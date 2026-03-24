@@ -28,7 +28,12 @@ export async function buildApp() {
   const app = Fastify({
     // ── Use the pino instance directly ──────
     logger,
-
+    rewriteUrl: (req) => {
+      if (req.url && req.url.startsWith('/api/v1')) {
+        return req.url.replace('/api/v1', '/v1')
+      }
+      return req.url || ''
+    },
     genReqId: (req) => {
       const fromHeader = req.headers['x-request-id']
       if (typeof fromHeader === 'string' && fromHeader.length > 0) return fromHeader
@@ -109,13 +114,6 @@ export async function buildApp() {
 
   // ── Idempotency middleware ───────────────────────────────────────
   await app.register(idempotencyCheckMiddleware)
-
-  // ── Compatibility shim: rewrite /api/v1 → /v1 ───────────────────
-  app.addHook('onRequest', async (request) => {
-    if (request.raw.url?.startsWith('/api/v1')) {
-      request.raw.url = request.raw.url.replace('/api/v1', '/v1')
-    }
-  })
 
   // ── API v1 routes ───────────────────────────────────────────────
   await app.register(async (v1) => {

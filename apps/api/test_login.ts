@@ -1,11 +1,10 @@
-import argon2 from 'argon2'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
-
 async function test() {
-  const users = await prisma.user.findMany()
-  console.log('Users:', users.map((u: any) => ({ email: u.email, isActive: u.isActive, deletedAt: u.deletedAt })))
+  const res = await fetch("http://127.0.0.1:8080/api/v1/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "admin@brayn.app", password: "Admin@123" })
+  });
+  console.log('Status:', res.status);
+  console.log(await res.text());
 }
-
-test()
+test();
