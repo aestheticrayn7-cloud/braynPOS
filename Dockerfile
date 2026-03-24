@@ -23,9 +23,12 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
+# Also copy prisma to the root level so 'npx prisma' finds it from anywhere
+COPY --from=builder /app/apps/api/prisma ./prisma
+
 EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Metadata to force Railway refresh: 2026-03-24T20:15:00
+# Metadata update to force fresh Railway pull: 2026-03-24T20:31:00
 CMD ["node", "apps/api/dist/server.js"]
