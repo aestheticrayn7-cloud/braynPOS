@@ -12,6 +12,8 @@ COPY apps/api ./apps/api
 RUN pnpm --filter api build
 
 FROM node:20-slim
+# Install OpenSSL as requested by Prisma
+RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /app
 RUN npm install -g pnpm
 COPY --from=builder /app/node_modules ./node_modules
@@ -25,4 +27,5 @@ EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
+# Run from the api directory to ensure prisma finds its schema
 CMD ["node", "apps/api/dist/server.js"]
