@@ -1,4 +1,6 @@
 FROM node:20-slim AS builder
+# Force cache bust: 2026-03-24T21:16:00
+ENV CACHE_BUST=2026-03-24T21:16:00
 WORKDIR /app
 RUN npm install -g pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -10,8 +12,8 @@ RUN pnpm --filter api exec prisma generate
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN pnpm --filter api build
-# Debug: List the files in dist
-RUN ls -R apps/api/dist
+# Find exactly where server.js is
+RUN find apps/api/dist -name "server.js"
 
 FROM node:20-slim
 RUN apt-get update -y && apt-get install -y openssl
@@ -29,7 +31,8 @@ EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Debug: List the files in the final stage too
-RUN ls -R apps/api/dist
+# Find it again in the final stage to be sure
+RUN find . -name "server.js"
 
-CMD ["node", "apps/api/dist/server.js"]
+# We will try to start from the most likely locations
+CMD ["sh", "-c", "node apps/api/dist/server.js || node apps/api/dist/src/server.js || node dist/server.js"]
