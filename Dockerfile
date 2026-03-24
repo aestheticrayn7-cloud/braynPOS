@@ -1,6 +1,6 @@
 FROM node:20-slim AS builder
-# Force cache bust: 2026-03-24T21:33:00
-ENV CACHE_BUST=2026-03-24T21:33:00
+# Force cache bust: 2026-03-24T21:40:00
+ENV CACHE_BUST=2026-03-24T21:40:00
 WORKDIR /app
 RUN npm install -g pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -13,30 +13,24 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN pnpm --filter api build
 
+# Use pnpm deploy to create a self-contained production bundle
+# This handles all hoisting and symlinks correctly.
+RUN pnpm --filter api --prod deploy /app/deployed
+
 FROM node:20-slim
 RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /app
-RUN npm install -g pnpm
 
-# Copy root node_modules for hoisted dependencies
-COPY --from=builder /app/node_modules ./node_modules
+# Copy the self-contained bundle created by pnpm deploy
+COPY --from=builder /app/deployed ./
 
-# Copy the API workspace specifically
-WORKDIR /app/apps/api
-COPY --from=builder /app/apps/api/node_modules ./node_modules
-COPY --from=builder /app/apps/api/package.json ./package.json
-
-# Flatten the build output into our new workdir
+# Copy the compiled dist folder (pnpm deploy copies source, we need the build)
+# We flatten it to /app/dist to keep things simple
 COPY --from=builder /app/apps/api/dist/apps/api/src ./dist
 COPY --from=builder /app/apps/api/prisma ./prisma
 
-# Shared package link
-WORKDIR /app/packages/shared
-COPY --from=builder /app/packages/shared ./
-
-# Back to API to run
-WORKDIR /app/apps/api
 EXPOSE 8080
 ENV NODE_ENV=production
 
+# The deployed folder has the package.json and its node_modules ready at the root
 CMD ["node", "dist/server.js"]
