@@ -1,0 +1,85 @@
+import type { FastifyPluginAsync } from 'fastify'
+import { getCreditStatus, recordRepayment, adjustCreditLimit } from './credit.service.js'
+import { authenticate } from '../../middleware/authenticate.js'
+import { authorize }    from '../../middleware/authorize.js'
+import { RATE }         from '../../lib/rate-limit.plugin.js'
+import { prisma }       from '../../lib/prisma.js'
+import { z }            from 'zod'
+
+export const creditRoutes: FastifyPluginAsync = async (app) => {
+  app.addHook('preHandler', authenticate)
+
+  // GET /credit/status/:customerId
+  app.get('/status/:customerId', {
+    config:     RATE.READ,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER', 'CASHIER', 'SALES_PERSON')],
+  }, async (request, reply) => {
+    const { customerId } = request.params as { customerId: string }
+
+    // FIX 13: Extend channel check to ALL non-admin roles, not just when
+    // the role is not SUPER_ADMIN/MANAGER_ADMIN. Previously CASHIER and
+    // SALES_PERSON could look up credit details for customers from any
+    // channel — outstandingCredit, creditLimit, all recent sales included.
+    if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
+      const customer = await prisma.customer.findUnique({
+        where:  { id: customerId },
+        select: { channelId: true },
+      })
+      if (!customer) {
+        return reply.status(404).send({ error: 'Customer not found' })
+      }
+      if (customer.channelId && customer.channelId !== request.user.channelId) {
+        return reply.status(403).send({
+          error:   'Forbidden',
+          message: 'Customer does not belong to your channel',
+        })
+      }
+    }
+
+    return getCreditStatus(customerId)
+  })
+
+  // POST /credit/repay
+  app.post('/repay', {
+    config:     RATE.SALE_COMMIT,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER', 'CASHIER', 'SALES_PERSON')],
+  }, async (request, reply) => {
+    const body = z.object({
+      customerId: z.string().uuid(),
+      amount:     z.number().positive(),
+      method:     z.enum(['CASH', 'MOBILE_MONEY', 'CARD', 'BANK_TRANSFER']),
+      reference:  z.string().max(100).optional().nullable(),
+      notes:      z.string().max(500).optional().nullable(),
+    }).parse(request.body)
+
+    // Non-admins can only record repayments for their own channel's customers
+    if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
+      const customer = await prisma.customer.findUnique({
+        where:  { id: body.customerId },
+        select: { channelId: true },
+      })
+      if (customer?.channelId && customer.channelId !== request.user.channelId) {
+        return reply.status(403).send({
+          error:   'Forbidden',
+          message: 'Customer does not belong to your channel',
+        })
+      }
+    }
+
+    const result = await recordRepayment(body as any, request.user)
+    reply.status(201).send(result)
+  })
+
+  // PATCH /api/v1/credit/adjust-limit
+  app.patch('/adjust-limit', {
+    config:     RATE.APPROVAL,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+  }, async (request) => {
+    const body = z.object({
+      customerId: z.string().uuid(),
+      newLimit:   z.number().min(0),
+    }).parse(request.body)
+
+    return adjustCreditLimit(body.customerId, body.newLimit, request.user)
+  })
+}

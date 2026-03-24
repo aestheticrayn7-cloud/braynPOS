@@ -1,0 +1,17 @@
+﻿--- Starting Performance Baseline Audit ---
+
+[1/3] Measuring Auth Performance (Argon2)...
+  Login 1: 63ms
+  Login 2: 5ms
+  Login 3: 3ms
+  Login 4: 4ms
+  Login 5: 4ms
+Average Login Latency: 16.00ms
+
+[2/3] Measuring Diagnostics Performance...
+Average Health Check Latency: 1.90ms
+
+[3/3] Measuring Audit Log Retrieval...
+Average Audit Log Latency: 2.00ms
+
+--- Performance Audit Complete ---

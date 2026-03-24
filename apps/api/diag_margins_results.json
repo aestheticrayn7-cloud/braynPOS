@@ -1,0 +1,77 @@
+{
+  "items": [
+    {
+      "id": "06261e79-a685-45fe-ac16-7b08a7352785",
+      "name": "Ipcone Blender",
+      "sku": "ITEM-1774010462782-WTIBZ",
+      "weightedAvgCost": "0"
+    },
+    {
+      "id": "4489703b-bc1b-4185-bc92-064dcc530c49",
+      "name": "microwave",
+      "sku": "ITEM-1773854078508",
+      "weightedAvgCost": "0"
+    },
+    {
+      "id": "4a09842a-4dac-4a53-8798-4a60fef036c8",
+      "name": "Printer",
+      "sku": "ITEM-1773857347475",
+      "weightedAvgCost": "0"
+    },
+    {
+      "id": "7c026bc0-422c-4101-a884-11116141668c",
+      "name": "Oraimo headphones",
+      "sku": "ITEM-1773927701707-296",
+      "weightedAvgCost": "0"
+    },
+    {
+      "id": "b496be02-aff7-4148-b53a-0be5de051b0a",
+      "name": "RBT speaker",
+      "sku": "ITEM-1773860140936",
+      "weightedAvgCost": "0"
+    }
+  ],
+  "saleItemsForToday": [
+    {
+      "id": "7ed9cb82-1715-4211-80e8-301d64a12e91",
+      "costPriceSnapshot": "0",
+      "quantity": 1,
+      "sale": {
+        "receiptNo": "RCP-20260320-0001",
+        "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2"
+      }
+    },
+    {
+      "id": "f7e68304-076e-4985-8022-7c6b7cb4c074",
+      "costPriceSnapshot": "0",
+      "quantity": 1,
+      "sale": {
+        "receiptNo": "RCP-20260320-0002",
+        "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d"
+      }
+    },
+    {
+      "id": "1aa32567-9b79-466b-bc0b-196f9c39a51d",
+      "costPriceSnapshot": "0",
+      "quantity": 1,
+      "sale": {
+        "receiptNo": "RCP-20260320-0003",
+        "channelId": "72e6eb96-ab84-4ae0-9277-fdd6b42bde19"
+      }
+    }
+  ],
+  "cogsRawResult": [
+    {
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "cogs": "0"
+    },
+    {
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "cogs": "0"
+    },
+    {
+      "channelId": "72e6eb96-ab84-4ae0-9277-fdd6b42bde19",
+      "cogs": "0"
+    }
+  ]
+}

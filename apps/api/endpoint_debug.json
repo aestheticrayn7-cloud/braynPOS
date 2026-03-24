@@ -1,0 +1,24 @@
+{
+  "balances": [
+    {
+      "name": "Generic Business Laptop",
+      "availableQty": 1
+    },
+    {
+      "name": "Optical Wireless Mouse",
+      "availableQty": 10
+    }
+  ],
+  "lowStock": [
+    {
+      "name": "Generic Business Laptop",
+      "availableQty": 1,
+      "reorderLevel": 10
+    },
+    {
+      "name": "Optical Wireless Mouse",
+      "availableQty": 10,
+      "reorderLevel": 10
+    }
+  ]
+}

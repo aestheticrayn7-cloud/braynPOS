@@ -1,0 +1,41 @@
+[
+  {
+    "id": "84822425-415f-4dee-a65c-1af258be1bfe",
+    "itemId": "item-mouse-002",
+    "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+    "movementType": "TRANSFER_IN_PENDING",
+    "quantityChange": -10,
+    "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+    "referenceType": "transfer",
+    "unitCostAtTime": "0",
+    "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+    "notes": null,
+    "createdAt": "2026-03-16T17:05:57.770Z"
+  },
+  {
+    "id": "da5dfdce-8257-4afc-9c90-a36eed75cdb1",
+    "itemId": "item-mouse-002",
+    "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+    "movementType": "TRANSFER_IN",
+    "quantityChange": 10,
+    "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+    "referenceType": "transfer",
+    "unitCostAtTime": "0",
+    "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+    "notes": null,
+    "createdAt": "2026-03-16T17:05:57.763Z"
+  },
+  {
+    "id": "1a0eda6b-e5fe-499a-a056-2543472c1ec2",
+    "itemId": "item-mouse-002",
+    "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+    "movementType": "TRANSFER_IN_PENDING",
+    "quantityChange": 10,
+    "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+    "referenceType": "transfer",
+    "unitCostAtTime": "0",
+    "performedBy": "fd1e2ba7-89e6-48f0-acd6-e7c9a9c78586",
+    "notes": null,
+    "createdAt": "2026-03-16T17:05:33.010Z"
+  }
+]

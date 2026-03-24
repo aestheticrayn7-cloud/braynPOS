@@ -1,0 +1,23 @@
+{
+  "id": "6cec81c2-f5e5-43f3-8111-aee3b12feaf9",
+  "sku": "ITEM-1773680682143",
+  "barcode": null,
+  "name": "5W bulbs Kehong",
+  "description": null,
+  "categoryId": "cat-electronics",
+  "brandId": "05ede1b2-a4c5-4f59-8440-43f3391c0c02",
+  "supplierId": "54549a23-55c2-478c-b110-a5b806fac205",
+  "unitOfMeasure": "PACK",
+  "retailPrice": "350",
+  "wholesalePrice": "450",
+  "minRetailPrice": "350",
+  "weightedAvgCost": "0",
+  "reorderLevel": 10,
+  "isSerialized": false,
+  "taxClass": "STANDARD",
+  "imageUrl": null,
+  "isActive": true,
+  "deletedAt": null,
+  "createdAt": "2026-03-16T17:04:42.146Z",
+  "updatedAt": "2026-03-16T17:04:42.146Z"
+}

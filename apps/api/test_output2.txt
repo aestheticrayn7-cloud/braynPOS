@@ -1,0 +1,1282 @@
+﻿
+> api@2.0.0 test C:\Users\HP\Desktop\braynPOS\apps\api
+> vitest run "src/modules/channels/isolation.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv4.1.1 [39m[90mC:/Users/HP/Desktop/braynPOS/apps/api[39m
+
+node.exe : npm warn 
+Unknown env config 
+"npm-globalconfig". 
+This will stop working 
+in the next major 
+version of npm.
+At C:\Users\HP\AppData\
+Roaming\npm\pnpm.ps1:24
+ char:5
++     & "node$exe"  "$b
+asedir/node_modules/pnp
+m/bin/pnpm.cjs" $args
++     ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (npm warn Unkn   
+ ow...version of np    
+m.:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+npm warn Unknown env 
+config "verify-deps-bef
+ore-run". This will 
+stop working in the 
+next major version of 
+npm.
+npm warn Unknown env 
+config 
+"_jsr-registry". This 
+will stop working in 
+the next major version 
+of npm.
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "braynpos", schema "public" at "127.0.0.1:5432"
+
+⚠️  There might be data loss when applying the changes:
+
+  • You are about to drop the column `updated_at` on the `receipt_sequences` table, which still contains 9 non-null values.
+
+
+Error: Use the 
+--accept-data-loss 
+flag to ignore the 
+data loss warnings 
+like prisma db push 
+--accept-data-loss
+[90mstdout[2m | src/modules/channels/isolation.test.ts
+[22m[39mPushing schema to test database...
+
+[90mstderr[2m | src/m
+odules/channels/isolati
+on.test.ts
+[22m[39mFailed to 
+sync test database 
+schema: Error: Command 
+failed: npx prisma db 
+push --skip-generate
+[90m    at 
+genericNodeError (node:
+internal/errors:985:15)
+[39m
+[90m    at wrappedFn (
+node:internal/errors:53
+9:14)[39m
+[90m    at 
+checkExecSyncError (nod
+e:child_process:925:11)
+[39m
+[90m    at execSync (n
+ode:child_process:997:1
+5)[39m
+    at C:/Users/HP/Desk
+top/braynPOS/apps/api/s
+rc/test/setup.ts:14:5
+    at wrapper (file://
+/C:/Users/HP/Desktop/br
+aynPOS/node_modules/[4
+m.pnpm[24m/@vitest+run
+ner@4.1.1/node_modules/
+[4m@vitest/runner[24m
+/dist/chunk-artifact.js
+:878:28)
+    at file:///C:/Users
+/HP/Desktop/braynPOS/no
+de_modules/[4m.pnpm[2
+4m/@vitest+runner@4.1.1
+/node_modules/[4m@vite
+st/runner[24m/dist/chu
+nk-artifact.js:294:11
+    at file:///C:/Users
+/HP/Desktop/braynPOS/no
+de_modules/[4m.pnpm[2
+4m/@vitest+runner@4.1.1
+/node_modules/[4m@vite
+st/runner[24m/dist/chu
+nk-artifact.js:891:10
+    at file:///C:/Users
+/HP/Desktop/braynPOS/no
+de_modules/[4m.pnpm[2
+4m/@vitest+runner@4.1.1
+/node_modules/[4m@vite
+st/runner[24m/dist/chu
+nk-artifact.js:2295:20
+    at new Promise 
+(<anonymous>) {
+  status: [33m1[39m,
+  signal: 
+[1mnull[22m,
+  output: [ 
+[1mnull[22m, 
+[1mnull[22m, 
+[1mnull[22m ],
+  pid: [33m23720[39m,
+  stdout: 
+[1mnull[22m,
+  stderr: [1mnull[22m
+}
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation
+[22m[39m[StockService] Loaded with Ghost Filtering active
+
+[11:25:12] [32mINFO[39m: [36m[health] /health and /ready endpoints registered[39m
+    service: "brayn-api"
+    env: "test"
+[11:25:12] [32mINFO[39m: [36m[request-context] Request context plugin registered[39m
+    service: "brayn-api"
+    env: "test"
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query BEGIN
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."items" ("id","sku","name","unitOfMeasure","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","reorderLevel","isSerialized","taxClass","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CAST($12::text AS "public"."TaxClass"),$13,$14,$15) RETURNING "public"."items"."id"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query INSERT INTO "public"."inventory_balances" ("itemId","channelId","availableQty","incomingQty","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","lastMovementAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE "public"."items"."id" = $1 LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query COMMIT
+
+(node:25576) 
+[FSTDEP017] 
+DeprecationWarning: 
+You are accessing the 
+deprecated 
+"request.routerPath" 
+property. Use "request.
+routeOptions.url" 
+instead. Property 
+"req.routerPath" will 
+be removed in 
+`fastify@5`.
+(Use `node 
+--trace-deprecation 
+...` to show where the 
+warning was created)
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39m[API items query]: {}
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query SELECT COUNT(*) FROM (SELECT "public"."items"."id" FROM "public"."items" WHERE ("public"."items"."deletedAt" IS NULL AND "public"."items"."isActive" = $1 AND ("public"."items"."id") IN (SELECT "t1"."itemId" FROM "public"."inventory_balances" AS "t1" WHERE ("t1"."channelId" = $2 AND "t1"."itemId" IS NOT NULL))) OFFSET $3) AS "sub"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE ("public"."items"."deletedAt" IS NULL AND "public"."items"."isActive" = $1 AND ("public"."items"."id") IN (SELECT "t1"."itemId" FROM "public"."inventory_balances" AS "t1" WHERE ("t1"."channelId" = $2 AND "t1"."itemId" IS NOT NULL))) ORDER BY "public"."items"."name" ASC LIMIT $3 OFFSET $4
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "sales_items" does not exist`
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "payments" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sale_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "inventory_balances" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "stock_movements" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "serials" CASCADE;
+
+[11:25:13] [32mINFO[39m: [36mincoming request[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2uam-hl8y1"
+    req: {
+      "id": "mn4j2uam-hl8y1",
+      "method": "GET",
+      "url": "/v1/items",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+[11:25:13] [32mINFO[39m: [36m[Redis] Connected[39m
+    service: "brayn-api"
+    env: "test"
+    requestId: "mn4j2uam-hl8y1"
+[11:25:13] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2uam-hl8y1"
+    requestId: "mn4j2uam-hl8y1"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/items"
+    statusCode: 200
+    duration: "62.32ms"
+[11:25:13] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2uam-hl8y1"
+    requestId: "mn4j2uam-hl8y1"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 120,
+        "x-ratelimit-remaining": 119,
+        "x-ratelimit-reset": 60,
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "65"
+      }
+    }
+    responseTime: 62.31549999117851
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfer_lines" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "categories" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "brands" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "suppliers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_sessions" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "users" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "channels" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "audit_logs" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "notifications" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "idempotency_records" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see items created in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "settings" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query BEGIN
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."items" ("id","sku","name","unitOfMeasure","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","reorderLevel","isSerialized","taxClass","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CAST($12::text AS "public"."TaxClass"),$13,$14,$15) RETURNING "public"."items"."id"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query INSERT INTO "public"."inventory_balances" ("itemId","channelId","availableQty","incomingQty","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","lastMovementAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE "public"."items"."id" = $1 LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query COMMIT
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE ("public"."items"."id" = $1 AND "public"."items"."deletedAt" IS NULL) LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query SELECT "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId", "public"."inventory_balances"."availableQty", "public"."inventory_balances"."incomingQty", "public"."inventory_balances"."retailPrice", "public"."inventory_balances"."wholesalePrice", "public"."inventory_balances"."minRetailPrice", "public"."inventory_balances"."minWholesalePrice", "public"."inventory_balances"."weightedAvgCost", "public"."inventory_balances"."lastMovementAt" FROM "public"."inventory_balances" WHERE ("public"."inventory_balances"."channelId" = $1 AND "public"."inventory_balances"."itemId" IN ($2)) ORDER BY "public"."inventory_balances"."itemId" ASC, "public"."inventory_balances"."channelId" ASC LIMIT $3 OFFSET $4
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "sales_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "sales_items" does not exist`
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "payments" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "sale_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "sales" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "inventory_balances" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "stock_movements" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "serials" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "transfer_lines" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "transfers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "items" CASCADE;
+
+[11:25:16] [32mINFO[39m: [36mincoming request[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2wni-wuoi0"
+    req: {
+      "id": "mn4j2wni-wuoi0",
+      "method": "GET",
+      "url": "/v1/items/775249e0-ba5e-457b-8920-3c7a3ffae093",
+      "query": {},
+      "params": {
+        "id": "775249e0-ba5e-457b-8920-3c7a3ffae093"
+      },
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+[11:25:16] [31mERROR[39m: [36mrequest error[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2wni-wuoi0"
+    requestId: "mn4j2wni-wuoi0"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/items/775249e0-ba5e-457b-8920-3c7a3ffae093"
+    err: {
+      "type": "Error",
+      "message": "NotFoundError: No Item found",
+      "stack":
+          Error: NotFoundError: No Item found
+              at C:/Users/HP/Desktop/braynPOS/apps/api/src/modules/items/items.service.ts:122:29
+      "statusCode": 404
+    }
+[11:25:16] [32mINFO[39m: [36mNotFoundError: No Item found[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2wni-wuoi0"
+    requestId: "mn4j2wni-wuoi0"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 120,
+        "x-ratelimit-remaining": 119,
+        "x-ratelimit-reset": 60
+      }
+    }
+    err: {
+      "type": "Error",
+      "message": "NotFoundError: No Item found",
+      "stack":
+          Error: NotFoundError: No Item found
+              at C:/Users/HP/Desktop/braynPOS/apps/api/src/modules/items/items.service.ts:122:29
+      "statusCode": 404
+    }
+[11:25:16] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2wni-wuoi0"
+    requestId: "mn4j2wni-wuoi0"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/items/775249e0-ba5e-457b-8920-3c7a3ffae093"
+    statusCode: 404
+    duration: "12.76ms"
+[11:25:16] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2wni-wuoi0"
+    requestId: "mn4j2wni-wuoi0"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 120,
+        "x-ratelimit-remaining": 119,
+        "x-ratelimit-reset": 60,
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "79"
+      }
+    }
+    responseTime: 12.761199980974197
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "categories" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "brands" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "suppliers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "sales_sessions" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "users" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "channels" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "audit_logs" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "notifications" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "idempotency_records" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to find Channel A item by ID
+[22m[39mprisma:query TRUNCATE TABLE "settings" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query BEGIN
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."items" ("id","sku","name","unitOfMeasure","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","reorderLevel","isSerialized","taxClass","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CAST($12::text AS "public"."TaxClass"),$13,$14,$15) RETURNING "public"."items"."id"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query INSERT INTO "public"."inventory_balances" ("itemId","channelId","availableQty","incomingQty","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","lastMovementAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE "public"."items"."id" = $1 LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query COMMIT
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "sales_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "sales_items" does not exist`
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "payments" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "sale_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "sales" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "inventory_balances" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "stock_movements" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "serials" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "transfer_lines" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "transfers" CASCADE;
+
+[11:25:19] [32mINFO[39m: [36mincoming request[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2yew-rr438"
+    req: {
+      "id": "mn4j2yew-rr438",
+      "method": "PATCH",
+      "url": "/v1/items/303ae8db-7b24-444e-b8fc-956d81fccf19",
+      "query": {},
+      "params": {
+        "id": "303ae8db-7b24-444e-b8fc-956d81fccf19"
+      },
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80",
+        "content-type": "application/json",
+        "content-length": "22"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+[11:25:19] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2yew-rr438"
+    requestId: "mn4j2yew-rr438"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "PATCH"
+    url: "/v1/items/303ae8db-7b24-444e-b8fc-956d81fccf19"
+    statusCode: 403
+    duration: "5.63ms"
+[11:25:19] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j2yew-rr438"
+    requestId: "mn4j2yew-rr438"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 5,
+        "x-ratelimit-remaining": 4,
+        "x-ratelimit-reset": 60,
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "118"
+      }
+    }
+    responseTime: 5.625900000333786
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "categories" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "brands" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "suppliers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "sales_sessions" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "users" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "channels" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "audit_logs" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "notifications" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "idempotency_records" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT be able to update Channel A item
+[22m[39mprisma:query TRUNCATE TABLE "settings" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query BEGIN
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."items" ("id","sku","name","unitOfMeasure","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","reorderLevel","isSerialized","taxClass","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CAST($12::text AS "public"."TaxClass"),$13,$14,$15) RETURNING "public"."items"."id"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."inventory_balances" ("itemId","channelId","availableQty","incomingQty","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","lastMovementAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE "public"."items"."id" = $1 LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query COMMIT
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query INSERT INTO "public"."sales" ("id","receiptNo","channelId","saleType","totalAmount","discountAmount","taxAmount","netAmount","taxSyncStatus","performedBy","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."SaleType"),$5,$6,$7,$8,CAST($9::text AS "public"."TaxSyncStatus"),$10,$11,$12) RETURNING "public"."sales"."id", "public"."sales"."receiptNo", "public"."sales"."channelId", "public"."sales"."sessionId", "public"."sales"."customerId", "public"."sales"."saleType"::text, "public"."sales"."totalAmount", "public"."sales"."discountAmount", "public"."sales"."taxAmount", "public"."sales"."netAmount", "public"."sales"."taxSyncStatus"::text, "public"."sales"."offlineReceiptNo", "public"."sales"."notes", "public"."sales"."performedBy", "public"."sales"."deletedAt", "public"."sales"."createdAt", "public"."sales"."updatedAt", "public"."sales"."dueDate"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "sales_items" does not exist`
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "payments" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sale_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "inventory_balances" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "stock_movements" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "serials" CASCADE;
+
+[11:25:21] [32mINFO[39m: [36mincoming request[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j3056-vase5"
+    req: {
+      "id": "mn4j3056-vase5",
+      "method": "GET",
+      "url": "/v1/payments?saleId=sale-a-uuid",
+      "query": {
+        "saleId": "sale-a-uuid"
+      },
+      "params": {},
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+[11:25:21] [31mERROR[39m: [36mrequest error[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j3056-vase5"
+    requestId: "mn4j3056-vase5"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/payments?saleId=sale-a-uuid"
+    err: {
+      "type": "ZodError",
+      "message": "[\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"saleId\"\n    ]\n  }\n]",
+      "stack":
+          ZodError: [
+            {
+              "validation": "uuid",
+              "code": "invalid_string",
+              "message": "Invalid uuid",
+              "path": [
+                "saleId"
+              ]
+            }
+          ]
+              at Object.get error [as error] (file:///C:/Users/HP/Desktop/braynPOS/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:39:31)
+              at ZodObject.parse (file:///C:/Users/HP/Desktop/braynPOS/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:114:22)
+              at Object.<anonymous> (C:/Users/HP/Desktop/braynPOS/apps/api/src/modules/payments/payments.routes.ts:15:64)
+              at preHandlerCallback (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\handleRequest.js:139:37)
+              at next (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\hooks.js:233:9)
+              at handleResolve (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\hooks.js:250:7)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+      "aggregateErrors": [
+        {
+          "type": "Object",
+          "message": "Invalid uuid",
+          "stack":
+              
+          "validation": "uuid",
+          "code": "invalid_string",
+          "path": [
+            "saleId"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "validation": "uuid",
+          "code": "invalid_string",
+          "message": "Invalid uuid",
+          "path": [
+            "saleId"
+          ]
+        }
+      ],
+      "name": "ZodError"
+    }
+[11:25:21] [31mERROR[39m: [36m[
+  {
+    "validation": "uuid",
+    "code": "invalid_string",
+    "message": "Invalid uuid",
+    "path": [
+      "saleId"
+    ]
+  }
+][39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j3056-vase5"
+    requestId: "mn4j3056-vase5"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    req: {
+      "id": "mn4j3056-vase5",
+      "method": "GET",
+      "url": "/v1/payments?saleId=sale-a-uuid",
+      "query": {
+        "saleId": "sale-a-uuid"
+      },
+      "params": {},
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 200,
+        "x-ratelimit-remaining": 199,
+        "x-ratelimit-reset": 60
+      }
+    }
+    err: {
+      "type": "ZodError",
+      "message": "[\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"saleId\"\n    ]\n  }\n]",
+      "stack":
+          ZodError: [
+            {
+              "validation": "uuid",
+              "code": "invalid_string",
+              "message": "Invalid uuid",
+              "path": [
+                "saleId"
+              ]
+            }
+          ]
+              at Object.get error [as error] (file:///C:/Users/HP/Desktop/braynPOS/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:39:31)
+              at ZodObject.parse (file:///C:/Users/HP/Desktop/braynPOS/node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:114:22)
+              at Object.<anonymous> (C:/Users/HP/Desktop/braynPOS/apps/api/src/modules/payments/payments.routes.ts:15:64)
+              at preHandlerCallback (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\handleRequest.js:139:37)
+              at next (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\hooks.js:233:9)
+              at handleResolve (C:\Users\HP\Desktop\braynPOS\node_modules\.pnpm\fastify@4.29.1\node_modules\fastify\lib\hooks.js:250:7)
+              at processTicksAndRejections (node:internal/process/task_queues:103:5)
+      "aggregateErrors": [
+        {
+          "type": "Object",
+          "message": "Invalid uuid",
+          "stack":
+              
+          "validation": "uuid",
+          "code": "invalid_string",
+          "path": [
+            "saleId"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "validation": "uuid",
+          "code": "invalid_string",
+          "message": "Invalid uuid",
+          "path": [
+            "saleId"
+          ]
+        }
+      ],
+      "name": "ZodError"
+    }
+[11:25:21] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j3056-vase5"
+    requestId: "mn4j3056-vase5"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/payments?saleId=sale-a-uuid"
+    statusCode: 500
+    duration: "6.45ms"
+[11:25:21] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j3056-vase5"
+    requestId: "mn4j3056-vase5"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 200,
+        "x-ratelimit-remaining": 199,
+        "x-ratelimit-reset": 60,
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "221"
+      }
+    }
+    responseTime: 6.447099983692169
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfer_lines" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "categories" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "brands" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "suppliers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_sessions" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "users" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "channels" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "audit_logs" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "notifications" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "idempotency_records" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see payments for sales in Channel A
+[22m[39mprisma:query TRUNCATE TABLE "settings" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."channels" ("id","name","code","type","isMainWarehouse","featureFlags","createdAt","updatedAt") VALUES ($1,$2,$3,CAST($4::text AS "public"."ChannelType"),$5,$6,$7,$8) RETURNING "public"."channels"."id", "public"."channels"."name", "public"."channels"."code", "public"."channels"."type"::text, "public"."channels"."isMainWarehouse", "public"."channels"."featureFlags", "public"."channels"."address", "public"."channels"."phone", "public"."channels"."email", "public"."channels"."deletedAt", "public"."channels"."createdAt", "public"."channels"."updatedAt"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."users" ("id","username","email","passwordHash","role","mfaEnabled","channelId","createdAt","updatedAt","status") VALUES ($1,$2,$3,$4,CAST($5::text AS "public"."UserRole"),$6,$7,$8,$9,CAST($10::text AS "public"."UserStatus")) RETURNING "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query BEGIN
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."items" ("id","sku","name","unitOfMeasure","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","reorderLevel","isSerialized","taxClass","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CAST($12::text AS "public"."TaxClass"),$13,$14,$15) RETURNING "public"."items"."id"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query INSERT INTO "public"."inventory_balances" ("itemId","channelId","availableQty","incomingQty","retailPrice","wholesalePrice","minRetailPrice","minWholesalePrice","weightedAvgCost","lastMovementAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."inventory_balances"."itemId", "public"."inventory_balances"."channelId"
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query SELECT "public"."items"."id", "public"."items"."sku", "public"."items"."barcode", "public"."items"."name", "public"."items"."description", "public"."items"."categoryId", "public"."items"."brandId", "public"."items"."supplierId", "public"."items"."unitOfMeasure", "public"."items"."retailPrice", "public"."items"."wholesalePrice", "public"."items"."minRetailPrice", "public"."items"."minWholesalePrice", "public"."items"."weightedAvgCost", "public"."items"."reorderLevel", "public"."items"."isSerialized", "public"."items"."taxClass"::text, "public"."items"."imageUrl", "public"."items"."isActive", "public"."items"."deletedAt", "public"."items"."createdAt", "public"."items"."updatedAt" FROM "public"."items" WHERE "public"."items"."id" = $1 LIMIT $2 OFFSET $3
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query COMMIT
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "sales_items" does not exist`
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "payments" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sale_items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "inventory_balances" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "stock_movements" CASCADE;
+
+[11:25:23] [32mINFO[39m: [36mincoming request[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j31t3-cztfj"
+    req: {
+      "id": "mn4j31t3-cztfj",
+      "method": "GET",
+      "url": "/v1/accounting/inventory-balances",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "lightMyRequest",
+        "host": "localhost:80"
+      },
+      "remoteAddress": "127.0.0.1"
+    }
+[11:25:23] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j31t3-cztfj"
+    requestId: "mn4j31t3-cztfj"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    method: "GET"
+    url: "/v1/accounting/inventory-balances"
+    statusCode: 403
+    duration: "2.62ms"
+[11:25:23] [32mINFO[39m: [36mrequest completed[39m
+    service: "brayn-api"
+    env: "test"
+    reqId: "mn4j31t3-cztfj"
+    requestId: "mn4j31t3-cztfj"
+    userId: "user-b-uuid"
+    role: "CASHIER"
+    channelId: "channel-b-uuid"
+    res: {
+      "statusCode": null,
+      "headers": {
+        "content-security-policy": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0",
+        "vary": "Origin",
+        "access-control-allow-credentials": "true",
+        "x-ratelimit-limit": 200,
+        "x-ratelimit-remaining": 198,
+        "x-ratelimit-reset": 58,
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "132"
+      }
+    }
+    responseTime: 2.6189000010490417
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "serials" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfer_lines" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "transfers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "items" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "categories" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "brands" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "suppliers" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "sales_sessions" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "users" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "channels" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "audit_logs" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "notifications" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "idempotency_records" CASCADE;
+
+[90mstdout[2m | src/modules/channels/isolation.test.ts[2m > [22m[2mMulti-Tenant Isolation[2m > [22m[2mUser B should NOT see inventory balances for Channel A
+[22m[39mprisma:query TRUNCATE TABLE "settings" CASCADE;
+
+ [31m❯[39m src/modules/channels/isolation.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 15502[2mms[22m[39m
+     [33m[2m✓[22m[39m User B should NOT see items created in Channel A [33m 3085[2mms[22m[39m
+     [33m[2m✓[22m[39m User B should NOT be able to find Channel A item by ID [33m 2291[2mms[22m[39m
+     [33m[2m✓[22m[39m User B should NOT be able to update Channel A item [33m 2244[2mms[22m[39m
+[31m     [31m×[31m User B should NOT see payments for sales in Channel A[39m[33m 2172[2mms[22m[39m
+[31m     [31m×[31m User B should NOT see inventory balances for Channel A[39m[33m 2228[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[
+41m Failed Tests 2 [49
+m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL 
+[22m[49m src/modules/
+channels/isolation.test
+.ts[2m > 
+[22mMulti-Tenant 
+Isolation[2m > 
+[22mUser B should NOT 
+see payments for sales 
+in Channel A
+[31m[1mAssertionError
+[22m: expected 500 to 
+be 403 // Object.is 
+equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 403[39m
+[31m+ 500[39m
+
+[36m [2m❯[22m src/mo
+dules/channels/isolatio
+n.test.ts:[2m123:33[2
+2m[39m
+    [90m121|[39m
+    [90m122|[39m     
+[90m// Should return 
+403 Forbidden as the 
+sale belongs to 
+Channel A[39m
+    [90m123|[39m     
+[34mexpect[39m(respon
+se[33m.[39mstatusCode
+)[33m.[39m[34mtoBe[
+39m([34m403[39m)
+    [90m   |[39m     
+                       
+     [31m^[39m
+    [90m124|[39m   })
+    [90m125|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[
+39m
+
+[41m[1m FAIL 
+[22m[49m src/modules/
+channels/isolation.test
+.ts[2m > 
+[22mMulti-Tenant 
+Isolation[2m > 
+[22mUser B should NOT 
+see inventory balances 
+for Channel A
+[31m[1mTypeError[22m
+: data.find is not a 
+function[39m
+[36m [2m❯[22m src/mo
+dules/channels/isolatio
+n.test.ts:[2m136:24[2
+2m[39m
+    [90m134|[39m     
+// Even if no 
+channelId is provided, 
+the route should force 
+User B…
+    [90m135|[39m     
+[90m// and thus NOT 
+show any balances for 
+Channel A[39m
+    [90m136|[39m     
+[35mconst[39m found 
+[33m=[39m data[33m.
+[39m[34mfind[39m((ib
+[33m:[39m any) 
+[33m=>[39m 
+ib[33m.[39mchannelId 
+[33m===[39m 
+channelAId)
+    [90m   |[39m     
+                   
+[31m^[39m
+    [90m137|[39m     
+[34mexpect[39m(found)
+[33m.[39m[34mtoBeUnd
+efined[39m()
+    [90m138|[39m   })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[
+39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 14:25:08
+[2m   Duration [22m 17.55s[2m (transform 898ms, setup 164ms, import 1.59s, tests 15.50s, environment 0ms)[22m
+
+ ELIFECYCLE  Test failed. See above for more details.

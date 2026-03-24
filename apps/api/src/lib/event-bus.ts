@@ -1,0 +1,79 @@
+import { EventEmitter } from 'events'
+import { logger } from './logger.js'
+
+// ── Domain Event Types ────────────────────────────────────────────────
+export interface DomainEvents {
+  'sale.committed':          { saleId: string; channelId: string; totalAmount: number }
+  'purchase.committed':      { purchaseId: string; channelId: string }
+  'transfer.sent':           { transferId: string; fromChannelId: string; toChannelId: string }
+  'transfer.received':       { transferId: string; toChannelId: string }
+  'transfer.disputed':       { transferId: string; toChannelId: string }
+  'expense.created':         { expenseId: string; channelId: string; amount: number }
+  'stock.low':               { itemId: string; channelId: string; currentQty: number; reorderLevel: number }
+  'stock.negative':          { itemId: string; channelId: string; currentQty: number }
+  'session.opened':          { sessionId: string; channelId: string; userId: string }
+  'session.closed':          { sessionId: string; channelId: string }
+  'payroll.finalized':       { salaryRunId: string }
+  'credit.payment.received': { customerId: string; amount: number }
+  'ticket.created':          { ticketId: string; subject: string; category: string; priority: string; refCode: string }
+  'stock.adjustment':        { itemId: string; quantityChange: number; reason: string; ticketId?: string }
+  'approval.requested':      { approvalId: string; requesterId: string; channelId: string | null; action: string; notes?: string | null }
+  'inventory.updated':       { itemId: string; channelId: string; availableQty: number; movementType: string }
+}
+
+class TypedEventBus {
+  private emitter = new EventEmitter()
+
+  constructor() {
+    // 50 listeners is a reasonable ceiling for this domain size.
+    // If this warning fires in future, audit for listener leaks first
+    // before raising the number — leaked listeners cause memory pressure.
+    this.emitter.setMaxListeners(50)
+  }
+
+  emit<K extends keyof DomainEvents>(event: K, data: DomainEvents[K]): void {
+    this.emitter.emit(event, data)
+  }
+
+  // FIX: Async handlers previously had no error boundary — a rejected
+  // Promise would surface as an unhandledRejection, potentially crashing
+  // the process in Node 18+ where unhandled rejections exit by default.
+  // Now wraps every handler in Promise.resolve().catch() so failures
+  // are logged via the structured logger and never propagate upward.
+  on<K extends keyof DomainEvents>(
+    event:   K,
+    handler: (data: DomainEvents[K]) => void | Promise<void>
+  ): void {
+    this.emitter.on(event, (data: DomainEvents[K]) => {
+      Promise.resolve(handler(data)).catch((err) => {
+        logger.error(
+          { err, event, data },
+          `[event-bus] Unhandled error in handler for "${event}"`
+        )
+      })
+    })
+  }
+
+  off<K extends keyof DomainEvents>(
+    event:   K,
+    handler: (data: DomainEvents[K]) => void | Promise<void>
+  ): void {
+    this.emitter.off(event, handler)
+  }
+
+  once<K extends keyof DomainEvents>(
+    event:   K,
+    handler: (data: DomainEvents[K]) => void | Promise<void>
+  ): void {
+    this.emitter.once(event, (data: DomainEvents[K]) => {
+      Promise.resolve(handler(data)).catch((err) => {
+        logger.error(
+          { err, event, data },
+          `[event-bus] Unhandled error in once-handler for "${event}"`
+        )
+      })
+    })
+  }
+}
+
+export const eventBus = new TypedEventBus()

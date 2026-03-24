@@ -1,0 +1,155 @@
+{
+  "transfers": [
+    {
+      "id": "5e25f2b1-925a-4860-82e4-00b848f5bd60",
+      "transferNo": "TRF-1773649978696",
+      "fromChannelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+      "toChannelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "status": "RECEIVED",
+      "sentBy": "fd1e2ba7-89e6-48f0-acd6-e7c9a9c78586",
+      "receivedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "sentAt": "2026-03-16T08:32:58.703Z",
+      "receivedAt": "2026-03-16T08:33:22.038Z",
+      "notes": "",
+      "createdAt": "2026-03-16T08:32:58.704Z",
+      "updatedAt": "2026-03-16T08:33:22.039Z",
+      "lines": [
+        {
+          "id": "d5e2b9b4-2a7f-41cf-b02e-5d53dae7a242",
+          "transferId": "5e25f2b1-925a-4860-82e4-00b848f5bd60",
+          "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+          "sentQuantity": 25,
+          "receivedQuantity": 25,
+          "disputeReason": null
+        }
+      ]
+    },
+    {
+      "id": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+      "transferNo": "TRF-1773680732984",
+      "fromChannelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+      "toChannelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "status": "RECEIVED",
+      "sentBy": "fd1e2ba7-89e6-48f0-acd6-e7c9a9c78586",
+      "receivedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "sentAt": "2026-03-16T17:05:32.990Z",
+      "receivedAt": "2026-03-16T17:05:57.780Z",
+      "notes": "",
+      "createdAt": "2026-03-16T17:05:32.992Z",
+      "updatedAt": "2026-03-16T17:05:57.781Z",
+      "lines": [
+        {
+          "id": "dd55af41-ea2e-4b88-a9f7-1183c45549d9",
+          "transferId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+          "itemId": "item-mouse-002",
+          "sentQuantity": 10,
+          "receivedQuantity": 10,
+          "disputeReason": null
+        }
+      ]
+    }
+  ],
+  "moves": [
+    {
+      "id": "84822425-415f-4dee-a65c-1af258be1bfe",
+      "itemId": "item-mouse-002",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN_PENDING",
+      "quantityChange": -10,
+      "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "notes": null,
+      "createdAt": "2026-03-16T17:05:57.770Z"
+    },
+    {
+      "id": "da5dfdce-8257-4afc-9c90-a36eed75cdb1",
+      "itemId": "item-mouse-002",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN",
+      "quantityChange": 10,
+      "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "notes": null,
+      "createdAt": "2026-03-16T17:05:57.763Z"
+    },
+    {
+      "id": "1a0eda6b-e5fe-499a-a056-2543472c1ec2",
+      "itemId": "item-mouse-002",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN_PENDING",
+      "quantityChange": 10,
+      "referenceId": "82a3da1f-91d9-45eb-a7da-098069f04f53",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "fd1e2ba7-89e6-48f0-acd6-e7c9a9c78586",
+      "notes": null,
+      "createdAt": "2026-03-16T17:05:33.010Z"
+    },
+    {
+      "id": "c927be0d-efb2-4b12-82c9-f9c0289b0e69",
+      "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN_PENDING",
+      "quantityChange": -25,
+      "referenceId": "5e25f2b1-925a-4860-82e4-00b848f5bd60",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "notes": null,
+      "createdAt": "2026-03-16T08:33:22.037Z"
+    },
+    {
+      "id": "e1ff453a-d088-47ee-8015-9365876bb939",
+      "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN",
+      "quantityChange": 25,
+      "referenceId": "5e25f2b1-925a-4860-82e4-00b848f5bd60",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "b515437f-afe1-4e46-8e57-83b46ec84d96",
+      "notes": null,
+      "createdAt": "2026-03-16T08:33:22.032Z"
+    },
+    {
+      "id": "72127305-9c64-426a-8586-5c6f8d48eeb2",
+      "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "movementType": "TRANSFER_IN_PENDING",
+      "quantityChange": 25,
+      "referenceId": "5e25f2b1-925a-4860-82e4-00b848f5bd60",
+      "referenceType": "transfer",
+      "unitCostAtTime": "0",
+      "performedBy": "fd1e2ba7-89e6-48f0-acd6-e7c9a9c78586",
+      "notes": null,
+      "createdAt": "2026-03-16T08:32:58.729Z"
+    }
+  ],
+  "balances": [
+    {
+      "itemId": "item-laptop-001",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "availableQty": 0,
+      "incomingQty": 0,
+      "lastMovementAt": "2026-03-16T16:59:02.881Z"
+    },
+    {
+      "itemId": "item-mouse-002",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "availableQty": 0,
+      "incomingQty": 0,
+      "lastMovementAt": "2026-03-16T16:59:02.910Z"
+    },
+    {
+      "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+      "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+      "availableQty": 25,
+      "incomingQty": 0,
+      "lastMovementAt": "2026-03-16T08:33:22.037Z"
+    }
+  ]
+}

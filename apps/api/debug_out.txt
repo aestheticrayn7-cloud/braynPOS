@@ -1,0 +1,9 @@
+--- DEBUG RESULTS ---
+ITEM: Generic Business Laptop (item-laptop-001)
+CHANNEL: Chuka Store (4178970e-8042-4796-a6af-da7c8e85d5ba)
+BALANCE: {"itemId":"item-laptop-001","channelId":"4178970e-8042-4796-a6af-da7c8e85d5ba","availableQty":10,"incomingQty":0,"lastMovementAt":"2026-03-16T16:18:09.569Z"}
+MOVE_COUNT: 3
+MOVE_SUM: 10
+  - Type: TRANSFER_IN_PENDING, Change: 10, Ref: 210cac95-403c-4f20-9906-59813703598a
+  - Type: TRANSFER_IN, Change: 10, Ref: 210cac95-403c-4f20-9906-59813703598a
+  - Type: TRANSFER_IN_PENDING, Change: -10, Ref: 210cac95-403c-4f20-9906-59813703598a

@@ -1,0 +1,15 @@
+{
+  "name": "@brayn/shared",
+  "version": "2.0.0",
+  "private": true,
+  "main": "./src/types/index.ts",
+  "types": "./src/types/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "rimraf": "^6.0.1"
+  }
+}

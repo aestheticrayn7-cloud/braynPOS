@@ -1,0 +1,82 @@
+[
+  {
+    "id": "aa4df860-244e-46a1-8e76-042d1535860c",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"how to add a staff salary\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:29:53.198Z"
+  },
+  {
+    "id": "a2ea5089-524e-4cc9-a426-478dc50c90aa",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"how to create a new payroll\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:28:56.046Z"
+  },
+  {
+    "id": "c7f06410-ef97-48b4-a006-3add82236603",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"how to add new item\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:28:00.396Z"
+  },
+  {
+    "id": "b2b21e77-1136-4067-b660-f345bd704a0d",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hello\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:27:28.812Z"
+  },
+  {
+    "id": "41c64633-8af0-4358-be14-178d14f5bbc0",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hey\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:26:54.466Z"
+  },
+  {
+    "id": "8b94ad7e-995a-47c7-b81e-f416b2e1069f",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hey\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T13:05:46.367Z"
+  },
+  {
+    "id": "e4128615-1cbc-4972-bd63-6539b4622288",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hello\". (Reason: LOW_SIMILARITY, Ticket: 92fdac9e-08a0-4568-9f25-4711bd79fcf5)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T12:55:42.605Z"
+  },
+  {
+    "id": "4b5cb297-e4ee-44d0-b404-f43dc1dfb790",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hey\". (Reason: LOW_SIMILARITY, Ticket: 4e9f8af0-42f0-4564-8fe4-5acf16686ac0)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T12:49:24.098Z"
+  },
+  {
+    "id": "7e1929fd-9d3b-4dd4-80dd-d8be38282c74",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hello\". (Reason: LOW_SIMILARITY, Ticket: 4e9f8af0-42f0-4564-8fe4-5acf16686ac0)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T12:44:27.887Z"
+  },
+  {
+    "id": "41266587-c473-4c90-bc14-ef2060835482",
+    "type": "SYSTEM",
+    "message": "📌 **KB GAP DETECTED:** Documentation may be missing for: \"hello\". (Reason: LOW_SIMILARITY, Ticket: 4e9f8af0-42f0-4564-8fe4-5acf16686ac0)",
+    "channelId": null,
+    "isRead": false,
+    "createdAt": "2026-03-16T12:38:14.043Z"
+  }
+]

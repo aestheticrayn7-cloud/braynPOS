@@ -1,0 +1,14 @@
+--- DB Check ---
+Total Items: 34
+Category: Accesories | ID: 4ecd7884-ccd9-423b-a9e3-83097c5eae08 | Items: 0 | Deleted: null
+Category: Accesories | ID: c588d94c-69f8-4c98-9e8e-672cd4ff3508 | Items: 0 | Deleted: null
+Category: Electronics | ID: cat-electronics | Items: 18 | Deleted: Thu Mar 12 2026 09:09:33 GMT+0300 (East Africa Time)
+Category: Electronics | ID: e88c1f81-a53a-41cb-b01a-e0afbf584877 | Items: 0 | Deleted: null
+Category: Computers | ID: 9b162dd2-9956-4217-adf9-2abd7d6d7981 | Items: 0 | Deleted: null
+Category: Electronics | ID: 7721ddab-c192-4c47-828f-dcd239bf3d77 | Items: 0 | Deleted: null
+Category: Stationery | ID: 1c43a314-8997-4dc6-b91f-720b5ed43ed5 | Items: 0 | Deleted: null
+Category: Accesories | ID: ae1dcf84-47d4-436b-b664-067333909579 | Items: 0 | Deleted: null
+Category: TestNew123 | ID: 412e75d2-ff50-4a68-8e0f-9b757a3ad822 | Items: 0 | Deleted: null
+Category: General Merchandise | ID: cat-general | Items: 15 | Deleted: null
+HQ Inventory Balance Rows: 34
+Today Total Sales Count: 10

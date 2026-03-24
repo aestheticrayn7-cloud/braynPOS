@@ -1,0 +1,17 @@
+[
+  {
+    "column_name": "availableQty"
+  },
+  {
+    "column_name": "incomingQty"
+  },
+  {
+    "column_name": "lastMovementAt"
+  },
+  {
+    "column_name": "itemId"
+  },
+  {
+    "column_name": "channelId"
+  }
+]

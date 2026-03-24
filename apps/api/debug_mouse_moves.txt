@@ -1,0 +1,7 @@
+--- MOUSE MOVEMENTS ---
+[2026-03-16T16:40:45.648Z] Type: TRANSFER_IN_PENDING, Qty: -10, Channel: 4178970e-8042-4796-a6af-da7c8e85d5ba, Ref: 6ccead2d-b92c-42a8-949f-3a28e2293af0
+[2026-03-16T16:40:45.643Z] Type: TRANSFER_IN, Qty: 10, Channel: 4178970e-8042-4796-a6af-da7c8e85d5ba, Ref: 6ccead2d-b92c-42a8-949f-3a28e2293af0
+[2026-03-16T16:40:34.508Z] Type: TRANSFER_IN_PENDING, Qty: 10, Channel: 4178970e-8042-4796-a6af-da7c8e85d5ba, Ref: 6ccead2d-b92c-42a8-949f-3a28e2293af0
+[2026-03-16T16:40:34.500Z] Type: TRANSFER_OUT, Qty: -10, Channel: c7983e54-a3b0-49be-b8bc-86b1bb01bd25, Ref: 6ccead2d-b92c-42a8-949f-3a28e2293af0
+[2026-03-15T20:17:54.040Z] Type: SALE, Qty: -1, Channel: c7983e54-a3b0-49be-b8bc-86b1bb01bd25, Ref: 5d434c3a-c1a8-4138-ae31-0d2168f9136b
+[2026-03-15T20:16:41.923Z] Type: SALE, Qty: -2, Channel: c7983e54-a3b0-49be-b8bc-86b1bb01bd25, Ref: ac6882c4-ada5-4e4c-b852-5e49ef268b0e

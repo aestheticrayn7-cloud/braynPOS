@@ -1,0 +1,15 @@
+--- MOUSE DEBUG ---
+ID: item-mouse-002
+Name: Optical Wireless Mouse
+SKU: MS-OPT-002
+DeletedAt: null
+IsActive: true
+Balances: [
+  {
+    "itemId": "item-mouse-002",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "availableQty": -3,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  }
+]

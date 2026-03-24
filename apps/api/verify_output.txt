@@ -1,0 +1,6 @@
+﻿--- TEST 1: NO CONTEXT ---
+prisma:query SELECT "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text FROM "public"."users" WHERE ("public"."users"."email" = $1 AND 1=1) LIMIT $2 OFFSET $3
+User found: YES
+--- TEST 2: EMPTY CONTEXT (ONLY requestId) ---
+prisma:query SELECT "public"."users"."id", "public"."users"."username", "public"."users"."email", "public"."users"."passwordHash", "public"."users"."role"::text, "public"."users"."mfaSecret", "public"."users"."mfaEnabled", "public"."users"."mfaRecoveryCodes", "public"."users"."channelId", "public"."users"."lastLoginAt", "public"."users"."deletedAt", "public"."users"."createdAt", "public"."users"."updatedAt", "public"."users"."status"::text FROM "public"."users" WHERE ("public"."users"."email" = $1 AND 1=1) LIMIT $2 OFFSET $3
+User found: YES

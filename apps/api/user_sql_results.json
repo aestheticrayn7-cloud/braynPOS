@@ -1,0 +1,250 @@
+{
+  "recentSalesSnapshots": [
+    {
+      "receiptNo": "RCP-20260320-0003",
+      "channelId": "72e6eb96-ab84-4ae0-9277-fdd6b42bde19",
+      "createdAt": "2026-03-20T12:42:25.055Z",
+      "itemId": "06261e79-a685-45fe-ac16-7b08a7352785",
+      "quantity": 1,
+      "unitPrice": "2500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260320-0002",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-20T09:22:58.183Z",
+      "itemId": "b496be02-aff7-4148-b53a-0be5de051b0a",
+      "quantity": 1,
+      "unitPrice": "2500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260320-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-20T07:50:05.002Z",
+      "itemId": "7c026bc0-422c-4101-a884-11116141668c",
+      "quantity": 1,
+      "unitPrice": "1950",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260319-0001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-19T13:35:07.061Z",
+      "itemId": "4489703b-bc1b-4185-bc92-064dcc530c49",
+      "quantity": 2,
+      "unitPrice": "1550",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260319-0001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-19T13:35:07.061Z",
+      "itemId": "b496be02-aff7-4148-b53a-0be5de051b0a",
+      "quantity": 4,
+      "unitPrice": "2500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260319-0001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-19T13:35:07.061Z",
+      "itemId": "4a09842a-4dac-4a53-8798-4a60fef036c8",
+      "quantity": 2,
+      "unitPrice": "22500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-20260319-0001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-19T13:35:07.061Z",
+      "itemId": "item-laptop-001",
+      "quantity": 1,
+      "unitPrice": "45000",
+      "costPriceSnapshot": "35000",
+      "line_cogs": "35000"
+    },
+    {
+      "receiptNo": "RCP-20260319-0001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "createdAt": "2026-03-19T13:35:07.061Z",
+      "itemId": "item-mouse-002",
+      "quantity": 2,
+      "unitPrice": "1500",
+      "costPriceSnapshot": "800",
+      "line_cogs": "1600"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0004",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:16:44.237Z",
+      "itemId": "4a09842a-4dac-4a53-8798-4a60fef036c8",
+      "quantity": 1,
+      "unitPrice": "22500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-MB1-20260318-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:12:13.372Z",
+      "itemId": "4a09842a-4dac-4a53-8798-4a60fef036c8",
+      "quantity": 5,
+      "unitPrice": "25500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0003",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:11:37.425Z",
+      "itemId": "4a09842a-4dac-4a53-8798-4a60fef036c8",
+      "quantity": 2,
+      "unitPrice": "22500",
+      "costPriceSnapshot": "0",
+      "line_cogs": "0"
+    },
+    {
+      "receiptNo": "RCP-CS1-20260318-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T17:56:25.177Z",
+      "itemId": "item-laptop-001",
+      "quantity": 4,
+      "unitPrice": "45500",
+      "costPriceSnapshot": "35000",
+      "line_cogs": "140000"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0002",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T17:34:25.192Z",
+      "itemId": "item-laptop-001",
+      "quantity": 1,
+      "unitPrice": "45000",
+      "costPriceSnapshot": "35000",
+      "line_cogs": "35000"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T15:18:17.260Z",
+      "itemId": "item-mouse-002",
+      "quantity": 1,
+      "unitPrice": "1500",
+      "costPriceSnapshot": "800",
+      "line_cogs": "800"
+    }
+  ],
+  "inventoryBalances": [
+    {
+      "name": "Generic Business Laptop",
+      "sku": "LP-GEN-001",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 24,
+      "weightedAvgCost": "0",
+      "retailPrice": "45000"
+    },
+    {
+      "name": "Generic Business Laptop",
+      "sku": "LP-GEN-001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 70,
+      "weightedAvgCost": "35000",
+      "retailPrice": "45000"
+    },
+    {
+      "name": "Ipcone Blender",
+      "sku": "ITEM-1774010462782-WTIBZ",
+      "channelId": "72e6eb96-ab84-4ae0-9277-fdd6b42bde19",
+      "availableQty": 49,
+      "weightedAvgCost": "1400",
+      "retailPrice": "2500"
+    },
+    {
+      "name": "Optical Wireless Mouse",
+      "sku": "MS-OPT-002",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 49,
+      "weightedAvgCost": "800",
+      "retailPrice": "1500"
+    },
+    {
+      "name": "Optical Wireless Mouse",
+      "sku": "MS-OPT-002",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 48,
+      "weightedAvgCost": "0",
+      "retailPrice": "1500"
+    },
+    {
+      "name": "Oraimo headphones",
+      "sku": "ITEM-1773927701707-296",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 74,
+      "weightedAvgCost": "1050",
+      "retailPrice": "1950"
+    },
+    {
+      "name": "Oraimo headphones",
+      "sku": "ITEM-1773927701707-296",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 25,
+      "weightedAvgCost": "1050",
+      "retailPrice": "1950"
+    },
+    {
+      "name": "Printer",
+      "sku": "ITEM-1773857347475",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 3,
+      "weightedAvgCost": "4833.3333",
+      "retailPrice": "22500"
+    },
+    {
+      "name": "Printer",
+      "sku": "ITEM-1773857347475",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 8,
+      "weightedAvgCost": "0",
+      "retailPrice": "22500"
+    },
+    {
+      "name": "RBT speaker",
+      "sku": "ITEM-1773860140936",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 20,
+      "weightedAvgCost": "0",
+      "retailPrice": "2500"
+    },
+    {
+      "name": "RBT speaker",
+      "sku": "ITEM-1773860140936",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 75,
+      "weightedAvgCost": "0",
+      "retailPrice": "2500"
+    },
+    {
+      "name": "microwave",
+      "sku": "ITEM-1773854078508",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "availableQty": 55,
+      "weightedAvgCost": "0",
+      "retailPrice": "1550"
+    },
+    {
+      "name": "microwave",
+      "sku": "ITEM-1773854078508",
+      "channelId": "43ae836a-7161-491f-b8ce-1c3c8de1ad0d",
+      "availableQty": 23,
+      "weightedAvgCost": "0",
+      "retailPrice": "1550"
+    }
+  ]
+}

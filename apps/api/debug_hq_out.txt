@@ -1,0 +1,5 @@
+--- HQ DEBUG RESULTS ---
+ITEM: Generic Business Laptop (item-laptop-001)
+CHANNEL: Headquarters (c7983e54-a3b0-49be-b8bc-86b1bb01bd25)
+BALANCE: {"itemId":"item-laptop-001","channelId":"c7983e54-a3b0-49be-b8bc-86b1bb01bd25","availableQty":-10,"incomingQty":0,"lastMovementAt":"2026-03-16T16:18:09.569Z"}
+MOVE_SUM: -10

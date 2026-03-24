@@ -1,0 +1,57 @@
+{
+  "preview": [
+    {
+      "receiptNo": "RCP-20260320-0003",
+      "channelId": "72e6eb96-ab84-4ae0-9277-fdd6b42bde19",
+      "createdAt": "2026-03-20T12:42:25.055Z",
+      "item_name": "Ipcone Blender",
+      "current_snapshot": "0",
+      "correct_cost": "1400",
+      "quantity": 1,
+      "correct_line_cogs": "1400"
+    },
+    {
+      "receiptNo": "RCP-20260320-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-20T07:50:05.002Z",
+      "item_name": "Oraimo headphones",
+      "current_snapshot": "0",
+      "correct_cost": "1050",
+      "quantity": 1,
+      "correct_line_cogs": "1050"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0004",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:16:44.237Z",
+      "item_name": "Printer",
+      "current_snapshot": "0",
+      "correct_cost": "4833.3333",
+      "quantity": 1,
+      "correct_line_cogs": "4833.3333"
+    },
+    {
+      "receiptNo": "RCP-MB1-20260318-0001",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:12:13.372Z",
+      "item_name": "Printer",
+      "current_snapshot": "0",
+      "correct_cost": "4833.3333",
+      "quantity": 5,
+      "correct_line_cogs": "24166.6665"
+    },
+    {
+      "receiptNo": "RCP-HQ-20260318-0003",
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "createdAt": "2026-03-18T18:11:37.425Z",
+      "item_name": "Printer",
+      "current_snapshot": "0",
+      "correct_cost": "4833.3333",
+      "quantity": 2,
+      "correct_line_cogs": "9666.6666"
+    }
+  ],
+  "updateSaleItemsCount": 5,
+  "updateMovementsCount": 5,
+  "remainingZeroCostCount": 0
+}

@@ -1,0 +1,115 @@
+[
+  {
+    "id": "item-laptop-001",
+    "sku": "LP-GEN-001",
+    "barcode": null,
+    "name": "Generic Business Laptop",
+    "description": null,
+    "categoryId": "cat-electronics",
+    "brandId": null,
+    "supplierId": null,
+    "unitOfMeasure": "PCS",
+    "retailPrice": "45000",
+    "wholesalePrice": "42000",
+    "minRetailPrice": "40000",
+    "weightedAvgCost": "35000",
+    "reorderLevel": 10,
+    "isSerialized": false,
+    "taxClass": "STANDARD",
+    "imageUrl": null,
+    "isActive": true,
+    "deletedAt": null,
+    "createdAt": "2026-03-15T19:49:18.323Z",
+    "updatedAt": "2026-03-15T19:49:18.323Z",
+    "category": {
+      "id": "cat-electronics",
+      "name": "Electronics",
+      "parentId": null,
+      "deletedAt": null,
+      "createdAt": "2026-03-15T19:49:18.314Z",
+      "updatedAt": "2026-03-15T19:49:18.314Z"
+    },
+    "inventory_balances": [
+      {
+        "itemId": "item-laptop-001",
+        "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+        "availableQty": 10,
+        "incomingQty": 0,
+        "lastMovementAt": "2026-03-16T14:12:49.448Z"
+      }
+    ]
+  },
+  {
+    "id": "item-mouse-002",
+    "sku": "MS-OPT-002",
+    "barcode": null,
+    "name": "Optical Wireless Mouse",
+    "description": null,
+    "categoryId": "cat-electronics",
+    "brandId": null,
+    "supplierId": null,
+    "unitOfMeasure": "PCS",
+    "retailPrice": "1500",
+    "wholesalePrice": "1200",
+    "minRetailPrice": "1100",
+    "weightedAvgCost": "800",
+    "reorderLevel": 10,
+    "isSerialized": false,
+    "taxClass": "STANDARD",
+    "imageUrl": null,
+    "isActive": true,
+    "deletedAt": null,
+    "createdAt": "2026-03-15T19:49:18.335Z",
+    "updatedAt": "2026-03-15T19:49:18.335Z",
+    "category": {
+      "id": "cat-electronics",
+      "name": "Electronics",
+      "parentId": null,
+      "deletedAt": null,
+      "createdAt": "2026-03-15T19:49:18.314Z",
+      "updatedAt": "2026-03-15T19:49:18.314Z"
+    },
+    "inventory_balances": [
+      {
+        "itemId": "item-mouse-002",
+        "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+        "availableQty": 10,
+        "incomingQty": 0,
+        "lastMovementAt": "2026-03-16T16:40:45.648Z"
+      }
+    ]
+  },
+  {
+    "id": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "sku": "ITEM-1773649926870",
+    "barcode": null,
+    "name": "rbg led snakelights",
+    "description": null,
+    "categoryId": null,
+    "brandId": null,
+    "supplierId": "54549a23-55c2-478c-b110-a5b806fac205",
+    "unitOfMeasure": "PCS",
+    "retailPrice": "1800",
+    "wholesalePrice": "1250",
+    "minRetailPrice": "1800",
+    "weightedAvgCost": "0",
+    "reorderLevel": 50,
+    "isSerialized": false,
+    "taxClass": "STANDARD",
+    "imageUrl": null,
+    "isActive": true,
+    "deletedAt": null,
+    "createdAt": "2026-03-16T08:32:06.871Z",
+    "updatedAt": "2026-03-16T08:32:06.871Z",
+    "category": null,
+    "inventory_balances": [
+      {
+        "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+        "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+        "availableQty": 10,
+        "incomingQty": 0,
+        "lastMovementAt": "2026-03-16T16:21:59.336Z"
+      }
+    ]
+  }
+]

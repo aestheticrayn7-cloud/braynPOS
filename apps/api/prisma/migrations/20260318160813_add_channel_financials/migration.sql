@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "inventory_balances" ADD COLUMN     "minRetailPrice" DECIMAL(12,4) NOT NULL DEFAULT 0,
+ADD COLUMN     "minWholesalePrice" DECIMAL(12,4) NOT NULL DEFAULT 0,
+ADD COLUMN     "retailPrice" DECIMAL(12,4) NOT NULL DEFAULT 0,
+ADD COLUMN     "weightedAvgCost" DECIMAL(12,4) NOT NULL DEFAULT 0,
+ADD COLUMN     "wholesalePrice" DECIMAL(12,4) NOT NULL DEFAULT 0;

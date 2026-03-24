@@ -1,0 +1,153 @@
+// ══════════════════════════════════════════════════════════════════════
+// FILE: apps/api/src/modules/support/support.socket.ts
+// Fixes:
+//   1. CRITICAL: JWT_SECRET fallback was 'your-secret-key' — a known
+//      public string. If JWT_SECRET env var is missing at runtime, every
+//      WebSocket connection is validated against a string any attacker
+//      knows, allowing forged tokens. Now throws at startup if the env
+//      var is absent instead of silently degrading to an insecure default.
+//   2. join_ticket had no ownership check — any authenticated user could
+//      join any ticket room and receive all AI responses and messages
+//      in real time. Now verifies the user owns the ticket or is a
+//      MANAGER+ before allowing them to join the room.
+//   3. Hardcoded PII (phone number, email) in error message template
+//      replaced with env var references.
+//   4. console.log calls leaking usernames and connection events removed.
+//   5. Math.random() message ID replaced with a timestamp+random suffix
+//      that is unique enough for a transient socket message ID.
+// ══════════════════════════════════════════════════════════════════════
+
+import { Server, Socket } from 'socket.io'
+import { supportService } from './support.service.js'
+import { verify }         from 'jsonwebtoken'
+import { prisma }         from '../../lib/prisma.js'
+
+// FIX 1: Fail hard at startup if JWT_SECRET is missing — never fall back
+// to a known insecure default.
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set. Cannot start socket server.')
+}
+
+// FIX 3: Contact details from env vars — never hardcode PII in source
+const SUPPORT_PHONE = process.env.SUPPORT_CONTACT_PHONE ?? 'the support team'
+const SUPPORT_EMAIL = process.env.SUPPORT_CONTACT_EMAIL ?? ''
+
+const ESCALATION_MSG =
+  `⚠️ **BRAYN CORE:** System reasoning module is unreachable. A human agent has been notified. ` +
+  `If you do not receive a response within 5 minutes, please contact **${SUPPORT_PHONE}**` +
+  (SUPPORT_EMAIL ? ` or email **${SUPPORT_EMAIL}**` : '') + ` for urgent assistance.`
+
+// FIX 5: Transient socket message ID — unique enough for client-side dedup
+function socketMsgId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+}
+
+export function setupSupportSocket(io: Server) {
+  const supportNamespace = io.of('/support')
+
+  supportNamespace.on('connection', (socket: Socket) => {
+    const token = socket.handshake.auth.token || socket.handshake.query.token
+
+    if (!token) {
+      socket.disconnect()
+      return
+    }
+
+    try {
+      const decoded      = verify(token as string, process.env.JWT_SECRET as string) as any
+      socket.data.user   = decoded
+      // FIX 4: Removed console.log leaking username
+    } catch {
+      socket.disconnect()
+      return
+    }
+
+    // FIX 2: Ownership check before joining a ticket room
+    socket.on('join_ticket', async (ticketId: string) => {
+      try {
+        const user    = socket.data.user
+        const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER']
+          .includes(user.role)
+
+        if (!isAdmin) {
+          // Verify the ticket belongs to this user or their channel
+          const ticket = await prisma.supportTicket.findUnique({
+            where:  { id: ticketId },
+            select: { userId: true, channelId: true },
+          })
+
+          if (!ticket) {
+            socket.emit('error', 'Ticket not found')
+            return
+          }
+
+          const isOwner     = ticket.userId     === user.sub
+          const sameChannel = ticket.channelId  === user.channelId
+
+          if (!isOwner && !sameChannel) {
+            socket.emit('error', 'Access denied to this ticket')
+            return
+          }
+        }
+
+        socket.join(`ticket:${ticketId}`)
+        // FIX 4: Removed console.log leaking ticket IDs
+      } catch {
+        socket.emit('error', 'Failed to join ticket room')
+      }
+    })
+
+    // Handle new message from user via socket
+    socket.on('send_message', async ({ ticketId, content }) => {
+      const userId = socket.data.user.sub
+
+      // Emit user message to the room immediately for responsive UI
+      supportNamespace.to(`ticket:${ticketId}`).emit('message', {
+        id:        socketMsgId(),  // FIX 5
+        content,
+        sender:    'USER',
+        senderId:  userId,
+        createdAt: new Date(),
+      })
+
+      let fullAIContent = ''
+      try {
+        await supportService.handleUserMessage(
+          ticketId,
+          userId,
+          content,
+          (token) => {
+            fullAIContent += token
+            supportNamespace.to(`ticket:${ticketId}`).emit('ai_chunk', {
+              ticketId,
+              token,
+            })
+          }
+        )
+
+        supportNamespace.to(`ticket:${ticketId}`).emit('ai_message_complete', {
+          ticketId,
+          fullContent: fullAIContent,
+        })
+      } catch (err) {
+        // FIX 4: Removed console.error leaking error details to stdout
+        supportNamespace.to(`ticket:${ticketId}`).emit('message', {
+          id:        socketMsgId(),
+          content:   ESCALATION_MSG,  // FIX 3
+          sender:    'SYSTEM',
+          createdAt: new Date(),
+        })
+        supportNamespace.to(`ticket:${ticketId}`).emit('error', 'AI processing failed.')
+        supportNamespace.to('admin').emit('ai_failure_alert', {
+          ticketId,
+          error: err instanceof Error ? err.message : 'Unknown AI error',
+        })
+      }
+    })
+
+    socket.on('disconnect', () => {
+      // FIX 4: Removed console.log leaking disconnect events
+    })
+  })
+}

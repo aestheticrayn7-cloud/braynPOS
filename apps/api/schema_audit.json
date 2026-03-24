@@ -1,0 +1,94 @@
+{
+  "transfers": [
+    {
+      "id": "02779721-7d13-48bd-8b13-b510f4d86b27",
+      "transferNo": "TRF-1773857459259",
+      "fromChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "toChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "status": "RECEIVED",
+      "sentBy": "28101511-e21b-4f11-9639-bff1ab029d4f",
+      "receivedBy": "d2d4317f-5eac-4cc8-b0dd-75beba046100",
+      "sentAt": "2026-03-18T18:10:59.262Z",
+      "receivedAt": "2026-03-18T18:11:25.302Z",
+      "notes": "",
+      "createdAt": "2026-03-18T18:10:59.264Z",
+      "updatedAt": "2026-03-18T18:11:25.304Z"
+    },
+    {
+      "id": "1ca9269b-37de-4f19-bd13-22df92f93fd7",
+      "transferNo": "TRF-1773857693663",
+      "fromChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "toChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "status": "RECEIVED",
+      "sentBy": "d2d4317f-5eac-4cc8-b0dd-75beba046100",
+      "receivedBy": "0b44d030-b9cf-4cbd-b8cd-b95482bb2b71",
+      "sentAt": "2026-03-18T18:14:53.665Z",
+      "receivedAt": "2026-03-18T18:15:05.717Z",
+      "notes": "",
+      "createdAt": "2026-03-18T18:14:53.666Z",
+      "updatedAt": "2026-03-18T18:15:05.719Z"
+    },
+    {
+      "id": "3888381b-8157-4dd4-a42e-9e43d652095a",
+      "transferNo": "TRF-1773855485627",
+      "fromChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "toChannelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "status": "RECEIVED",
+      "sentBy": "d2d4317f-5eac-4cc8-b0dd-75beba046100",
+      "receivedBy": "0b44d030-b9cf-4cbd-b8cd-b95482bb2b71",
+      "sentAt": "2026-03-18T17:38:05.630Z",
+      "receivedAt": "2026-03-18T17:38:19.343Z",
+      "notes": "",
+      "createdAt": "2026-03-18T17:38:05.631Z",
+      "updatedAt": "2026-03-18T17:38:19.344Z"
+    }
+  ],
+  "serials": [],
+  "users": [
+    {
+      "id": "0b1ebfda-0ee1-4329-a814-e5bf6afdad2e",
+      "username": "Reo",
+      "email": "storekeeper@brayn.app",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$EqOkw9mBrrIXoCqXLpBR2w$nwxM9CMcIoAzfO84ogFHMzQa7Op8So8jl8dBf/xJOtc",
+      "role": "STOREKEEPER",
+      "mfaSecret": null,
+      "mfaEnabled": false,
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "lastLoginAt": "2026-03-18T18:23:06.505Z",
+      "deletedAt": null,
+      "createdAt": "2026-03-18T15:45:52.211Z",
+      "updatedAt": "2026-03-19T07:40:36.692Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "0b44d030-b9cf-4cbd-b8cd-b95482bb2b71",
+      "username": "Mark1",
+      "email": "manager@brayn.app",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$lJpbUhsC2ZJjzT9bdyqZPw$B2wj2KBhmhzykuaddBJHRDCkbCfHeLbjnZF8SLqbNxI",
+      "role": "MANAGER",
+      "mfaSecret": null,
+      "mfaEnabled": false,
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "lastLoginAt": "2026-03-19T05:33:31.838Z",
+      "deletedAt": null,
+      "createdAt": "2026-03-18T14:12:25.871Z",
+      "updatedAt": "2026-03-19T07:40:36.692Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "28101511-e21b-4f11-9639-bff1ab029d4f",
+      "username": "Evans1",
+      "email": "managers@brayn.app",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$xl6JfVEI1wsp/UZxXLF5nQ$V7Re5QJ1CFn08V4CRRsoHGFvZODBKs4aJL7rIFZJbGI",
+      "role": "MANAGER",
+      "mfaSecret": null,
+      "mfaEnabled": false,
+      "channelId": "605831cd-dc31-47c1-8f39-dcd8dd493de2",
+      "lastLoginAt": "2026-03-19T05:33:49.806Z",
+      "deletedAt": null,
+      "createdAt": "2026-03-18T15:48:27.792Z",
+      "updatedAt": "2026-03-19T07:40:36.692Z",
+      "status": "ACTIVE"
+    }
+  ]
+}

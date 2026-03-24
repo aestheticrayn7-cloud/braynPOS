@@ -1,0 +1,4 @@
+﻿Checking sale RCP-20260317-0001...
+Item: rbg led snakelights (ITEM-1773649926870). Qty Sold: 5
+Current Balance in MB1: 30
+Movements for this sale: [{"id":"7c37dbcb-f917-49fd-b9ef-a6d12697fb62","itemId":"6f9539fe-20e0-403f-acd5-c1b804709487","channelId":"e803051e-c9ca-46a4-9014-83075d6a3e13","movementType":"SALE","quantityChange":-5,"referenceId":"d2ced37e-8278-4e9f-ae3c-36a12a559f81","referenceType":"sale","unitCostAtTime":"0","performedBy":"b515437f-afe1-4e46-8e57-83b46ec84d96","notes":null,"createdAt":"2026-03-17T17:03:14.098Z"}]

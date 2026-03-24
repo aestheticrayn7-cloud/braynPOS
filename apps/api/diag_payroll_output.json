@@ -1,0 +1,60 @@
+{
+  "rules": [
+    {
+      "id": "cf2b553e-c979-47c1-8721-7b1bc8824062",
+      "name": "NSSF (Employee)",
+      "type": "PERCENTAGE_OF_GROSS",
+      "rate": "6",
+      "isActive": true,
+      "appliesToJobLevelId": null,
+      "channelId": null,
+      "calculationSequence": 10,
+      "isPreTaxDeduction": true
+    },
+    {
+      "id": "ad46cac6-0eae-4f19-9160-40b7484d55d6",
+      "name": "NHIF",
+      "type": "BRACKET_TABLE",
+      "rate": null,
+      "isActive": true,
+      "appliesToJobLevelId": null,
+      "channelId": null,
+      "calculationSequence": 20,
+      "isPreTaxDeduction": false
+    },
+    {
+      "id": "ce2e948b-b1e5-420e-b303-dabe5de5c468",
+      "name": "PAYE",
+      "type": "BRACKET_TABLE",
+      "rate": null,
+      "isActive": true,
+      "appliesToJobLevelId": null,
+      "channelId": null,
+      "calculationSequence": 30,
+      "isPreTaxDeduction": false
+    }
+  ],
+  "staff": [
+    {
+      "id": "d424b1f5-5f74-4819-aab4-a05549f320f9",
+      "username": "Mark",
+      "grossSalary": "9500",
+      "jobTitle": "Staff",
+      "jobLevelId": "lvl-staff"
+    },
+    {
+      "id": "ae752026-5897-4995-bbcb-739ab37d6a05",
+      "username": "Hildah",
+      "grossSalary": "7500",
+      "jobTitle": "Staff",
+      "jobLevelId": "lvl-staff"
+    },
+    {
+      "id": "f8f2b9b5-70ec-4d81-94e6-0ea6692a26ff",
+      "username": "chris",
+      "grossSalary": "9500",
+      "jobTitle": "Staff",
+      "jobLevelId": "lvl-staff"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+--- FACTORY REPAIR LOG ---
+[Chuka Store] rbg led snakelights: Avail=10, Inc=0
+[Mobile Shop] rbg led snakelights: Avail=25, Inc=0
+[Chuka Store] Optical Wireless Mouse: Avail=10, Inc=0
+[Chuka Store] Generic Business Laptop: Avail=10, Inc=0
+[Headquarters] rbg led snakelights: Avail=-35, Inc=0
+[Headquarters] Generic Business Laptop: Avail=-10, Inc=0
+[Headquarters] Optical Wireless Mouse: Avail=-23, Inc=0
+[Mobile Shop] Optical Wireless Mouse: Avail=15, Inc=0

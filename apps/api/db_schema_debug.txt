@@ -1,0 +1,89 @@
+
+--- Schema for table: inventory_balances ---
+Column: availableQty              | Type: integer                   | UDT: int4
+Column: channelId                 | Type: text                      | UDT: text
+Column: incomingQty               | Type: integer                   | UDT: int4
+Column: itemId                    | Type: text                      | UDT: text
+Column: lastMovementAt            | Type: timestamp without time zone | UDT: timestamp
+Column: minRetailPrice            | Type: numeric                   | UDT: numeric
+Column: minWholesalePrice         | Type: numeric                   | UDT: numeric
+Column: retailPrice               | Type: numeric                   | UDT: numeric
+Column: weightedAvgCost           | Type: numeric                   | UDT: numeric
+Column: wholesalePrice            | Type: numeric                   | UDT: numeric
+
+--- Schema for table: sales ---
+Column: channelId                 | Type: text                      | UDT: text
+Column: createdAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: customerId                | Type: text                      | UDT: text
+Column: deletedAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: discountAmount            | Type: numeric                   | UDT: numeric
+Column: dueDate                   | Type: timestamp with time zone  | UDT: timestamptz
+Column: id                        | Type: text                      | UDT: text
+Column: netAmount                 | Type: numeric                   | UDT: numeric
+Column: notes                     | Type: text                      | UDT: text
+Column: offlineReceiptNo          | Type: text                      | UDT: text
+Column: performedBy               | Type: text                      | UDT: text
+Column: receiptNo                 | Type: text                      | UDT: text
+Column: saleType                  | Type: USER-DEFINED              | UDT: SaleType
+Column: sessionId                 | Type: text                      | UDT: text
+Column: taxAmount                 | Type: numeric                   | UDT: numeric
+Column: taxSyncStatus             | Type: USER-DEFINED              | UDT: TaxSyncStatus
+Column: totalAmount               | Type: numeric                   | UDT: numeric
+Column: updatedAt                 | Type: timestamp without time zone | UDT: timestamp
+
+--- Schema for table: sale_items ---
+Column: costPriceSnapshot         | Type: numeric                   | UDT: numeric
+Column: createdAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: discountAmount            | Type: numeric                   | UDT: numeric
+Column: id                        | Type: text                      | UDT: text
+Column: itemId                    | Type: text                      | UDT: text
+Column: lineTotal                 | Type: numeric                   | UDT: numeric
+Column: markup                    | Type: numeric                   | UDT: numeric
+Column: minRetailPriceSnapshot    | Type: numeric                   | UDT: numeric
+Column: quantity                  | Type: integer                   | UDT: int4
+Column: saleId                    | Type: text                      | UDT: text
+Column: serialId                  | Type: text                      | UDT: text
+Column: unitPrice                 | Type: numeric                   | UDT: numeric
+
+--- Schema for table: receipt_sequences ---
+Column: last_seq                  | Type: integer                   | UDT: int4
+Column: seq_key                   | Type: text                      | UDT: text
+Column: updated_at                | Type: timestamp with time zone  | UDT: timestamptz
+
+--- Schema for table: channels ---
+Column: address                   | Type: text                      | UDT: text
+Column: code                      | Type: text                      | UDT: text
+Column: createdAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: deletedAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: email                     | Type: text                      | UDT: text
+Column: featureFlags              | Type: jsonb                     | UDT: jsonb
+Column: id                        | Type: text                      | UDT: text
+Column: isMainWarehouse           | Type: boolean                   | UDT: bool
+Column: name                      | Type: text                      | UDT: text
+Column: phone                     | Type: text                      | UDT: text
+Column: type                      | Type: USER-DEFINED              | UDT: ChannelType
+Column: updatedAt                 | Type: timestamp without time zone | UDT: timestamp
+
+--- Schema for table: items ---
+Column: barcode                   | Type: text                      | UDT: text
+Column: brandId                   | Type: text                      | UDT: text
+Column: categoryId                | Type: text                      | UDT: text
+Column: createdAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: deletedAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: description               | Type: text                      | UDT: text
+Column: id                        | Type: text                      | UDT: text
+Column: imageUrl                  | Type: text                      | UDT: text
+Column: isActive                  | Type: boolean                   | UDT: bool
+Column: isSerialized              | Type: boolean                   | UDT: bool
+Column: minRetailPrice            | Type: numeric                   | UDT: numeric
+Column: minWholesalePrice         | Type: numeric                   | UDT: numeric
+Column: name                      | Type: text                      | UDT: text
+Column: reorderLevel              | Type: integer                   | UDT: int4
+Column: retailPrice               | Type: numeric                   | UDT: numeric
+Column: sku                       | Type: text                      | UDT: text
+Column: supplierId                | Type: text                      | UDT: text
+Column: taxClass                  | Type: USER-DEFINED              | UDT: TaxClass
+Column: unitOfMeasure             | Type: text                      | UDT: text
+Column: updatedAt                 | Type: timestamp without time zone | UDT: timestamp
+Column: weightedAvgCost           | Type: numeric                   | UDT: numeric
+Column: wholesalePrice            | Type: numeric                   | UDT: numeric

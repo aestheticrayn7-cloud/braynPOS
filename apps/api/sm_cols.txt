@@ -1,0 +1,35 @@
+[
+  {
+    "column_name": "unitCostAtTime"
+  },
+  {
+    "column_name": "movementType"
+  },
+  {
+    "column_name": "quantityChange"
+  },
+  {
+    "column_name": "createdAt"
+  },
+  {
+    "column_name": "referenceType"
+  },
+  {
+    "column_name": "performedBy"
+  },
+  {
+    "column_name": "notes"
+  },
+  {
+    "column_name": "referenceId"
+  },
+  {
+    "column_name": "itemId"
+  },
+  {
+    "column_name": "channelId"
+  },
+  {
+    "column_name": "id"
+  }
+]

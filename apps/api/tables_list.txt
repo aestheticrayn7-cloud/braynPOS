@@ -1,0 +1,158 @@
+[
+  {
+    "table_name": "stock_takes"
+  },
+  {
+    "table_name": "stock_take_items"
+  },
+  {
+    "table_name": "commission_rules"
+  },
+  {
+    "table_name": "_prisma_migrations"
+  },
+  {
+    "table_name": "commission_entries"
+  },
+  {
+    "table_name": "commission_payouts"
+  },
+  {
+    "table_name": "refresh_tokens"
+  },
+  {
+    "table_name": "receipt_sequences"
+  },
+  {
+    "table_name": "allowance_rules"
+  },
+  {
+    "table_name": "tax_connector_configs"
+  },
+  {
+    "table_name": "document_templates"
+  },
+  {
+    "table_name": "idempotency_records"
+  },
+  {
+    "table_name": "brands"
+  },
+  {
+    "table_name": "categories"
+  },
+  {
+    "table_name": "channels"
+  },
+  {
+    "table_name": "customers"
+  },
+  {
+    "table_name": "deduction_rules"
+  },
+  {
+    "table_name": "items"
+  },
+  {
+    "table_name": "suppliers"
+  },
+  {
+    "table_name": "accounts"
+  },
+  {
+    "table_name": "journal_entries"
+  },
+  {
+    "table_name": "customer_payments"
+  },
+  {
+    "table_name": "ledger_lines"
+  },
+  {
+    "table_name": "loyalty_transactions"
+  },
+  {
+    "table_name": "stock_movements"
+  },
+  {
+    "table_name": "serials"
+  },
+  {
+    "table_name": "sales_sessions"
+  },
+  {
+    "table_name": "sale_items"
+  },
+  {
+    "table_name": "payments"
+  },
+  {
+    "table_name": "lpo_lines"
+  },
+  {
+    "table_name": "purchase_lines"
+  },
+  {
+    "table_name": "landed_costs"
+  },
+  {
+    "table_name": "transfers"
+  },
+  {
+    "table_name": "transfer_lines"
+  },
+  {
+    "table_name": "bank_deposits"
+  },
+  {
+    "table_name": "staff_profiles"
+  },
+  {
+    "table_name": "deduction_brackets"
+  },
+  {
+    "table_name": "salary_run_lines"
+  },
+  {
+    "table_name": "notifications"
+  },
+  {
+    "table_name": "purchase_orders"
+  },
+  {
+    "table_name": "users"
+  },
+  {
+    "table_name": "expenses"
+  },
+  {
+    "table_name": "salary_runs"
+  },
+  {
+    "table_name": "sales"
+  },
+  {
+    "table_name": "purchases"
+  },
+  {
+    "table_name": "settings"
+  },
+  {
+    "table_name": "inventory_balances"
+  },
+  {
+    "table_name": "audit_logs"
+  },
+  {
+    "table_name": "knowledge_chunks"
+  },
+  {
+    "table_name": "support_tickets"
+  },
+  {
+    "table_name": "support_messages"
+  },
+  {
+    "table_name": "manager_approvals"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "itemId": "item-laptop-001",
+    "itemName": "Generic Business Laptop",
+    "availableQty": 1,
+    "reorderLevel": 10
+  },
+  {
+    "itemId": "item-mouse-002",
+    "itemName": "Optical Wireless Mouse",
+    "availableQty": 10,
+    "reorderLevel": 10
+  }
+]

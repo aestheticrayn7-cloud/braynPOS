@@ -1,0 +1,1240 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id                  String               @id @default(uuid())
+  name                String
+  code                String               @unique
+  type                ChannelType
+  isMainWarehouse     Boolean              @default(false)
+  featureFlags        Json                 @default("{}")
+  address             String?
+  phone               String?
+  email               String?
+  deletedAt           DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  accounts            Account[]
+  bankDeposits        BankDeposit[]
+  expenses            Expense[]
+  inventoryBalances   InventoryBalance[]
+  journalEntries      JournalEntry[]
+  notifications       Notification[]
+  purchaseOrders      PurchaseOrder[]
+  purchases           Purchase[]
+  sales               Sale[]
+  sessions            SalesSession[]
+  serials             Serial[]
+  stockMovements      StockMovement[]
+  transfersFrom       Transfer[]           @relation("FromChannel")
+  transfersTo         Transfer[]           @relation("ToChannel")
+  users               User[]
+  stockTakes          StockTake[]
+  brands              Brand[]
+  categories          Category[]
+  suppliers           Supplier[]
+  customers           Customer[]
+  deductionRules      DeductionRule[]
+  allowanceRules      AllowanceRule[]
+  taxConfigs          TaxConnectorConfig[]
+  documentTemplates   DocumentTemplate[]
+  commissionRules     CommissionRule[]
+  commissionEntries   CommissionEntry[]
+  commissionPayouts   CommissionPayout[]
+  salaryRuns          SalaryRun[]
+  settings            Setting[]
+  customerPayments    CustomerPayment[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@map("channels")
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  username           String             @unique
+  email              String             @unique
+  passwordHash       String
+  role               UserRole
+  mfaSecret          String?
+  mfaEnabled         Boolean            @default(false)
+  mfaRecoveryCodes   String?
+  channelId          String?
+  lastLoginAt        DateTime?
+  deletedAt          DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  status             UserStatus         @default(ACTIVE)
+  approvedApprovals  ManagerApproval[]  @relation("ApprovedBy")
+  requestedApprovals ManagerApproval[]  @relation("RequestedApprovals")
+  sessions           SalesSession[]
+  staffProfile       StaffProfile?
+  supportTickets     SupportTicket[]
+  channel            Channel?           @relation(fields: [channelId], references: [id])
+  startedTakes       StockTake[]        @relation("StartedTakes")
+  completedTakes     StockTake[]        @relation("CompletedTakes")
+  commissionRules    CommissionRule[]
+  commissionEntries  CommissionEntry[]
+  commissionPayouts  CommissionPayout[]
+  refreshTokens      RefreshToken[]
+  assignedTickets    SupportTicket[]    @relation("AssignedTickets")
+  sentTransfers      Transfer[]         @relation("SentTransfers")
+  receivedTransfers  Transfer[]         @relation("ReceivedTransfers")
+
+  @@index([channelId])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  issuedAt  DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Account {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  name        String
+  type        AccountType
+  parentId    String?
+  isSystem    Boolean      @default(false)
+  channelId   String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  channel     Channel?     @relation(fields: [channelId], references: [id])
+  parent      Account?     @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children    Account[]    @relation("AccountHierarchy")
+  ledgerLines LedgerLine[]
+
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id            String         @id @default(uuid())
+  description   String
+  referenceId   String
+  referenceType JournalRefType
+  channelId     String
+  postedAt      DateTime       @default(now())
+  postedBy      String
+  reversedAt    DateTime?
+  channel       Channel        @relation(fields: [channelId], references: [id])
+
+  lines LedgerLine[]
+
+  @@index([referenceId])
+  @@index([channelId, postedAt])
+  @@map("journal_entries")
+}
+
+model LedgerLine {
+  id             String       @id @default(uuid())
+  journalEntryId String
+  accountId      String
+  debitAmount    Decimal      @default(0) @db.Decimal(14, 4)
+  creditAmount   Decimal      @default(0) @db.Decimal(14, 4)
+  memo           String?
+  createdAt      DateTime     @default(now())
+  account        Account      @relation(fields: [accountId], references: [id])
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@map("ledger_lines")
+}
+
+model Brand {
+  id        String    @id @default(uuid())
+  name      String
+  channelId String?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  items     Item[]
+  channel   Channel?  @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, name])
+  @@index([channelId])
+  @@map("brands")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+  parentId  String?
+  channelId String?
+  deletedAt DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  items     Item[]
+  channel   Channel?   @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, name])
+  @@index([channelId])
+  @@map("categories")
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  name           String
+  contactName    String?
+  phone          String?
+  email          String?
+  address        String?
+  taxPin         String?
+  paymentTerms   String?
+  channelId      String?
+  deletedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  items          Item[]
+  purchaseOrders PurchaseOrder[]
+  purchases      Purchase[]
+  channel        Channel?        @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, name])
+  @@index([channelId])
+  @@map("suppliers")
+}
+
+model Item {
+  id                String             @id @default(uuid())
+  sku               String             @unique
+  barcode           String?
+  name              String
+  description       String?
+  categoryId        String?
+  brandId           String?
+  supplierId        String?
+  unitOfMeasure     String             @default("PCS")
+  retailPrice       Decimal            @db.Decimal(12, 4)
+  wholesalePrice    Decimal            @db.Decimal(12, 4)
+  minRetailPrice    Decimal            @db.Decimal(12, 4)
+  minWholesalePrice Decimal            @default(0) @db.Decimal(12, 4)
+  weightedAvgCost   Decimal            @default(0) @db.Decimal(12, 4)
+  reorderLevel      Int                @default(5)
+  isSerialized      Boolean            @default(false)
+  taxClass          TaxClass           @default(STANDARD)
+  imageUrl          String?
+  isActive          Boolean            @default(true)
+  deletedAt         DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  inventoryBalances InventoryBalance[]
+  brand             Brand?             @relation(fields: [brandId], references: [id])
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  supplier          Supplier?          @relation(fields: [supplierId], references: [id])
+  lpoLines          LpoLine[]
+  purchaseLines     PurchaseLine[]
+  saleItems         SaleItem[]
+  serials           Serial[]
+  stockMovements    StockMovement[]
+  transferLines     TransferLine[]
+  stockTakeItems    StockTakeItem[]
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([supplierId])
+  @@index([isActive])
+  @@map("items")
+}
+
+model StockMovement {
+  id             String       @id @default(uuid())
+  itemId         String
+  channelId      String
+  movementType   MovementType
+  quantityChange Int
+  referenceId    String
+  referenceType  String
+  unitCostAtTime Decimal      @default(0) @db.Decimal(12, 4)
+  performedBy    String
+  notes          String?
+  createdAt      DateTime     @default(now())
+  channel        Channel      @relation(fields: [channelId], references: [id])
+  item           Item         @relation(fields: [itemId], references: [id])
+
+  @@index([itemId, channelId])
+  @@index([createdAt])
+  @@index([referenceId, referenceType])
+  @@index([channelId, createdAt])
+  @@index([movementType])
+  @@map("stock_movements")
+}
+
+model Serial {
+  id        String       @id @default(uuid())
+  serialNo  String
+  itemId    String
+  channelId String
+  status    SerialStatus @default(IN_STOCK)
+  saleId    String?
+  deletedAt DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  channel   Channel      @relation(fields: [channelId], references: [id])
+  item      Item         @relation(fields: [itemId], references: [id])
+  sale      Sale?        @relation(fields: [saleId], references: [id])
+
+  @@unique([serialNo, itemId, channelId])
+  @@index([itemId])
+  @@index([channelId])
+  @@map("serials")
+}
+
+model Sale {
+  id               String           @id @default(uuid())
+  receiptNo        String           @unique
+  channelId        String
+  sessionId        String?
+  customerId       String?
+  saleType         SaleType         @default(RETAIL)
+  totalAmount      Decimal          @db.Decimal(14, 4)
+  discountAmount   Decimal          @default(0) @db.Decimal(14, 4)
+  taxAmount        Decimal          @default(0) @db.Decimal(14, 4)
+  netAmount        Decimal          @db.Decimal(14, 4)
+  taxSyncStatus    TaxSyncStatus    @default(NOT_APPLICABLE)
+  offlineReceiptNo String?
+  notes            String?
+  performedBy      String
+  deletedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  dueDate          DateTime?        @db.Timestamptz(6)
+  payments         Payment[]
+  items            SaleItem[]
+  channel          Channel          @relation(fields: [channelId], references: [id])
+  customer         Customer?        @relation(fields: [customerId], references: [id])
+  session          SalesSession?    @relation(fields: [sessionId], references: [id])
+  serials          Serial[]
+  commissionEntry  CommissionEntry?
+
+  @@index([channelId, createdAt])
+  @@index([customerId])
+  @@index([sessionId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id                     String   @id @default(uuid())
+  saleId                 String
+  itemId                 String
+  serialId               String?
+  quantity               Int
+  unitPrice              Decimal  @db.Decimal(12, 4)
+  minRetailPriceSnapshot Decimal  @db.Decimal(12, 4)
+  costPriceSnapshot      Decimal  @db.Decimal(12, 4)
+  markup                 Decimal  @db.Decimal(12, 4)
+  lineTotal              Decimal  @db.Decimal(14, 4)
+  discountAmount         Decimal  @default(0) @db.Decimal(14, 4)
+  createdAt              DateTime @default(now())
+  item                   Item     @relation(fields: [itemId], references: [id])
+  sale                   Sale     @relation(fields: [saleId], references: [id])
+
+  @@index([saleId])
+  @@index([itemId])
+  @@index([createdAt])
+  @@index([itemId, createdAt])
+  @@map("sale_items")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  saleId         String
+  method         PaymentMethod
+  amount         Decimal       @db.Decimal(14, 4)
+  reference      String?
+  status         PaymentStatus @default(CONFIRMED)
+  idempotencyKey String?       @unique
+  createdAt      DateTime      @default(now())
+  sale           Sale          @relation(fields: [saleId], references: [id])
+
+  @@index([saleId])
+  @@map("payments")
+}
+
+model Customer {
+  id                   String               @id @default(uuid())
+  name                 String
+  phone                String?
+  email                String?
+  tier                 CustomerTier         @default(BRONZE)
+  loyaltyPoints        Int                  @default(0)
+  creditLimit          Decimal              @default(0) @db.Decimal(14, 4)
+  outstandingCredit    Decimal              @default(0) @db.Decimal(14, 4)
+  channelId            String?
+  deletedAt            DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  successfulRepayments Int                  @default(0)
+  customerPayments     CustomerPayment[]
+  loyaltyTransactions  LoyaltyTransaction[]
+  sales                Sale[]
+  channel              Channel?             @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, phone])
+  @@index([channelId])
+  @@map("customers")
+}
+
+model LoyaltyTransaction {
+  id          String        @id @default(uuid())
+  customerId  String
+  type        LoyaltyTxType
+  points      Int
+  referenceId String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  channelId   String
+  channel     Channel       @relation(fields: [channelId], references: [id])
+
+  @@index([customerId])
+  @@map("loyalty_transactions")
+}
+
+model CustomerPayment {
+  id         String        @id @default(uuid())
+  customerId String
+  saleId     String?
+  method     PaymentMethod
+  amount     Decimal       @db.Decimal(14, 4)
+  reference  String?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  channelId  String
+  channel    Channel       @relation(fields: [channelId], references: [id])
+
+  @@index([customerId])
+  @@map("customer_payments")
+}
+
+model SalesSession {
+  id            String        @id @default(uuid())
+  channelId     String
+  userId        String
+  status        SessionStatus @default(OPEN)
+  openingFloat  Decimal       @db.Decimal(14, 4)
+  closingFloat  Decimal?      @db.Decimal(14, 4)
+  expectedFloat Decimal?      @db.Decimal(14, 4)
+  variance      Decimal?      @db.Decimal(14, 4)
+  openedAt      DateTime      @default(now())
+  closedAt      DateTime?
+  notes         String?
+  sales         Sale[]
+  channel       Channel       @relation(fields: [channelId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@index([channelId])
+  @@index([userId])
+  @@map("sales_sessions")
+}
+
+model PurchaseOrder {
+  id           String     @id @default(uuid())
+  orderNo      String     @unique
+  supplierId   String
+  channelId    String
+  status       LpoStatus  @default(DRAFT)
+  notes        String?
+  createdBy    String
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  expectedDate DateTime?
+  lines        LpoLine[]
+  channel      Channel    @relation(fields: [channelId], references: [id])
+  supplier     Supplier   @relation(fields: [supplierId], references: [id])
+  purchases    Purchase[]
+
+  @@index([supplierId])
+  @@index([channelId])
+  @@map("purchase_orders")
+}
+
+model LpoLine {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  itemId          String
+  quantity        Int
+  unitCost        Decimal       @db.Decimal(12, 4)
+  receivedQty     Int           @default(0)
+  status          LpoLineStatus @default(PENDING)
+  item            Item          @relation(fields: [itemId], references: [id])
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@map("lpo_lines")
+}
+
+model Purchase {
+  id              String         @id @default(uuid())
+  purchaseNo      String         @unique
+  supplierId      String
+  channelId       String
+  purchaseOrderId String?
+  status          PurchaseStatus @default(DRAFT)
+  totalCost       Decimal        @default(0) @db.Decimal(14, 4)
+  landedCostTotal Decimal        @default(0) @db.Decimal(14, 4)
+  paymentMethod   PaymentMethod?
+  notes           String?
+  committedBy     String?
+  committedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+  landedCosts     LandedCost[]
+  lines           PurchaseLine[]
+  channel         Channel        @relation(fields: [channelId], references: [id])
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  supplier        Supplier       @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@index([channelId])
+  @@map("purchases")
+}
+
+model PurchaseLine {
+  id         String   @id @default(uuid())
+  purchaseId String
+  itemId     String
+  quantity   Int
+  unitCost   Decimal  @db.Decimal(12, 4)
+  lineTotal  Decimal  @db.Decimal(14, 4)
+  item       Item     @relation(fields: [itemId], references: [id])
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+
+  @@index([purchaseId])
+  @@map("purchase_lines")
+}
+
+model LandedCost {
+  id               String                  @id @default(uuid())
+  purchaseId       String
+  description      String
+  amount           Decimal                 @db.Decimal(14, 4)
+  allocationMethod ExpenseAllocationMethod @default(BY_VALUE)
+  purchase         Purchase                @relation(fields: [purchaseId], references: [id])
+
+  @@index([purchaseId])
+  @@map("landed_costs")
+}
+
+model Transfer {
+  id             String         @id @default(uuid())
+  transferNo     String         @unique
+  fromChannelId  String
+  toChannelId    String
+  status         TransferStatus @default(DRAFT)
+  sentBy         String?
+  receivedBy     String?
+  sentAt         DateTime?
+  receivedAt     DateTime?
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  lines          TransferLine[]
+  sentByUser     User?          @relation("SentTransfers", fields: [sentBy], references: [id])
+  receivedByUser User?          @relation("ReceivedTransfers", fields: [receivedBy], references: [id])
+  fromChannel    Channel        @relation("FromChannel", fields: [fromChannelId], references: [id])
+  toChannel      Channel        @relation("ToChannel", fields: [toChannelId], references: [id])
+
+  @@index([fromChannelId])
+  @@index([toChannelId])
+  @@map("transfers")
+}
+
+model TransferLine {
+  id               String   @id @default(uuid())
+  transferId       String
+  itemId           String
+  sentQuantity     Int
+  receivedQuantity Int?
+  disputeReason    String?
+  item             Item     @relation(fields: [itemId], references: [id])
+  transfer         Transfer @relation(fields: [transferId], references: [id])
+
+  @@index([transferId])
+  @@map("transfer_lines")
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  channelId   String
+  description String
+  amount      Decimal   @db.Decimal(14, 4)
+  category    String?
+  receiptRef  String?
+  notes       String?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  channel     Channel   @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@index([createdAt])
+  @@map("expenses")
+}
+
+model BankDeposit {
+  id          String   @id @default(uuid())
+  channelId   String
+  amount      Decimal  @db.Decimal(14, 4)
+  reference   String?
+  depositedBy String
+  depositedAt DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+  channel     Channel  @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@map("bank_deposits")
+}
+
+model StaffProfile {
+  id             String          @id @default(uuid())
+  userId         String          @unique
+  jobTitle       String
+  jobLevelId     String?
+  grossSalary    Decimal         @db.Decimal(12, 2)
+  bankName       String?
+  bankAccount    String?
+  taxPin         String?
+  hireDate       DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  salaryRunLines SalaryRunLine[]
+  user           User            @relation(fields: [userId], references: [id])
+
+  @@map("staff_profiles")
+}
+
+model DeductionRule {
+  id                     String             @id @default(uuid())
+  name                   String
+  type                   DeductionType
+  rate                   Decimal?           @db.Decimal(8, 4)
+  isPreTaxDeduction      Boolean            @default(false)
+  minimumFloorAmount     Decimal?           @db.Decimal(12, 2)
+  maximumCapAmount       Decimal?           @db.Decimal(12, 2)
+  calculationSequence    Int                @default(100)
+  isEmployerContribution Boolean            @default(false)
+  isMandatory            Boolean            @default(true)
+  appliesToJobLevelId    String?
+  channelId              String?
+  isActive               Boolean            @default(true)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  brackets               DeductionBracket[]
+  channel                Channel?           @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, name])
+  @@index([channelId])
+  @@map("deduction_rules")
+}
+
+model DeductionBracket {
+  id                 String        @id @default(uuid())
+  ruleId             String
+  incomeFrom         Decimal       @db.Decimal(12, 2)
+  incomeTo           Decimal?      @db.Decimal(12, 2)
+  ratePercentage     Decimal       @db.Decimal(8, 4)
+  fixedDeduction     Decimal       @default(0) @db.Decimal(12, 2)
+  effectiveStartDate DateTime?
+  effectiveEndDate   DateTime?
+  rule               DeductionRule @relation(fields: [ruleId], references: [id])
+
+  @@index([ruleId])
+  @@map("deduction_brackets")
+}
+
+model AllowanceRule {
+  id                  String        @id @default(uuid())
+  name                String
+  type                DeductionType
+  amount              Decimal       @db.Decimal(12, 4)
+  appliesToJobLevelId String?
+  channelId           String?
+  isActive            Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  channel             Channel?      @relation(fields: [channelId], references: [id])
+
+  @@unique([channelId, name])
+  @@index([channelId])
+  @@map("allowance_rules")
+}
+
+model SalaryRun {
+  id                String          @id @default(uuid())
+  month             Int
+  year              Int
+  channelId         String?
+  status            SalaryRunStatus @default(DRAFT)
+  runBy             String
+  runAt             DateTime        @default(now())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  finalizedAt       DateTime?       @db.Timestamptz(6)
+  totalDeductions   Decimal         @default(0) @db.Decimal(14, 2)
+  totalEmployerCost Decimal         @default(0) @db.Decimal(14, 2)
+  totalGross        Decimal         @default(0) @db.Decimal(14, 2)
+  totalNet          Decimal         @default(0) @db.Decimal(14, 2)
+  lines             SalaryRunLine[]
+  channel           Channel?        @relation(fields: [channelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([month, year, channelId])
+  @@index([channelId])
+  @@map("salary_runs")
+}
+
+model SalaryRunLine {
+  id              String       @id @default(uuid())
+  salaryRunId     String
+  staffProfileId  String
+  grossSalary     Decimal      @db.Decimal(12, 2)
+  allowancesTotal Decimal      @default(0) @db.Decimal(12, 2)
+  deductionsTotal Decimal      @default(0) @db.Decimal(12, 2)
+  netSalary       Decimal      @db.Decimal(12, 2)
+  employerCost    Decimal      @default(0) @db.Decimal(12, 2)
+  breakdown       Json
+  createdAt       DateTime     @default(now())
+  salaryRun       SalaryRun    @relation(fields: [salaryRunId], references: [id])
+  staffProfile    StaffProfile @relation(fields: [staffProfileId], references: [id])
+
+  @@index([salaryRunId])
+  @@map("salary_run_lines")
+}
+
+model TaxConnectorConfig {
+  id        String   @id @default(uuid())
+  provider  String
+  baseUrl   String
+  apiKey    String
+  apiSecret String?
+  channelId String?
+  isActive  Boolean  @default(false)
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel? @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@map("tax_connector_configs")
+}
+
+model DocumentTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  content   String
+  channelId String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel? @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@map("document_templates")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  channelId String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  channel   Channel?         @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@map("notifications")
+}
+
+model IdempotencyRecord {
+  key          String   @id
+  responseBody Json
+  statusCode   Int
+  createdAt    DateTime @default(now())
+
+  @@map("idempotency_records")
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String
+  value     Json
+  channelId String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  channel   Channel? @relation(fields: [channelId], references: [id])
+
+  @@unique([key, channelId])
+  @@map("settings")
+}
+
+model InventoryBalance {
+  itemId            String
+  channelId         String
+  availableQty      Int      @default(0)
+  incomingQty       Int      @default(0)
+  retailPrice       Decimal  @default(0) @db.Decimal(12, 4)
+  wholesalePrice    Decimal  @default(0) @db.Decimal(12, 4)
+  minRetailPrice    Decimal  @default(0) @db.Decimal(12, 4)
+  minWholesalePrice Decimal  @default(0) @db.Decimal(12, 4)
+  weightedAvgCost   Decimal  @default(0) @db.Decimal(12, 4)
+  lastMovementAt    DateTime @default(now())
+  item              Item     @relation(fields: [itemId], references: [id])
+  channel           Channel  @relation(fields: [channelId], references: [id])
+
+  @@id([itemId, channelId])
+  @@map("inventory_balances")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  actorId    String
+  actorRole  String
+  approverId String?
+  channelId  String?
+  targetType String?
+  targetId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([channelId, createdAt])
+  @@index([action])
+  @@index([targetId, targetType])
+  @@map("audit_logs")
+}
+
+model SupportTicket {
+  id           String           @id @default(uuid())
+  refCode      String           @unique
+  subject      String
+  category     SupportCategory  @default(GENERAL)
+  priority     TicketPriority   @default(MEDIUM)
+  status       TicketStatus     @default(OPEN)
+  userId       String
+  channelId    String?
+  assignedToId String?
+  assignedTo   User?            @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  aiSummary    String?
+  escalatedAt  DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  messages     SupportMessage[]
+  user         User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([channelId, createdAt])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id            String        @id @default(uuid())
+  ticketId      String
+  sender        MessageSender @default(USER)
+  senderId      String?
+  content       String
+  toolCallsJson Json?
+  createdAt     DateTime      @default(now())
+  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
+}
+
+model KnowledgeChunk {
+  id          String   @id @default(uuid())
+  sourceFile  String
+  chunkIndex  Int
+  content     String
+  embedding   Json
+  contentHash String
+  createdAt   DateTime @default(now())
+
+  @@unique([sourceFile, contentHash])
+  @@map("knowledge_chunks")
+}
+
+model ManagerApproval {
+  id            String         @id @default(uuid())
+  action        String
+  contextId     String
+  channelId     String?
+  requesterId   String
+  status        ApprovalStatus @default(PENDING)
+  notes         String?
+  approvalToken String?        @unique
+  approvedById  String?
+  expiresAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  approvedBy    User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  requester     User           @relation("RequestedApprovals", fields: [requesterId], references: [id])
+
+  @@index([requesterId])
+  @@index([status])
+  @@map("manager_approvals")
+}
+
+enum ChannelType {
+  RETAIL_SHOP
+  WHOLESALE_SHOP
+  WAREHOUSE
+  ONLINE
+}
+
+enum StockTakeStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER_ADMIN
+  MANAGER
+  CASHIER
+  STOREKEEPER
+  PROMOTER
+  SALES_PERSON
+}
+
+enum MovementType {
+  PURCHASE
+  SALE
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  RETURN
+  SWAP
+  WRITE_OFF
+  TRANSFER_IN_PENDING
+  STOCK_TAKE_CORRECTION
+}
+
+enum SaleType {
+  WHOLESALE
+  RETAIL
+  CREDIT
+  PRE_ORDER
+  LAYAWAY
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum LpoStatus {
+  DRAFT
+  SENT
+  PARTIALLY_FULFILLED
+  FULFILLED
+  CANCELLED
+}
+
+enum LpoLineStatus {
+  PENDING
+  PARTIAL
+  FULFILLED
+}
+
+enum PurchaseStatus {
+  DRAFT
+  COMMITTED
+}
+
+enum ExpenseAllocationMethod {
+  BY_VALUE
+  BY_QUANTITY
+}
+
+enum TransferStatus {
+  DRAFT
+  SENT
+  AWAITING_RECEIVER
+  RECEIVED
+  DISPUTED
+  REJECTED
+}
+
+enum SerialStatus {
+  IN_STOCK
+  SOLD
+  TRANSFERRED
+  RETURNED
+  SWAPPED_OUT
+  WRITTEN_OFF
+}
+
+enum TaxClass {
+  STANDARD
+  ZERO_RATED
+  EXEMPT
+}
+
+enum TaxSyncStatus {
+  NOT_APPLICABLE
+  QUEUED
+  SYNCED
+  FAILED
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum CustomerTier {
+  BRONZE
+  SILVER
+  GOLD
+}
+
+enum LoyaltyTxType {
+  EARN
+  REDEEM
+  EXPIRE
+  ADJUST
+}
+
+enum DeductionType {
+  FIXED_AMOUNT
+  PERCENTAGE_OF_GROSS
+  BRACKET_TABLE
+  PERCENTAGE_OF_TAXABLE
+}
+
+enum SalaryRunStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalRefType {
+  SALE
+  PURCHASE
+  EXPENSE
+  TRANSFER_DISPUTE
+  PAYROLL
+  PAYROLL_REVERSAL
+  CREDIT_NOTE
+  BANK_DEPOSIT
+  ADJUSTMENT
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+  BANK_TRANSFER
+  LOYALTY_POINTS
+  CREDIT
+}
+
+enum NotificationType {
+  LOW_STOCK
+  NEGATIVE_STOCK
+  TRANSFER_RECEIVED
+  TRANSFER_DISPUTED
+  CREDIT_DUE
+  SYSTEM
+  APPROVAL_REQUESTED
+}
+
+enum MessageSender {
+  USER
+  AI
+  HUMAN_AGENT
+  SYSTEM
+}
+
+enum SupportCategory {
+  GENERAL
+  TECHNICAL
+  BILLING
+  STOCK
+  TRANSFER
+  PAYROLL
+  BUG_REPORT
+  FEATURE_REQUEST
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_HUMAN
+  CLOSED
+  RESOLVED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+model StockTake {
+  id              String          @id @default(uuid())
+  channelId       String
+  status          StockTakeStatus @default(OPEN)
+  startedBy       String
+  completedBy     String?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  items           StockTakeItem[]
+  channel         Channel         @relation(fields: [channelId], references: [id])
+  startedByUser   User            @relation("StartedTakes", fields: [startedBy], references: [id])
+  completedByUser User?           @relation("CompletedTakes", fields: [completedBy], references: [id])
+
+  @@map("stock_takes")
+}
+
+model StockTakeItem {
+  id          String    @id @default(uuid())
+  stockTakeId String
+  itemId      String
+  expectedQty Int // System balance at start
+  recordedQty Int? // Physical count
+  discrepancy Int? // difference
+  stockTake   StockTake @relation(fields: [stockTakeId], references: [id])
+  item        Item      @relation(fields: [itemId], references: [id])
+
+  @@map("stock_take_items")
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  VOIDED
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PAID
+  VOIDED
+}
+
+model CommissionRule {
+  id               String            @id @default(uuid())
+  name             String
+  channelId        String?
+  userId           String?
+  role             UserRole?
+  ratePercent      Decimal           @db.Decimal(14, 4)
+  minMarginPercent Decimal?          @db.Decimal(14, 4)
+  appliesTo        SaleType[]
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  channel          Channel?          @relation(fields: [channelId], references: [id])
+  user             User?             @relation(fields: [userId], references: [id])
+  entries          CommissionEntry[]
+
+  @@map("commission_rules")
+}
+
+model CommissionEntry {
+  id               String            @id @default(uuid())
+  saleId           String            @unique
+  userId           String
+  channelId        String
+  ruleId           String?
+  grossMargin      Decimal           @db.Decimal(14, 4)
+  marginPercent    Decimal           @db.Decimal(14, 4)
+  commissionAmount Decimal           @db.Decimal(14, 4)
+  rateApplied      Decimal           @db.Decimal(14, 4)
+  status           CommissionStatus  @default(PENDING)
+  payoutId         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sale             Sale              @relation(fields: [saleId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+  channel          Channel           @relation(fields: [channelId], references: [id])
+  rule             CommissionRule?   @relation(fields: [ruleId], references: [id])
+  payout           CommissionPayout? @relation(fields: [payoutId], references: [id])
+
+  @@index([userId, status])
+  @@index([channelId, createdAt])
+  @@map("commission_entries")
+}
+
+model CommissionPayout {
+  id              String            @id @default(uuid())
+  userId          String
+  channelId       String?
+  periodStart     DateTime
+  periodEnd       DateTime
+  totalCommission Decimal           @db.Decimal(14, 4)
+  entryCount      Int
+  status          PayoutStatus      @default(PENDING)
+  salaryRunId     String?
+  processedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id])
+  channel         Channel?          @relation(fields: [channelId], references: [id])
+  entries         CommissionEntry[]
+
+  @@map("commission_payouts")
+}
+
+model ReceiptSequence {
+  seqKey  String @id @map("seq_key")
+  lastSeq Int    @default(0) @map("last_seq")
+
+  @@map("receipt_sequences")
+}

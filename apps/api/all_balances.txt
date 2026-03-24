@@ -1,0 +1,44 @@
+[
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+    "availableQty": 25,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  },
+  {
+    "itemId": "item-laptop-001",
+    "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+    "availableQty": 10,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  },
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "availableQty": -25,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  },
+  {
+    "itemId": "item-laptop-001",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "availableQty": -10,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  },
+  {
+    "itemId": "item-mouse-002",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "availableQty": -3,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:18:09.569Z"
+  },
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+    "availableQty": 10,
+    "incomingQty": 0,
+    "lastMovementAt": "2026-03-16T16:33:23.142Z"
+  }
+]

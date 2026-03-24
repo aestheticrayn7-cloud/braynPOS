@@ -1,0 +1,38 @@
+[
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+    "cnt": "3",
+    "availableQty": "10"
+  },
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+    "cnt": "3",
+    "availableQty": "25"
+  },
+  {
+    "itemId": "item-laptop-001",
+    "channelId": "4178970e-8042-4796-a6af-da7c8e85d5ba",
+    "cnt": "3",
+    "availableQty": "10"
+  },
+  {
+    "itemId": "6f9539fe-20e0-403f-acd5-c1b804709487",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "cnt": "2",
+    "availableQty": "-35"
+  },
+  {
+    "itemId": "item-laptop-001",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "cnt": "1",
+    "availableQty": "-10"
+  },
+  {
+    "itemId": "item-mouse-002",
+    "channelId": "c7983e54-a3b0-49be-b8bc-86b1bb01bd25",
+    "cnt": "2",
+    "availableQty": "-3"
+  }
+]

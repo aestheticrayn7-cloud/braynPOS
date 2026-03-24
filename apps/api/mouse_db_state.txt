@@ -1,0 +1,7 @@
+{
+  "itemId": "item-mouse-002",
+  "channelId": "e803051e-c9ca-46a4-9014-83075d6a3e13",
+  "availableQty": 10,
+  "incomingQty": 0,
+  "lastMovementAt": "2026-03-16T17:05:57.770Z"
+}
