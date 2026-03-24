@@ -29,7 +29,6 @@ COPY --from=builder /app/apps/api/prisma ./prisma
 
 EXPOSE 8080
 ENV NODE_ENV=production
-ENV PORT=8080
 
 # Find it again in the final stage to be sure
 RUN find . -name "server.js"

@@ -8,7 +8,7 @@ import { startNotificationWorker }  from './workers/notification.worker.js'
 import { basePrisma } from './lib/prisma.js'
 import { redis } from './lib/redis.js'
 
-const PORT = parseInt(process.env.API_PORT || '4000', 10)
+const PORT = parseInt(process.env.PORT || process.env.API_PORT || '4000', 10)
 const HOST = process.env.API_HOST || '0.0.0.0'
 
 async function start() {
