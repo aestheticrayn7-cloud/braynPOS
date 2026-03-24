@@ -12,7 +12,7 @@ COPY apps/api ./apps/api
 RUN pnpm --filter api build
 
 FROM node:20-slim
-# Install OpenSSL as requested by Prisma
+# Install OpenSSL (required for Prisma to run in production)
 RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /app
 RUN npm install -g pnpm
@@ -27,5 +27,5 @@ EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Run from the api directory to ensure prisma finds its schema
+# Metadata to force Railway refresh: 2026-03-24T20:15:00
 CMD ["node", "apps/api/dist/server.js"]
