@@ -4,6 +4,8 @@ RUN npm install -g pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile
+COPY apps/api/prisma ./apps/api/prisma
+RUN pnpm --filter api exec prisma generate
 COPY apps/api ./apps/api
 RUN pnpm --filter api build
 
