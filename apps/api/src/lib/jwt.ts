@@ -21,8 +21,9 @@ const envPrivateKey = process.env.JWT_PRIVATE_KEY
 const envPublicKey  = process.env.JWT_PUBLIC_KEY
 
 if (envPrivateKey && envPublicKey) {
-  privateKey = envPrivateKey.replace(/\\n/g, '\n')
-  publicKey  = envPublicKey.replace(/\\n/g, '\n')
+  // FIX: Strip surrounding quotes and replace literal \n with real newlines
+  privateKey = envPrivateKey.trim().replace(/^"|"$/g, '').replace(/\\n/g, '\n')
+  publicKey  = envPublicKey.trim().replace(/^"|"$/g, '').replace(/\\n/g, '\n')
 } else {
   try {
     privateKey = fs.readFileSync(path.resolve(PRIVATE_KEY_PATH), 'utf8')
