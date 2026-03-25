@@ -19,15 +19,10 @@
 
 import { Server, Socket } from 'socket.io'
 import { supportService } from './support.service.js'
-import { verify }         from 'jsonwebtoken'
+import { verifyToken }    from '../../lib/jwt.js'
 import { prisma }         from '../../lib/prisma.js'
 
-// FIX 1: Fail hard at startup if JWT_SECRET is missing — never fall back
-// to a known insecure default.
-const JWT_SECRET = process.env.JWT_SECRET
-if (!JWT_SECRET) {
-  throw new Error('FATAL: JWT_SECRET environment variable is not set. Cannot start socket server.')
-}
+// JWT configuration is handled centrally in lib/jwt.js
 
 // FIX 3: Contact details from env vars — never hardcode PII in source
 const SUPPORT_PHONE = process.env.SUPPORT_CONTACT_PHONE ?? 'the support team'
@@ -55,7 +50,7 @@ export function setupSupportSocket(io: Server) {
     }
 
     try {
-      const decoded      = verify(token as string, process.env.JWT_SECRET as string) as any
+      const decoded      = verifyToken(token as string) as any
       socket.data.user   = decoded
       // FIX 4: Removed console.log leaking username
     } catch {

@@ -1,8 +1,8 @@
 import { Server, Socket } from 'socket.io'
-import { verify } from 'jsonwebtoken'
-import { eventBus } from '../../lib/event-bus.js'
+import { verifyToken } from '../../lib/jwt.js'
+import { eventBus }   from '../../lib/event-bus.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+// JWT configuration is handled centrally in lib/jwt.js
 
 export function setupInventorySocket(io: Server) {
   const inventoryNamespace = io.of('/inventory')
@@ -16,7 +16,7 @@ export function setupInventorySocket(io: Server) {
     }
 
     try {
-      const decoded = verify(token as string, JWT_SECRET) as any
+      const decoded = verifyToken(token as string) as any
       socket.data.user = decoded
       
       // Join channel-specific room
