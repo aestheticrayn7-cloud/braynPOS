@@ -1,8 +1,8 @@
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL
-if (!rawApiUrl && process.env.NODE_ENV === 'production') {
-  console.error('[CRITICAL] NEXT_PUBLIC_API_URL is missing! Requests will fail.')
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api-production-f729.up.railway.app'
+if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
+  console.warn('[INFO] Using production fallback for API URL.')
 }
-const API_BASE = (rawApiUrl || 'http://localhost:8080') + '/v1'
+const API_BASE = rawApiUrl + '/v1'
 
 interface FetchOptions extends RequestInit {
   token?: string
