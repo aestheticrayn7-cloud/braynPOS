@@ -1,4 +1,8 @@
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/v1'
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL
+if (!rawApiUrl && process.env.NODE_ENV === 'production') {
+  console.error('[CRITICAL] NEXT_PUBLIC_API_URL is missing! Requests will fail.')
+}
+const API_BASE = (rawApiUrl || 'http://localhost:8080') + '/v1'
 
 interface FetchOptions extends RequestInit {
   token?: string
