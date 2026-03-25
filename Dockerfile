@@ -1,6 +1,6 @@
 FROM node:20-slim AS builder
 # FORCE COMPLETE REBUILD: 2026-03-25T13:05:00
-ENV CACHE_BUST=2026-03-25T13:05:00
+ENV CACHE_BUST=2026-03-25T14:15:00
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./

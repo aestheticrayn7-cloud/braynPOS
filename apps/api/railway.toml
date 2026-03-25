@@ -3,7 +3,7 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node apps/api/dist/apps/api/src/server.js"
+startCommand = "pnpm --filter api prisma db seed && node apps/api/dist/apps/api/src/server.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 restartPolicyType = "on_failure"
