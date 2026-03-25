@@ -1,6 +1,6 @@
 FROM node:20-slim AS builder
-# FORCE COMPLETE REBUILD: 2026-03-25T08:55:00
-ENV CACHE_BUST=2026-03-25T08:55:00
+# FORCE COMPLETE REBUILD: 2026-03-25T12:50:00
+ENV CACHE_BUST=2026-03-25T12:50:00
 WORKDIR /app
 RUN npm install -g pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
