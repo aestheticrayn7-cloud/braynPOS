@@ -1,4 +1,3 @@
-import 'module-alias/register'
 import 'dotenv/config'
 import { buildApp } from './app.js'
 import { Server } from 'socket.io'
