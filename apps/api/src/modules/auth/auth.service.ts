@@ -7,7 +7,7 @@ import { authLogger } from '../../lib/logger.js'
 import type { LoginInput, RegisterInput, ChangePasswordInput } from './auth.schema.js'
 
 const MAX_FAILED_ATTEMPTS = 10
-const ENFORCED_MFA_ROLES = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN']
+const ENFORCED_MFA_ROLES = ['MANAGER_ADMIN', 'ADMIN']
 
 export class AuthService {
 
