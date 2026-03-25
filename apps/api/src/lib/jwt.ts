@@ -16,20 +16,29 @@ export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 let privateKey: string
 let publicKey:  string
 
-try {
-  privateKey = fs.readFileSync(path.resolve(PRIVATE_KEY_PATH), 'utf8')
-  publicKey  = fs.readFileSync(path.resolve(PUBLIC_KEY_PATH),  'utf8')
-} catch {
-  authLogger.warn(
-    { privatePath: PRIVATE_KEY_PATH, publicPath: PUBLIC_KEY_PATH },
-    'RSA keys not found — falling back to HMAC HS256 (development only)'
-  )
-  const secret = process.env.JWT_SECRET
-  if (!secret && process.env.NODE_ENV !== 'test') {
-    throw new Error('JWT_SECRET or RSA keys must be provided')
+// ── Key Loading Logic ────────────────────────────────────────────────
+const envPrivateKey = process.env.JWT_PRIVATE_KEY
+const envPublicKey  = process.env.JWT_PUBLIC_KEY
+
+if (envPrivateKey && envPublicKey) {
+  privateKey = envPrivateKey.replace(/\\n/g, '\n')
+  publicKey  = envPublicKey.replace(/\\n/g, '\n')
+} else {
+  try {
+    privateKey = fs.readFileSync(path.resolve(PRIVATE_KEY_PATH), 'utf8')
+    publicKey  = fs.readFileSync(path.resolve(PUBLIC_KEY_PATH),  'utf8')
+  } catch {
+    authLogger.warn(
+      { privatePath: PRIVATE_KEY_PATH, publicPath: PUBLIC_KEY_PATH },
+      'RSA keys not found (env or file) — falling back to HMAC HS256 (development only)'
+    )
+    const secret = process.env.JWT_SECRET
+    if (!secret && process.env.NODE_ENV !== 'test') {
+      throw new Error('JWT_SECRET, RSA key files, or RSA key env vars must be provided')
+    }
+    privateKey = secret || 'test-secret-only'
+    publicKey  = privateKey
   }
-  privateKey = secret || 'test-secret-only'
-  publicKey  = privateKey
 }
 
 const isRSA     = privateKey.includes('-----BEGIN')
