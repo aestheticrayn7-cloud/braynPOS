@@ -29,4 +29,4 @@ FROM base AS runner
 COPY --from=builder /app ./
 
 # Default fallback for the API (railway.toml overrides this, but good for safety)
-CMD ["node", "apps/api/dist/apps/api/src/server.js"]
+CMD ["node", "apps/api/dist/server.js"]

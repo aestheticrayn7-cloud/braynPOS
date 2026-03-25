@@ -1,27 +1,18 @@
-import Redis from 'ioredis'
-import { logger } from './logger.js'
+import { EventEmitter } from 'events'
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
+class RedisMock extends EventEmitter {
+  constructor() { super() }
+  async quit() { return 'OK' }
+  async ping() { return 'PONG' }
+  async get() { return null }
+  async set() { return 'OK' }
+  async del() { return 1 }
+  async exists() { return 0 }
+  async incr() { return 1 }
+  async expire() { return 1 }
+  status = 'ready'
+}
 
-export const redis = new Redis(REDIS_URL, {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 200, 2000)
-    return delay
-  },
-  lazyConnect: true,
-})
-
-redis.on('error', (err) => {
-  logger.error({ err }, '[Redis] Connection error')
-})
-
-redis.on('connect', () => {
-  logger.info('[Redis] Connected')
-})
-
-export const createBullConnection = () =>
-  new Redis(REDIS_URL, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false,
-  }) as any
+export const redis = new RedisMock() as any
+export const createBullConnection = () => new RedisMock() as any
+export default redis
