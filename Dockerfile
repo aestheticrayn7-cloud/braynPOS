@@ -1,8 +1,8 @@
 FROM node:20-slim AS builder
-# FORCE COMPLETE REBUILD: 2026-03-25T12:50:00
-ENV CACHE_BUST=2026-03-25T12:50:00
+# FORCE COMPLETE REBUILD: 2026-03-25T13:05:00
+ENV CACHE_BUST=2026-03-25T13:05:00
 WORKDIR /app
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
 # Copy ALL package.json files for installation
@@ -25,7 +25,7 @@ RUN pnpm --filter web build
 FROM node:20-slim
 RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /app
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy everything from builder
 COPY --from=builder /app ./
