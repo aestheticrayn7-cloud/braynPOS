@@ -3,8 +3,8 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 FROM base AS builder
-# FORCE COMPLETE REBUILD: 2026-03-25T14:58:00
-ENV CACHE_BUST=2026-03-25T14:58:00
+# FORCE COMPLETE REBUILD: 2026-03-25T15:05:00
+ENV CACHE_BUST=2026-03-25T15:05:00
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
 # Copy ALL package.json files for installation
