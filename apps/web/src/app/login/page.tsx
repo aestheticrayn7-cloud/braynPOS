@@ -127,7 +127,7 @@ export default function LoginPage() {
       <div className="login-card animate-fade-in">
         <div className="brand">
           <h1>◆ BRAYN</h1>
-          <p>Hybrid Edition • Enterprise POS [Build: 12:50]</p>
+          <p>Hybrid Edition • Enterprise POS [Build: 13:17]</p>
         </div>
 
         {error && <div className="login-error">{error}</div>}
