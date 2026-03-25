@@ -11,7 +11,47 @@ import { redis } from './lib/redis.js'
 const PORT = parseInt(process.env.PORT || process.env.API_PORT || '4000', 10)
 const HOST = process.env.API_HOST || '0.0.0.0'
 
+/**
+ * 🛠️ Maintenance Hook: Admin Recovery
+ * Allows resetting the super-admin password via environment variable if lockouts occur.
+ */
+async function syncAdmin() {
+  const resetPass = process.env.ADMIN_PASSWORD_RESET
+  if (!resetPass) return
+
+  const { hashPassword } = await import('./lib/password.js')
+  
+  // Find or Create HQ Channel (Required for Super Admin)
+  let hqChannel = await basePrisma.channel.findUnique({ where: { code: 'HQ' } })
+  if (!hqChannel) {
+    hqChannel = await basePrisma.channel.create({
+      data: { name: 'Headquarters', code: 'HQ', status: 'ACTIVE' }
+    })
+  }
+
+  const passwordHash = await hashPassword(resetPass)
+  await basePrisma.user.upsert({
+    where: { id: 'usr-super-admin' },
+    create: {
+      id: 'usr-super-admin',
+      username: 'admin',
+      email: 'admin@brayn.app',
+      passwordHash,
+      role: 'SUPER_ADMIN',
+      channelId: hqChannel.id,
+      status: 'ACTIVE',
+    },
+    update: {
+      passwordHash,
+      status: 'ACTIVE',
+    },
+  })
+  
+  console.log('✅ [MAINTENANCE] Admin user synced/reset successfully.')
+}
+
 async function start() {
+  await syncAdmin()
   const app = await buildApp()
 
   try {
