@@ -25,7 +25,7 @@ async function syncAdmin() {
   let hqChannel = await basePrisma.channel.findUnique({ where: { code: 'HQ' } })
   if (!hqChannel) {
     hqChannel = await basePrisma.channel.create({
-      data: { name: 'Headquarters', code: 'HQ', status: 'ACTIVE' }
+      data: { name: 'Headquarters', code: 'HQ' }
     })
   }
 
