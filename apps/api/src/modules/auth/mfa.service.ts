@@ -67,7 +67,7 @@ export class MfaService {
       where: { id: userId },
       data: { 
         mfaEnabled: true,
-        mfaRecoveryCodes: JSON.stringify(hashed),
+        mfaRecoveryCodes: hashed as any,
       },
     })
 
@@ -84,9 +84,7 @@ export class MfaService {
    */
   async verifyRecoveryCode(userId: string, code: string) {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } })
-    if (!user.mfaRecoveryCodes) throw { statusCode: 401, message: 'No recovery codes configured' }
-
-    const codes = JSON.parse(user.mfaRecoveryCodes!) as string[]
+    const codes = user.mfaRecoveryCodes || []
     let matchedIndex = -1
 
     for (let i = 0; i < codes.length; i++) {
@@ -104,7 +102,7 @@ export class MfaService {
     // Remove the used code or just disable MFA entirely (safer for recovery flow)
     await prisma.user.update({
       where: { id: userId },
-      data: { mfaEnabled: false, mfaSecret: null, mfaRecoveryCodes: null },
+      data: { mfaEnabled: false, mfaSecret: null, mfaRecoveryCodes: [] as any },
     })
 
     return { message: 'MFA disabled via recovery code' }
