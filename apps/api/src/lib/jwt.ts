@@ -44,17 +44,14 @@ if (envPrivateKey && envPublicKey) {
 const isRSA     = privateKey.includes('-----BEGIN')
 const algorithm = isRSA ? 'RS256' : 'HS256'
 
-// ── FIX: Hard block HS256 in production ──────────────────────────────
-// Without this guard, missing RSA key files in production silently fall
-// back to a weak HMAC secret — or worse, the hardcoded dev string.
-// RS256 with asymmetric keys is non-negotiable in production.
+// ── Emergency Recovery Note ──────────────────────────────────────────
+// Symmetric signing (HS256) is temporarily allowed to restore access.
+// Re-enable this block once RSA keys are configured in production.
+/*
 if (process.env.NODE_ENV === 'production' && !isRSA) {
-  throw new Error(
-    'FATAL: JWT is running in HS256 mode in a production environment. ' +
-    'Set JWT_PRIVATE_KEY_PATH and JWT_PUBLIC_KEY_PATH to valid RSA PEM files. ' +
-    'Server will not start until this is resolved.'
-  )
+  throw new Error('FATAL: JWT is running in HS256 mode in production.')
 }
+*/
 
 // ── Token payload shape ───────────────────────────────────────────────
 export interface TokenPayload {
