@@ -115,28 +115,29 @@ export class PurchaseService {
         const effectiveUnitCost = Number(line.unitCost) + (allocatedLandedCost / line.quantity)
 
         const balance               = balanceMap[line.itemId]
-        const currentQty            = balance?.availableQty || 0
-        // Trigger has already fired on the bulk insert, so availableQty is updated.
-        // We reverse it strictly for the math here.
-        const qtyBeforeThisPurchase = Math.max(0, currentQty - line.quantity)
+        const currentQty            = Number(balance?.availableQty || 0)
+        // No DB trigger exists — availableQty is NOT pre-updated by the stock movement insert.
+        // WAC calculation: old stock value + new purchase value / total new qty
         const oldWAC                = Number(balance?.weightedAvgCost || 0)
 
-        const totalValueBefore      = qtyBeforeThisPurchase * oldWAC
+        const totalValueBefore      = currentQty * oldWAC
         const totalValueAfter       = totalValueBefore + (line.quantity * effectiveUnitCost)
-        const totalQtyAfter         = qtyBeforeThisPurchase + line.quantity
+        const totalQtyAfter         = currentQty + line.quantity
         const newWAC                = totalQtyAfter > 0 ? totalValueAfter / totalQtyAfter : effectiveUnitCost
 
-        // Single upsert combines metadata (retailPrice) and WAC
+        // Single upsert combines metadata (retailPrice), WAC, and availableQty
         await tx.inventoryBalance.upsert({
           where:  { itemId_channelId: { itemId: line.itemId, channelId: data.channelId } },
           create: {
             itemId:          line.itemId,
             channelId:       data.channelId,
+            availableQty:    line.quantity,
             weightedAvgCost: newWAC,
             retailPrice:     line.retailPrice    ?? 0,
             wholesalePrice:  line.wholesalePrice ?? 0,
           },
           update: {
+            availableQty:    { increment: line.quantity },
             weightedAvgCost: newWAC,
             ...(line.retailPrice    !== undefined && { retailPrice:    line.retailPrice }),
             ...(line.wholesalePrice !== undefined && { wholesalePrice: line.wholesalePrice }),
