@@ -3,8 +3,8 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 FROM base AS builder
-# FORCE COMPLETE REBUILD: 2026-03-25T15:05:00
-ENV CACHE_BUST=2026-03-25T15:05:00
+# FORCE COMPLETE REBUILD: 2026-03-26T10:20:00
+ENV CACHE_BUST=2026-03-26T10:20:00
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
 # Copy ALL package.json files for installation
@@ -29,4 +29,4 @@ FROM base AS runner
 COPY --from=builder /app ./
 
 # Default fallback for the API (railway.toml overrides this, but good for safety)
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["pnpm", "--filter", "api", "start:prod"]
