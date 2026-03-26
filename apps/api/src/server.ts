@@ -51,11 +51,29 @@ async function syncAdmin() {
 }
 
 async function start() {
-  await syncAdmin()
-  const app = await buildApp()
+  console.log('🚀 [BOOT] Starting BraynPOS API restoration sequence...')
+  console.log('🔗 [BOOT] PORT:', PORT)
+  console.log('🔗 [BOOT] HOST:', HOST)
 
   try {
-    await app.listen({ port: PORT, host: HOST })
+    // Wrap syncAdmin in a race to prevent silent DB hangs
+    console.log('⌚ [BOOT] Syncing Admin (Maintenance Hook)...')
+    const syncPromise = syncAdmin()
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('TIMEOUT: Database connection stalled during syncAdmin')), 10000)
+    )
+    await Promise.race([syncPromise, timeoutPromise])
+    console.log('✅ [BOOT] syncAdmin completed.')
+  } catch (err: any) {
+    console.warn(`⚠️ [BOOT] syncAdmin failed or timed out: ${err.message}. Continuing...`)
+  }
+
+  console.log('🏗️ [BOOT] Building Fastify app...')
+  const app = await buildApp()
+  console.log('✅ [BOOT] Fastify app built.')
+
+  try {
+    console.log('👂 [BOOT] Starting listener...')
     
     // Initialize Socket.io
     const io = new Server(app.server, {
