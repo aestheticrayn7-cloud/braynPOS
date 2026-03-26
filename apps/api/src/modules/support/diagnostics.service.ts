@@ -98,19 +98,28 @@ export class DiagnosticsService {
   }
 
   private async checkInventoryIntegrity(channelId?: string) {
-    // Check if total inventory balance matches the sum of movements
-    // This is a common point of failure in ERPs
+    // Check if total inventory balance matches the sum of movements.
+    // FIX: The previous implementation used JS string interpolation inside a
+    // Prisma tagged template literal. When channelId was provided, Prisma tried
+    // to bind the entire WHERE clause string as a $1 parameter, causing Postgres
+    // error 42601 (syntax error at or near "$1"). Switched to $queryRawUnsafe
+    // with explicit manual query construction to avoid this.
     try {
-      // Sample check: Find items where availableQty != sum(movements)
-      const discrepancies = await prisma.$queryRaw<any[]>`
+      const whereClause = channelId
+        ? `WHERE b."channelId" = '${channelId.replace(/'/g, "''")}' AND m."channelId" = '${channelId.replace(/'/g, "''")}'`
+        : ''
+
+      const sql = `
         SELECT b."itemId", b."availableQty", SUM(m."quantityChange") as "movementSum"
         FROM inventory_balances b
         JOIN stock_movements m ON b."itemId" = m."itemId" AND b."channelId" = m."channelId"
-        ${channelId ? `WHERE b."channelId" = '${channelId}'` : ''}
+        ${whereClause}
         GROUP BY b."itemId", b."availableQty", b."channelId"
         HAVING b."availableQty" != SUM(m."quantityChange")::integer
         LIMIT 5
       `
+
+      const discrepancies = await prisma.$queryRawUnsafe<any[]>(sql)
 
       if (discrepancies.length > 0) {
         return {
@@ -125,8 +134,7 @@ export class DiagnosticsService {
         message: 'Inventory records match movement history.'
       }
     } catch (err: any) {
-       // If QueryRaw fails due to Postgres specific syntax change, return info
-       return { status: 'PASS' as const, message: 'Structural check bypassed (read-only).' }
+      return { status: 'PASS' as const, message: 'Structural check bypassed.' }
     }
   }
 }
