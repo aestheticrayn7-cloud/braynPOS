@@ -13,6 +13,7 @@ import { RATE }                   from '../../lib/rate-limit.plugin.js'
 import { z }                      from 'zod'
 import { eventBus }               from '../../lib/event-bus.js'
 import '@fastify/multipart'
+import { MultipartFile } from '@fastify/multipart'
 
 export const itemsRoutes: FastifyPluginAsync = async (app) => {
   app.addHook('preHandler', authenticate)

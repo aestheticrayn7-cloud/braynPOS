@@ -8,3 +8,19 @@ dist
 .gitignore
 README.md
 Dockerfile
+# Debug & dev artifacts
+*.log
+*.txt
+tmp/
+scripts/
+verify-*.js
+verify-*.ts
+debug_*.ts
+hash.cjs
+test_*.ts
+all_models.txt
+full_hash.txt
+tmp_models.json
+docker-compose.yml
+.cursor/
+.agent/

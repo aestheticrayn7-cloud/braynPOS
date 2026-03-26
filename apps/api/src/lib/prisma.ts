@@ -9,10 +9,22 @@ const globalForPrisma = globalThis as unknown as {
 // Used directly for models like Transfer that use fromChannelId/toChannelId
 // instead of channelId — the multi-tenant extension cannot handle these
 // and must not intercept their create() calls.
+function buildDatasourceUrl() {
+  if (!process.env.DATABASE_URL) return undefined
+  try {
+    const url = new URL(process.env.DATABASE_URL)
+    url.searchParams.set('connect_timeout', '10')
+    return url.toString()
+  } catch {
+    // Malformed URL — return as-is so Prisma surfaces the real error
+    return process.env.DATABASE_URL
+  }
+}
+
 export const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL ? `${process.env.DATABASE_URL}${process.env.DATABASE_URL.includes('?') ? '&' : '?'}connect_timeout=10` : undefined,
+    datasourceUrl: buildDatasourceUrl(),
     log: process.env.NODE_ENV === 'production'
       ? ['error', 'warn']
       : ['query', 'error', 'warn'],

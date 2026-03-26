@@ -775,7 +775,10 @@ model IdempotencyRecord {
   responseBody Json
   statusCode   Int
   createdAt    DateTime @default(now())
+  // FIX: expiresAt allows scheduled cleanup to prevent unbounded table growth
+  expiresAt    DateTime @default(dbgenerated("NOW() + INTERVAL '7 days'"))
 
+  @@index([expiresAt])
   @@map("idempotency_records")
 }
 

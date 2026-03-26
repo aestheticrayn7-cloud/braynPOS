@@ -12,4 +12,4 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
-prisma/migrations/
+# NOTE: prisma/migrations/ is intentionally tracked in git for reproducible deployments

@@ -30,10 +30,10 @@ async function syncAdmin() {
   }
 
   const passwordHash = await hashPassword(resetPass)
+  // FIX: Use email-based lookup instead of hardcoded static ID for security
   await basePrisma.user.upsert({
-    where: { id: 'usr-super-admin' },
+    where: { email: 'admin@brayn.app' },
     create: {
-      id: 'usr-super-admin',
       username: 'admin',
       email: 'admin@brayn.app',
       passwordHash,
@@ -72,30 +72,32 @@ async function start() {
   const app = await buildApp()
   console.log('✅ [BOOT] Fastify app built.')
 
+  // FIX: Set up Socket.io and all handlers BEFORE app.listen() to
+  // eliminate the race condition where connections arrive before handlers are wired.
+  const io = new Server(app.server, {
+    cors: {
+      origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+      credentials: true
+    }
+  })
+
+  setupSupportSocket(io)
+  const { setupApprovalSocket } = await import('./modules/users/approval.socket.js')
+  setupApprovalSocket(io)
+  
+  const { setupInventorySocket } = await import('./modules/inventory/inventory.socket.js')
+  setupInventorySocket(io)
+
+  startProactiveMonitor()
+  startCommissionListener()
+  startNotificationWorker()
+
+  // FIX: listen() comes LAST — after all handlers are ready
   try {
     console.log('👂 [BOOT] Starting listener...')
-    
-    // Initialize Socket.io
-    const io = new Server(app.server, {
-      cors: {
-        origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
-        credentials: true
-      }
-    })
-    
-    setupSupportSocket(io)
-    const { setupApprovalSocket } = await import('./modules/users/approval.socket.js')
-    setupApprovalSocket(io)
-    
-    const { setupInventorySocket } = await import('./modules/inventory/inventory.socket.js')
-    setupInventorySocket(io)
-
-    startProactiveMonitor()
-    startCommissionListener()  // Fixed: automate commission calc
-    startNotificationWorker()  // Fixed: start background notifications
-    
+    await app.listen({ port: PORT, host: HOST })
     app.log.info(`🚀 BRAYN API v2.0 running on http://${HOST}:${PORT}`)
-    app.log.info(`🔌 Socket.io initialized on /support`)
+    app.log.info(`🔌 Socket.io initialized`)
   } catch (err) {
     app.log.error(err)
     process.exit(1)

@@ -24,9 +24,8 @@ export class TaxConnectorService {
       where: { channelId },
     })
 
-    const settingsValue = data.settings
-      ? (data.settings as unknown as Prisma.InputJsonValue)
-      : (Prisma.JsonNull as unknown as Prisma.InputJsonValue)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const settingsValue: Prisma.InputJsonValue = (data.settings ?? Prisma.JsonNull) as any
 
     if (existing) {
       return prisma.taxConnectorConfig.update({
