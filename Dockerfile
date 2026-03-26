@@ -3,8 +3,8 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 FROM base AS builder
-# FORCE COMPLETE REBUILD: 2026-03-26T10:20:00
-ENV CACHE_BUST=2026-03-26T10:20:00
+# FORCE COMPLETE REBUILD: 2026-03-26T11:35:00
+ENV CACHE_BUST=2026-03-26T11:35:00
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
 # Copy ALL package.json files for installation
@@ -22,11 +22,12 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma and build
 RUN pnpm --filter api exec prisma generate
 RUN pnpm --filter api build
-RUN pnpm --filter web build
+
+# FIX: Fail fast if build produced no output — prevents broken images
+RUN test -f apps/api/dist/server.js || (echo "FATAL: dist/server.js not found after build!" && exit 1)
 
 FROM base AS runner
-# Copy everything from builder
 COPY --from=builder /app ./
 
-# Default fallback for the API (railway.toml overrides this, but good for safety)
-CMD ["pnpm", "--filter", "api", "start:prod"]
+# Default: run migrations then start the API
+CMD ["sh", "-c", "pnpm --filter api exec prisma migrate deploy && pnpm --filter api start:prod"]
