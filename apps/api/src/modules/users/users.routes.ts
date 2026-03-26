@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { usersService } from './users.service.js'
+import { mfaService } from '../auth/mfa.service.js'
 import { authenticate } from '../../middleware/authenticate.js'
 import { authorize } from '../../middleware/authorize.js'
 import { registerSchema } from '../auth/auth.schema.js'
@@ -96,6 +97,18 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
+    // Security check: Enforce maximum administrative role counts (only count non-deleted users)
+    if (body.role === 'SUPER_ADMIN') {
+      const count = await prisma.user.count({ where: { role: 'SUPER_ADMIN', deletedAt: null } })
+      if (count >= 1) return reply.status(403).send({ error: 'Maximum of 1 Super Admin allowed' })
+    } else if (body.role === 'ADMIN') {
+      const count = await prisma.user.count({ where: { role: 'ADMIN', deletedAt: null } })
+      if (count >= 2) return reply.status(403).send({ error: 'Maximum of 2 Admins allowed' })
+    } else if (body.role === 'MANAGER_ADMIN') {
+      const count = await prisma.user.count({ where: { role: 'MANAGER_ADMIN', deletedAt: null } })
+      if (count >= 2) return reply.status(403).send({ error: 'Maximum of 2 Manager Admins allowed' })
+    }
+
     // Security check: Managers and Manager Admins need Administrator Manager approval (for lower roles)
     if (request.user.role === 'MANAGER') {
       // Create user as PENDING
@@ -145,6 +158,20 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
       // Cannot promote someone to a role higher than themselves
       if (body.role && !hasRole(request.user, body.role as any)) {
          return reply.status(403).send({ error: 'You cannot promote a user to a rank higher than your own' })
+      }
+    }
+
+    // Security check: Enforce maximum administrative role counts on promotion
+    if (body.role && body.role !== targetUser.role) {
+      if (body.role === 'SUPER_ADMIN') {
+        const count = await prisma.user.count({ where: { role: 'SUPER_ADMIN', deletedAt: null } })
+        if (count >= 1) return reply.status(403).send({ error: 'Maximum of 1 Super Admin allowed' })
+      } else if (body.role === 'ADMIN') {
+        const count = await prisma.user.count({ where: { role: 'ADMIN', deletedAt: null } })
+        if (count >= 2) return reply.status(403).send({ error: 'Maximum of 2 Admins allowed' })
+      } else if (body.role === 'MANAGER_ADMIN') {
+        const count = await prisma.user.count({ where: { role: 'MANAGER_ADMIN', deletedAt: null } })
+        if (count >= 2) return reply.status(403).send({ error: 'Maximum of 2 Manager Admins allowed' })
       }
     }
 
@@ -248,5 +275,42 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
     const { password } = request.body as { password: string }
     await usersService.resetPassword(id, password)
     return { message: 'Password reset successfully' }
+  })
+  // POST /users/:id/reset-mfa
+  app.post('/:id/reset-mfa', {
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN')],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string }
+    const { password } = z.object({ password: z.string() }).parse(request.body)
+
+    // Fetch target user's role
+    const targetUser = await prisma.user.findUnique({ where: { id }, select: { role: true } })
+    if (!targetUser) return reply.status(404).send({ error: 'User not found' })
+
+    if (targetUser.role === 'SUPER_ADMIN') {
+      return reply.status(403).send({ error: 'Super Admin MFA can only be reset manually via server coding/scripts' })
+    }
+
+    // Import role hierarchy to enforce strict rank-based resets
+    const { roleHierarchy } = await import('../../middleware/authorize.js')
+    const actorRank = roleHierarchy[request.user.role] ?? 0
+    const targetRank = roleHierarchy[targetUser.role] ?? 0
+
+    if (actorRank <= targetRank) {
+      return reply.status(403).send({ error: 'You can only reset MFA for users with a lower administrative rank than your own' })
+    }
+
+    // Verify actor password
+    const actor = await prisma.user.findUniqueOrThrow({
+      where: { id: request.user.sub },
+      select: { passwordHash: true }
+    })
+
+    const isValid = await verifyPassword(actor.passwordHash, password)
+    if (!isValid) {
+      return reply.status(403).send({ error: 'Invalid administrator password' })
+    }
+
+    return mfaService.disableMfa(id)
   })
 }

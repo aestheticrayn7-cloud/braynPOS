@@ -13,7 +13,7 @@ import { RATE }         from '../../lib/rate-limit.plugin.js'
 // Previously: `request.body as any` — no validation, any malformed body
 // would throw an unstructured runtime error or corrupt data silently.
 const commitSaleSchema = z.object({
-  channelId:       z.string().uuid(),
+  channelId:       z.string().optional().or(z.literal('')),
   sessionId:       z.string().nullable().optional(),
   customerId:      z.string().nullable().optional(),
   saleType:        z.enum(['RETAIL', 'WHOLESALE', 'CREDIT']),
@@ -112,14 +112,14 @@ export const salesRoutes: FastifyPluginAsync = async (app) => {
     // FIX: Zod parse replaces unsafe `request.body as any`
     const body = commitSaleSchema.parse(request.body)
 
-    // Non-admin roles can only commit sales for their own channel
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      if (body.channelId !== request.user.channelId) {
+      if (body.channelId && body.channelId !== request.user.channelId) {
         return reply.status(403).send({ error: 'You can only commit sales for your assigned channel' })
       }
+      body.channelId = body.channelId || request.user.channelId!
     }
 
-    const sale = await commitSale(body, request.user, {
+    const sale = await commitSale(body as any, request.user, {
       approvalToken: body.approvalToken,
     })
     reply.status(201).send(sale)

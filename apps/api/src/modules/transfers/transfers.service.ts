@@ -126,22 +126,41 @@ export class TransfersService {
 
   async receive(
     id:         string,
-    receivedBy: string,
+    userId:     string,
     lines:      Array<{ itemId: string; receivedQuantity: number; disputeReason?: string }>
   ) {
     const transfer = await this.findById(id)
     const t        = transfer as any
 
-    let hasDispute          = false
-    let totalShrinkageValue = 0
+    let hasDispute           = false
+    let totalShrinkageValue  = 0
+    let receivedBy           = userId
+
+    // Pre-fetch metadata (categories/brands/suppliers) OUTSIDE the transaction
+    // to prevent connection pool deadlocks with the global Prisma client
+    const ensuredMetadata: Record<string, { localCategoryId?: string, localBrandId?: string, localSupplierId?: string }> = {}
+    const sourceItemsForMetadata: Record<string, any> = {} // Store source items for later use
+    for (const line of lines) {
+      const sourceItemForMeta = await prisma.item.findUniqueOrThrow({
+        where: { id: line.itemId },
+        include: { 
+          category: true, 
+          brand: true, 
+          supplier: true,
+          inventoryBalances: { where: { channelId: t.fromChannelId }, take: 1 },
+        } as any,
+      })
+      sourceItemsForMetadata[line.itemId] = sourceItemForMeta
+      ensuredMetadata[line.itemId] = await itemsService.ensureMetadata(t.toChannelId, sourceItemForMeta)
+    }
 
     await prisma.$transaction(async (tx) => {
       for (const line of lines) {
         const transferLine = t.lines?.find((tl: any) => tl.itemId === line.itemId)
         if (!transferLine) continue
 
-        // Update transfer line via basePrisma (no channelId field to worry about)
-        await basePrisma.transferLine.update({
+        // Update transfer line inside the shared transaction avoiding pool deadlocks
+        await tx.transferLine.update({
           where: { id: transferLine.id },
           data:  {
             receivedQuantity: line.receivedQuantity,
@@ -165,16 +184,16 @@ export class TransfersService {
           // No DB trigger exists! Increment handled via upsert below.
         }
 
-        const sourceItem = await prisma.item.findUniqueOrThrow({
-          where:   { id: line.itemId },
-          include: {
-            category: true, brand: true, supplier: true,
-            inventoryBalances: { where: { channelId: t.fromChannelId }, take: 1 },
-          } as any,
+        // Use the pre-fetched source item
+        const sourceItem = sourceItemsForMetadata[line.itemId]
+
+        const existingBalance = await (tx as any).inventoryBalance.findUnique({
+          where: { itemId_channelId: { itemId: line.itemId, channelId: t.toChannelId } },
         })
 
-        const { localCategoryId, localBrandId, localSupplierId } =
-          await itemsService.ensureMetadata(t.toChannelId, sourceItem)
+        // Consume the pre-fetched metadata mapping to avoid global client usage inside `tx`
+        const metadata = ensuredMetadata[line.itemId] || {}
+        const { localCategoryId, localBrandId, localSupplierId } = metadata
 
         await tx.item.update({
           where: { id: line.itemId },
@@ -186,9 +205,6 @@ export class TransfersService {
         })
 
         const sourceBalance   = (sourceItem as any).inventoryBalances?.[0]
-        const existingBalance = await (tx as any).inventoryBalance.findUnique({
-          where: { itemId_channelId: { itemId: line.itemId, channelId: t.toChannelId } },
-        })
 
         await (tx as any).inventoryBalance.upsert({
           where:  { itemId_channelId: { itemId: line.itemId, channelId: t.toChannelId } },
@@ -243,7 +259,8 @@ export class TransfersService {
       }
 
       const newStatus = hasDispute ? 'DISPUTED' : 'RECEIVED'
-      await basePrisma.transfer.update({
+      // Use updateMany so the Prisma extension's `OR: []` injection is valid syntax.
+      await tx.transfer.updateMany({
         where: { id },
         data:  { status: newStatus, receivedBy, receivedAt: new Date() },
       })

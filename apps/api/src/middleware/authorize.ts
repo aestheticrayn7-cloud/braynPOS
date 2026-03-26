@@ -26,9 +26,9 @@ export function authorize(...allowedRoles: UserRole[]) {
 // authority. They are intentionally different trust levels.
 //
 // Hierarchy (higher = more trusted):
-//   SUPER_ADMIN    100  — full system access, bypasses channel isolation
-//   MANAGER_ADMIN   90  — cross-channel admin, approves finance/user ops
-//   ADMIN           80  — branch admin, elevated over standard manager
+//   SUPER_ADMIN    100  — full system access, bypasses channel isolation (Developer)
+//   ADMIN           90  — full system access, bypasses channel isolation (Developer)
+//   MANAGER_ADMIN   80  — business owner / cross-channel admin
 //   MANAGER         70  — branch manager, approves day-to-day operations
 //   CASHIER         40  — point-of-sale operations
 //   SALES_PERSON    40  — sales operations (same level as cashier)
@@ -36,9 +36,9 @@ export function authorize(...allowedRoles: UserRole[]) {
 //   PROMOTER        20  — limited sales/view access
 export const roleHierarchy: Record<string, number> = {
   SUPER_ADMIN:   100,
-  MANAGER_ADMIN:  90,
-  ADMIN:          80,  // FIX: was 90 — now correctly below MANAGER_ADMIN
-  MANAGER:        70,  // FIX: was 80 — adjusted to preserve relative gaps
+  ADMIN:          90,
+  MANAGER_ADMIN:  80,
+  MANAGER:        70,
   CASHIER:        40,
   SALES_PERSON:   40,
   STOREKEEPER:    30,

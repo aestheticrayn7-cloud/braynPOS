@@ -234,8 +234,13 @@ async function commitSaleOnce(
         })),
       }),
 
-      // 3) Bulk inventory deduction â€” single SQL for all items at once
-      // Trigger handles availableQty now.,
+      // 3) Bulk inventory deduction — No DB trigger exists! We must map the deductions directly.
+      ...input.items.map(line =>
+        tx.inventoryBalance.update({
+          where:  { itemId_channelId: { itemId: line.itemId, channelId: input.channelId } },
+          data:   { availableQty: { decrement: line.quantity } }
+        })
+      )
     ])
 
     // 4) Batch-insert all payments in one statement
@@ -505,7 +510,11 @@ export async function reverseSale(saleId: string, actorId: string, managerPasswo
           unitCostAtTime: item.costPriceSnapshot, performedBy: actorId,
         },
       })
-      // Removed manual availableQty update: Trigger on stock_movements now handles it.
+      // No DB trigger exists! We must manually update availableQty.
+      await tx.inventoryBalance.update({
+        where: { itemId_channelId: { itemId: item.itemId, channelId: sale.channelId } },
+        data: { availableQty: { increment: item.quantity } }
+      })
     }
 
     if (sale.saleType === 'CREDIT' && sale.customerId) {
