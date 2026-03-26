@@ -228,7 +228,11 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
         },
       })
 
-      // Removed manual availableQty update: Trigger on stock_movements now handles it.
+      // No DB trigger exists! We must directly update availableQty.
+      await tx.inventoryBalance.update({
+        where: { itemId_channelId: { itemId: body.itemId, channelId: body.channelId } },
+        data: { availableQty: { increment: body.quantity } }
+      })
     })
 
     // Emit event for real-time UI updates

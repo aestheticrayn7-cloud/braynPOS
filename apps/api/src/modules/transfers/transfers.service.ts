@@ -81,8 +81,11 @@ export class TransfersService {
             },
           })
 
-          // Removed manual availableQty update: Trigger on stock_movements now handles it.
-          
+          // No DB trigger exists! We must manually deduct from source location.
+          await (tx as any).inventoryBalance.update({
+            where: { itemId_channelId: { itemId: line.itemId, channelId: data.fromChannelId } },
+            data:  { availableQty: { decrement: line.quantity } }
+          })
           if (line.serialIds?.length) {
             for (const serialId of line.serialIds) {
               await tx.serial.update({
@@ -159,7 +162,7 @@ export class TransfersService {
             },
           })
 
-          // Removed manual availableQty update: Trigger on stock_movements now handles it.
+          // No DB trigger exists! Increment handled via upsert below.
         }
 
         const sourceItem = await prisma.item.findUniqueOrThrow({
@@ -192,7 +195,7 @@ export class TransfersService {
           create: {
             itemId:            line.itemId,
             channelId:         t.toChannelId,
-            availableQty:      0,
+            availableQty:      line.receivedQuantity,
             retailPrice:       sourceBalance?.retailPrice       ?? 0,
             wholesalePrice:    sourceBalance?.wholesalePrice    ?? 0,
             minRetailPrice:    sourceBalance?.minRetailPrice    ?? 0,
@@ -200,6 +203,7 @@ export class TransfersService {
             weightedAvgCost:   sourceBalance?.weightedAvgCost   ?? 0,
           },
           update: {
+            availableQty: { increment: line.receivedQuantity },
             ...(Number(existingBalance?.retailPrice     ?? 0) === 0 && { retailPrice:       sourceBalance?.retailPrice       ?? 0 }),
             ...(Number(existingBalance?.wholesalePrice  ?? 0) === 0 && { wholesalePrice:    sourceBalance?.wholesalePrice    ?? 0 }),
             ...(Number(existingBalance?.minRetailPrice  ?? 0) === 0 && { minRetailPrice:    sourceBalance?.minRetailPrice    ?? 0 }),

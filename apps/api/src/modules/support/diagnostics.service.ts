@@ -125,7 +125,10 @@ export class DiagnosticsService {
         return {
           status: 'FAIL' as const,
           message: `${discrepancies.length} items have stock/ledger discrepancies.`,
-          details: discrepancies
+          details: discrepancies.map(d => ({
+            ...d,
+            movementSum: Number(d.movementSum) // Convert Postgres BigInt to Number for JSON
+          }))
         }
       }
 
