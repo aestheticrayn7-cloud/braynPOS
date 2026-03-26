@@ -1,5 +1,21 @@
 import type { TransactionClient } from './prisma.js'
-import { SYSTEM_ACCOUNT_IDS } from '@shared/types/ledger.types'
+
+// Inlined from packages/shared — eliminates cross-package import that
+// caused tsc rootDir to resolve to monorepo root, breaking dist/ output path
+const SYSTEM_ACCOUNT_IDS = {
+  CASH_ON_HAND: 'acc-1010',
+  BANK_ACCOUNT: 'acc-1020',
+  ACCOUNTS_RECEIVABLE: 'acc-1200',
+  INVENTORY_VALUE: 'acc-1500',
+  ACCOUNTS_PAYABLE: 'acc-2000',
+  RETAINED_EARNINGS: 'acc-3000',
+  SALES_REVENUE: 'acc-4000',
+  COGS: 'acc-5000',
+  SHRINKAGE_LOSS: 'acc-5100',
+  PAYROLL_EXPENSE: 'acc-5200',
+  GENERAL_EXPENSE: 'acc-5300',
+  TAX_PAYABLE: 'acc-2100',
+} as const
 
 export const ACCOUNT_IDS = SYSTEM_ACCOUNT_IDS
 
