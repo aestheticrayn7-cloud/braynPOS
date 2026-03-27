@@ -31,4 +31,4 @@ FROM base AS runner
 COPY --from=builder /app ./
 
 # Switch start command based on service name
-CMD ["sh", "-c", "if [ \"$RAILWAY_SERVICE_NAME\" = \"web\" ]; then pnpm --filter web start; else pnpm --filter api exec prisma migrate deploy && pnpm --filter api start:prod; fi"]
+CMD ["sh", "-c", "if [ \"$RAILWAY_SERVICE_NAME\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod; fi"]
