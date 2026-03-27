@@ -416,10 +416,13 @@ export async function findSales(query: any, actor?: TokenPayload) {
   const page  = query.page  ?? 1
   const limit = Math.min(query.limit ?? 25, 100)
   const skip  = (page - 1) * limit
+  const isAdmin = hasRole(actor as any, 'MANAGER_ADMIN')
 
   const where: Prisma.SaleWhereInput = {
     deletedAt: null,
-    ...(query.channelId   && { channelId:   query.channelId }),
+    ...(query.channelId ? {
+      channelId: (isAdmin || query.channelId === actor?.channelId) ? query.channelId : (actor?.channelId || 'none')
+    } : (isAdmin ? {} : { channelId: actor?.channelId || 'none' })),
     ...(query.saleType    && { saleType:    query.saleType }),
     ...(query.customerId  && { customerId:  query.customerId }),
     ...(query.sessionId   && { sessionId:   query.sessionId }),
@@ -451,8 +454,7 @@ export async function findSales(query: any, actor?: TokenPayload) {
     FROM   "sale_items" si
     JOIN   "sales" s ON si."saleId" = s.id
     WHERE  s."deletedAt" IS NULL
-    ${where.channelId ? Prisma.sql`AND s."channelId" = ${where.channelId}` : 
-      (['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(actor?.role || '') ? Prisma.sql`` : Prisma.sql`AND s."channelId" = ${actor?.channelId || ''}`)}
+    ${where.channelId ? Prisma.sql`AND s."channelId" = ${where.channelId}` : Prisma.sql``}
     ${query.performedBy ? Prisma.sql`AND s."performedBy" = ${query.performedBy}` : Prisma.sql``}
     ${(where.createdAt as any)?.gte ? Prisma.sql`AND s."createdAt" >= ${(where.createdAt as any).gte}` : Prisma.sql``}
     ${(where.createdAt as any)?.lte ? Prisma.sql`AND s."createdAt" <= ${(where.createdAt as any).lte}` : Prisma.sql``}
