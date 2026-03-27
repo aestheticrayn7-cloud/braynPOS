@@ -25,8 +25,31 @@ export class PayslipService {
       throw { statusCode: 400, message: 'No staff profiles found' }
     }
 
-    const runDate  = new Date(year, month - 1, 15)
+    // ── Pre-fetch all rules once to avoid thousands of queries ───────
+    const [allowanceRules, deductionRules] = await Promise.all([
+      prisma.allowanceRule.findMany({ where: { isActive: true } }),
+      prisma.deductionRule.findMany({ 
+        where: { isActive: true }, 
+        include: { brackets: { orderBy: { incomeFrom: 'asc' } } } 
+      }),
+    ])
+
+    const prefetchedRules = { allowanceRules, deductionRules }
+    const runDate = new Date(year, month - 1, 15)
     const warnings: string[] = []
+
+    // ── Pre-calculate all net salaries BEFORE starting transaction ───
+    // This allows the transaction to be purely focused on persistence.
+    const calculations = await Promise.all(
+      staffProfiles.map(async (profile) => {
+        try {
+          const calc = await calculateNetSalary(profile.id, runDate, prefetchedRules)
+          return { profile, calc, error: null }
+        } catch (err: any) {
+          return { profile, calc: null, error: err?.message || 'Calculation failed' }
+        }
+      })
+    )
 
     return prisma.$transaction(async (tx) => {
       const salaryRun = await tx.salaryRun.create({
@@ -44,15 +67,10 @@ export class PayslipService {
       let totalDeductions  = 0
       let totalEmployerCost = 0
 
-      for (const profile of staffProfiles) {
-        // Isolate per-staff errors — one bad profile should not abort the whole run
-        let calc: Awaited<ReturnType<typeof calculateNetSalary>>
-        try {
-          calc = await calculateNetSalary(profile.id, runDate)
-        } catch (err: any) {
-          const msg = err?.message ?? `Unknown error for profile ${profile.id}`
-          warnings.push(`Skipped ${profile.user.username}: ${msg}`)
-          console.error(`[payslip] Skipping staff profile ${profile.id}: ${msg}`)
+      for (const item of calculations) {
+        const { profile, calc, error } = item
+        if (error || !calc) {
+          warnings.push(`Skipped ${profile.user.username}: ${error}`)
           continue
         }
 
@@ -152,6 +170,8 @@ export class PayslipService {
         staffCount:   staffProfiles.length,
         ...(warnings.length > 0 ? { warnings } : {}),
       }
+    }, {
+      timeout: 30000 // Increase timeout to 30s for large payroll runs
     })
   }
 

@@ -21,7 +21,16 @@ function n(value: unknown, fallback = 0): number {
   return result
 }
 
-export async function calculateNetSalary(staffProfileId: string, runDate: Date = new Date()) {
+export interface PrefetchedPayrollRules {
+  allowanceRules: any[]
+  deductionRules: any[]
+}
+
+export async function calculateNetSalary(
+  staffProfileId: string, 
+  runDate: Date = new Date(),
+  prefetchedRules?: PrefetchedPayrollRules
+) {
   const profile = await prisma.staffProfile.findUniqueOrThrow({
     where: { id: staffProfileId },
     include: { user: true },
@@ -37,15 +46,19 @@ export async function calculateNetSalary(staffProfileId: string, runDate: Date =
   }
 
   // ── Fetch allowances ──────────────────────────────────────────────
-  const allowanceRules = await prisma.allowanceRule.findMany({
-    where: {
-      isActive: true,
-      OR: [
-        { appliesToJobLevelId: profile.jobLevelId },
-        { appliesToJobLevelId: null },
-      ],
-    },
-  })
+  const allowanceRules = prefetchedRules 
+    ? prefetchedRules.allowanceRules.filter(r => 
+        r.isActive && (r.appliesToJobLevelId === profile.jobLevelId || r.appliesToJobLevelId === null)
+      )
+    : await prisma.allowanceRule.findMany({
+        where: {
+          isActive: true,
+          OR: [
+            { appliesToJobLevelId: profile.jobLevelId },
+            { appliesToJobLevelId: null },
+          ],
+        },
+      })
 
   const allowances = allowanceRules.map(r => {
     // FIX 5: Allowance percentages apply to base grossSalary only —
@@ -63,17 +76,23 @@ export async function calculateNetSalary(staffProfileId: string, runDate: Date =
   const grossWithAllowances = grossSalary + allowancesTotal
 
   // ── Fetch deduction rules ordered by calculationSequence ─────────
-  const deductionRules = await prisma.deductionRule.findMany({
-    where: {
-      isActive: true,
-      OR: [
-        { appliesToJobLevelId: profile.jobLevelId },
-        { appliesToJobLevelId: null },
-      ],
-    },
-    orderBy: { calculationSequence: 'asc' },
-    include: { brackets: { orderBy: { incomeFrom: 'asc' } } },
-  })
+  const deductionRules = prefetchedRules
+    ? prefetchedRules.deductionRules
+        .filter(r => 
+          r.isActive && (r.appliesToJobLevelId === profile.jobLevelId || r.appliesToJobLevelId === null)
+        )
+        .sort((a, b) => (a.calculationSequence ?? 100) - (b.calculationSequence ?? 100))
+    : await prisma.deductionRule.findMany({
+        where: {
+          isActive: true,
+          OR: [
+            { appliesToJobLevelId: profile.jobLevelId },
+            { appliesToJobLevelId: null },
+          ],
+        },
+        orderBy: { calculationSequence: 'asc' },
+        include: { brackets: { orderBy: { incomeFrom: 'asc' } } },
+      })
 
   const deductions: DeductionResult[] = []
   let preTaxDeductionsTotal = 0
@@ -81,7 +100,7 @@ export async function calculateNetSalary(staffProfileId: string, runDate: Date =
 
   for (const rule of deductionRules) {
     // ── Filter brackets by temporal validity ──────────────────────
-    const validBrackets = rule.brackets.filter(b => {
+    const validBrackets = rule.brackets.filter((b: any) => {
       const afterStart  = !b.effectiveStartDate || runDate >= new Date(b.effectiveStartDate.toISOString())
       const beforeEnd   = !b.effectiveEndDate   || runDate <= new Date(b.effectiveEndDate.toISOString())
       return afterStart && beforeEnd
@@ -111,7 +130,7 @@ export async function calculateNetSalary(staffProfileId: string, runDate: Date =
       amount = calcBase * (rate / 100)
 
     } else if (rule.type === 'BRACKET_TABLE') {
-      const bracket = validBrackets.find(b =>
+      const bracket = validBrackets.find((b: any) =>
         calcBase >= n(b.incomeFrom) &&
         (b.incomeTo === null || calcBase <= n(b.incomeTo))
       )

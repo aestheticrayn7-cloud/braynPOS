@@ -113,10 +113,19 @@ export const salesRoutes: FastifyPluginAsync = async (app) => {
     const body = commitSaleSchema.parse(request.body)
 
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
+      if (!body.channelId && !request.user.channelId) {
+        return reply.status(403).send({ error: 'User is not assigned to any channel' })
+      }
       if (body.channelId && body.channelId !== request.user.channelId) {
         return reply.status(403).send({ error: 'You can only commit sales for your assigned channel' })
       }
       body.channelId = body.channelId || request.user.channelId!
+    } else if (!body.channelId) {
+      // Admins MUST specify a channelId if not using a default
+      if (!request.user.channelId) {
+         return reply.status(400).send({ error: 'channelId is required for this operation' })
+      }
+      body.channelId = request.user.channelId
     }
 
     const sale = await commitSale(body as any, request.user, {

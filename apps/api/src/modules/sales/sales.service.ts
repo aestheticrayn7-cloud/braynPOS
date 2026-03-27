@@ -30,6 +30,10 @@ async function generateReceiptNo(
   channelId: string,
   tx: Prisma.TransactionClient
 ): Promise<string> {
+  if (!channelId) {
+    // Fallback if channelId is somehow missing
+    return `RCP-GEN-${Date.now()}-${randomBytes(2).toString('hex')}`
+  }
   // EAT date string (UTC+3) so midnight in Kenya is correct
   const now     = new Date()
   const eatDate = new Date(now.getTime() + 3 * 60 * 60 * 1000)
@@ -329,6 +333,10 @@ export async function commitSale(
   actor:    TokenPayload,
   options?: { skipStockCheck?: boolean; offlineReceiptNo?: string | null; approvalToken?: string | null }
 ) {
+  if (!input.channelId) {
+    throw { statusCode: 400, message: 'channelId is required to commit a sale' }
+  }
+
   // Server-level double-commit guard
   const guardKey      = `${input.channelId}:${actor.sub}`
   const inFlightSince = inFlightCommits.get(guardKey)
