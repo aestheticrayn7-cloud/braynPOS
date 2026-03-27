@@ -1,11 +1,11 @@
 steps:
   # Build the unified Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1', '.']
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA']
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1']
 
   # Deploy API to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +15,7 @@ steps:
       - 'deploy'
       - 'brayn-api'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
       - '--region'
       - 'europe-west1'
       - '--platform'
@@ -23,6 +23,10 @@ steps:
       - '--allow-unauthenticated'
       - '--service-account'
       - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--add-cloudsql-instances'
+      - 'project-5ca97705-2309-428a-a54:europe-west1:braynpos-db'
+      - '--set-secrets'
+      - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
       - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
       - '--set-env-vars'
@@ -36,7 +40,7 @@ steps:
       - 'deploy'
       - 'brayn-web'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
       - '--region'
       - 'europe-west1'
       - '--platform'
@@ -44,13 +48,12 @@ steps:
       - '--allow-unauthenticated'
       - '--service-account'
       - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-secrets'
+      - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
-      - 'sh,-c,cd apps/web && pnpm start'
+      - 'sh,-c,cd apps/web && pnpm start -- -p 8080'
       - '--set-env-vars'
       - 'SERVICE_TYPE=web'
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
-
-options:
-  logging: CLOUD_LOGGING
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
