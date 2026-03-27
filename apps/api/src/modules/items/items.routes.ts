@@ -79,7 +79,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
   // POST /items
   app.post('/', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { approvalToken, ...body } = z.object({
       approvalToken: z.string().optional(),
@@ -104,7 +104,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
   // PATCH /items/:id
   app.patch('/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const body   = updateItemSchema.parse(request.body)
@@ -125,7 +125,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
   // DELETE /items/:id
   app.delete('/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { id }            = request.params as { id: string }
     const { approvalToken } = z.object({ approvalToken: z.string().optional() }).parse(request.body || {})
@@ -162,7 +162,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
   // POST /items/stock-adjustment
   app.post('/stock-adjustment', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER', 'STOREKEEPER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER', 'STOREKEEPER')],
   }, async (request) => {
     const body = stockAdjustmentSchema.parse(request.body)
 
@@ -196,8 +196,8 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     let movementType: 'ADJUSTMENT_IN' | 'ADJUSTMENT_OUT' | 'OPENING_STOCK'
     if (body.isOpening) {
       const { settingsService } = await import('../dashboard/settings.service.js')
-      const globalSettings = await settingsService.getByKey('advancedSettings') as any
-      if (!globalSettings?.globalOpeningStockActive) {
+      const advancedSettings = await settingsService.getByKey('advancedSettings', request.user.channelId) as any
+      if (!advancedSettings?.globalOpeningStockActive) {
         throw { statusCode: 403, message: 'Global opening stock window is closed' }
       }
       const channel = await prisma.channel.findUniqueOrThrow({ where: { id: body.channelId } })
@@ -258,7 +258,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.post('/brands', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { name } = z.object({ name: z.string().min(1) }).parse(request.body)
     const brand = await itemsService.createBrand(name, request.user.channelId || undefined)
@@ -267,7 +267,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.patch('/brands/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const isHQ   = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
@@ -277,7 +277,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.delete('/brands/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const isHQ   = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
@@ -292,7 +292,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.post('/categories', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { name, parentId } = z.object({
       name:     z.string().min(1),
@@ -311,7 +311,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.patch('/categories/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { id }             = request.params as { id: string }
     const { name, parentId } = z.object({
@@ -331,7 +331,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.delete('/categories/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const isHQ   = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
@@ -346,7 +346,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.post('/suppliers', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const body = z.object({
       name:         z.string().min(1),
@@ -363,7 +363,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.patch('/suppliers/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const isHQ   = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
@@ -381,7 +381,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
   app.delete('/suppliers/:id', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const { id } = request.params as { id: string }
     const isHQ   = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
@@ -395,7 +395,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
   // POST /items/import
   app.post('/import', {
     config:     RATE.APPROVAL,
-    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request) => {
     const data = await request.file()
     if (!data || !data.file) throw { statusCode: 400, message: 'CSV file required' }
