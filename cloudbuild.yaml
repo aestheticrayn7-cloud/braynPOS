@@ -1,13 +1,13 @@
 steps:
   # Build the unified Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1', '.']
+    args: ['build', '-t', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1', '.']
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1']
+    args: ['push', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1']
 
-  # Deploy API to Cloud Run
+  # Deploy API to Cloud Run (with Direct VPC Egress)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -15,16 +15,19 @@ steps:
       - 'deploy'
       - 'brayn-api'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
+      - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1'
       - '--region'
-      - 'europe-west1'
+      - 'africa-south1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
       - '--service-account'
       - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
       - '--add-cloudsql-instances'
-      - 'project-5ca97705-2309-428a-a54:europe-west1:braynpos-db'
+      - '$PROJECT_ID:africa-south1:braynpos-db-af'
+      - '--network=braynpos-network'
+      - '--subnet=braynpos-subnet-af'
+      - '--vpc-egress=private-ranges-only'
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
@@ -40,9 +43,9 @@ steps:
       - 'deploy'
       - 'brayn-web'
       - '--image'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
+      - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1'
       - '--region'
-      - 'europe-west1'
+      - 'africa-south1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
@@ -56,4 +59,4 @@ steps:
       - 'SERVICE_TYPE=web'
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:v1'
+  - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1'
