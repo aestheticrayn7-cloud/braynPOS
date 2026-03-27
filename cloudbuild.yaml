@@ -1,7 +1,13 @@
 steps:
   # Build the unified Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1', '.']
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
+      - '-t'
+      - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1'
+      - '.'
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -54,9 +60,9 @@ steps:
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
-      - 'sh,-c,cd apps/web && pnpm start -- -p 8080'
+      - 'sh,-c,cd apps/web && pnpm start'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=web'
+      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
 
 images:
   - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:v1'

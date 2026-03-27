@@ -22,6 +22,9 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma and build
 RUN pnpm --filter api exec prisma generate
 RUN pnpm --filter api build
+# Accept API URL build arg so Next.js bakes it into the browser bundle
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter web build
 
 # FIX: Fail fast if build produced no output — prevents broken images
