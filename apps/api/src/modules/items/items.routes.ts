@@ -168,12 +168,11 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
     const item       = await prisma.item.findUniqueOrThrow({ where: { id: body.itemId } })
     const unitPrice  = Number(item.retailPrice)
-    const totalValue = unitPrice * Math.abs(body.quantity)
-
+    const totalValue      = Math.abs(body.quantity) * Number(item.retailPrice)
     const THRESHOLD_QTY   = 50
     const THRESHOLD_VALUE = 500
     const isOverThreshold = Math.abs(body.quantity) > THRESHOLD_QTY || totalValue > THRESHOLD_VALUE
-    const needsApproval   = isOverThreshold && !['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)
+    const needsApproval   = isOverThreshold && !body.isOpening && !['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)
 
     if (needsApproval) {
       const approval = await prisma.managerApproval.create({

@@ -36,11 +36,12 @@ export function StockAdjustmentModal({ item, channelId, isOpen, onClose, onSucce
         quantity,
         reason,
         reasonCode,
-        isOpening: isOpening && user?.role === 'SUPER_ADMIN',
+        isOpening: isOpening && ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(user?.role || ''),
       }, token!)
       
       if (res.status === 'PENDING_APPROVAL') {
-        alert('Threshold Exceeded: This adjustment has been submitted for Manager Approval.')
+        alert('Threshold Exceeded: This adjustment has been submitted for Manager Approval. The stock will update once a manager approves the request.')
+        return // Do NOT close or refresh yet
       } else {
         alert('Stock adjustment recorded successfully.')
       }
@@ -54,7 +55,7 @@ export function StockAdjustmentModal({ item, channelId, isOpen, onClose, onSucce
     }
   }
 
-  const isAuthorisedForOpening = user?.role === 'SUPER_ADMIN'
+  const isAuthorisedForOpening = ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(user?.role || '')
 
   return (
     <div className="modal-overlay">

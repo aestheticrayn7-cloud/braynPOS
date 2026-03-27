@@ -1,0 +1,176 @@
+﻿--- Latest Stock Movements ---
+[
+  {
+    "id": "699a5a78-7cfc-496f-8269-16b8d1bdadbd",
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "84e9f29f-5d6a-4aae-b237-1442d88688ab",
+    "movementType": "SALE",
+    "quantityChange": -1,
+    "referenceId": "a7dbe291-d062-43af-8ac4-ede1a75e8b9d",
+    "referenceType": "sale",
+    "unitCostAtTime": "250",
+    "performedBy": "1b57e8e1-e7b2-4d51-a69b-db731fca29ee",
+    "notes": null,
+    "createdAt": "2026-03-27T05:50:25.385Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  },
+  {
+    "id": "65ede0ab-6893-4ad7-992a-761dba36b3fd",
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "movementType": "SALE",
+    "quantityChange": -2,
+    "referenceId": "ce2faaec-f181-4639-98a1-404067ba6269",
+    "referenceType": "sale",
+    "unitCostAtTime": "250",
+    "performedBy": "615524b0-7c1b-4293-9484-2f29c9c2b8ec",
+    "notes": null,
+    "createdAt": "2026-03-27T05:38:40.872Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  },
+  {
+    "id": "6122b1be-d9d8-469a-84cc-d92bea99ac51",
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "movementType": "SALE",
+    "quantityChange": -2,
+    "referenceId": "576373b3-2a49-4bd8-a21b-60244cfb5427",
+    "referenceType": "sale",
+    "unitCostAtTime": "250",
+    "performedBy": "615524b0-7c1b-4293-9484-2f29c9c2b8ec",
+    "notes": null,
+    "createdAt": "2026-03-26T16:50:22.680Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  },
+  {
+    "id": "b7a72273-d5a5-4b69-8f0b-dc520a261296",
+    "itemId": "ee7c4a1c-cd8d-4dc5-964f-09c48275e5b5",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "movementType": "SALE",
+    "quantityChange": -2,
+    "referenceId": "576373b3-2a49-4bd8-a21b-60244cfb5427",
+    "referenceType": "sale",
+    "unitCostAtTime": "18500",
+    "performedBy": "615524b0-7c1b-4293-9484-2f29c9c2b8ec",
+    "notes": null,
+    "createdAt": "2026-03-26T16:50:22.680Z",
+    "item": {
+      "name": "HP business Desktop"
+    }
+  },
+  {
+    "id": "aea4648c-b8f0-4210-8842-f080f6165ca7",
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "movementType": "SALE",
+    "quantityChange": -2,
+    "referenceId": "0c9922f3-0deb-49fa-9cf3-acb6b6fe6359",
+    "referenceType": "sale",
+    "unitCostAtTime": "250",
+    "performedBy": "615524b0-7c1b-4293-9484-2f29c9c2b8ec",
+    "notes": null,
+    "createdAt": "2026-03-26T16:49:17.960Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  }
+]
+--- Inventory Balances ---
+[
+  {
+    "itemId": "ee7c4a1c-cd8d-4dc5-964f-09c48275e5b5",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "availableQty": 3,
+    "incomingQty": 0,
+    "retailPrice": "45000",
+    "wholesalePrice": "36500",
+    "minRetailPrice": "36500",
+    "minWholesalePrice": "36500",
+    "weightedAvgCost": "18500",
+    "lastMovementAt": "2026-03-26T15:07:18.307Z",
+    "item": {
+      "name": "HP business Desktop"
+    }
+  },
+  {
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "1a87bce9-1a0e-4511-bd8c-eb136c0f8198",
+    "availableQty": 44,
+    "incomingQty": 0,
+    "retailPrice": "1200",
+    "wholesalePrice": "800",
+    "minRetailPrice": "800",
+    "minWholesalePrice": "800",
+    "weightedAvgCost": "250",
+    "lastMovementAt": "2026-03-26T16:43:35.075Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  },
+  {
+    "itemId": "c0a80101-0000-4000-8000-000000000002",
+    "channelId": "84e9f29f-5d6a-4aae-b237-1442d88688ab",
+    "availableQty": 50,
+    "incomingQty": 0,
+    "retailPrice": "0",
+    "wholesalePrice": "0",
+    "minRetailPrice": "0",
+    "minWholesalePrice": "0",
+    "weightedAvgCost": "0",
+    "lastMovementAt": "2026-03-25T13:00:49.285Z",
+    "item": {
+      "name": "Generic Business Laptop"
+    }
+  },
+  {
+    "itemId": "c0a80101-0000-4000-8000-000000000003",
+    "channelId": "84e9f29f-5d6a-4aae-b237-1442d88688ab",
+    "availableQty": 200,
+    "incomingQty": 0,
+    "retailPrice": "0",
+    "wholesalePrice": "0",
+    "minRetailPrice": "0",
+    "minWholesalePrice": "0",
+    "weightedAvgCost": "0",
+    "lastMovementAt": "2026-03-25T13:00:50.367Z",
+    "item": {
+      "name": "Optical Wireless Mouse"
+    }
+  },
+  {
+    "itemId": "901d8846-9818-48a7-868c-59b8ec01c023",
+    "channelId": "84e9f29f-5d6a-4aae-b237-1442d88688ab",
+    "availableQty": 49,
+    "incomingQty": 0,
+    "retailPrice": "1200",
+    "wholesalePrice": "800",
+    "minRetailPrice": "800",
+    "minWholesalePrice": "800",
+    "weightedAvgCost": "250",
+    "lastMovementAt": "2026-03-26T16:34:02.245Z",
+    "item": {
+      "name": "Optical wireless headphones"
+    }
+  },
+  {
+    "itemId": "ee7c4a1c-cd8d-4dc5-964f-09c48275e5b5",
+    "channelId": "84e9f29f-5d6a-4aae-b237-1442d88688ab",
+    "availableQty": 15,
+    "incomingQty": 0,
+    "retailPrice": "45000",
+    "wholesalePrice": "36500",
+    "minRetailPrice": "36500",
+    "minWholesalePrice": "36500",
+    "weightedAvgCost": "18500",
+    "lastMovementAt": "2026-03-26T10:13:43.526Z",
+    "item": {
+      "name": "HP business Desktop"
+    }
+  }
+]

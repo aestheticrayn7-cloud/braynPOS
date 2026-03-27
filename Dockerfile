@@ -22,6 +22,7 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma and build
 RUN pnpm --filter api exec prisma generate
 RUN pnpm --filter api build
+RUN pnpm --filter web build
 
 # FIX: Fail fast if build produced no output — prevents broken images
 RUN test -f apps/api/dist/server.js || (echo "FATAL: dist/server.js not found after build!" && exit 1)
@@ -29,5 +30,5 @@ RUN test -f apps/api/dist/server.js || (echo "FATAL: dist/server.js not found af
 FROM base AS runner
 COPY --from=builder /app ./
 
-# Default: run migrations then start the API
-CMD ["sh", "-c", "pnpm --filter api exec prisma migrate deploy && pnpm --filter api start:prod"]
+# Switch start command based on service name
+CMD ["sh", "-c", "if [ \"$RAILWAY_SERVICE_NAME\" = \"web\" ]; then pnpm --filter web start; else pnpm --filter api exec prisma migrate deploy && pnpm --filter api start:prod; fi"]
