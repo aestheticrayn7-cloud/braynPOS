@@ -451,7 +451,8 @@ export async function findSales(query: any, actor?: TokenPayload) {
     FROM   "sale_items" si
     JOIN   "sales" s ON si."saleId" = s.id
     WHERE  s."deletedAt" IS NULL
-    AND    s."channelId" = ${where.channelId || actor?.channelId || ''}
+    ${where.channelId ? Prisma.sql`AND s."channelId" = ${where.channelId}` : 
+      (['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(actor?.role || '') ? Prisma.sql`` : Prisma.sql`AND s."channelId" = ${actor?.channelId || ''}`)}
     ${query.performedBy ? Prisma.sql`AND s."performedBy" = ${query.performedBy}` : Prisma.sql``}
     ${(where.createdAt as any)?.gte ? Prisma.sql`AND s."createdAt" >= ${(where.createdAt as any).gte}` : Prisma.sql``}
     ${(where.createdAt as any)?.lte ? Prisma.sql`AND s."createdAt" <= ${(where.createdAt as any).lte}` : Prisma.sql``}
