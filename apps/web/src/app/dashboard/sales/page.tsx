@@ -33,6 +33,7 @@ export default function SalesPage() {
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
   const [channelId, setChannelId] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [channels, setChannels] = useState<{ id: string; name: string }[]>([])
   const [performedBy, setPerformedBy] = useState('')
   const [users, setUsers] = useState<{ id: string; username: string }[]>([])
@@ -54,6 +55,7 @@ export default function SalesPage() {
     if (startDate) params.set('startDate', startDate)
     if (endDate) params.set('endDate', endDate)
     if (channelId) params.set('channelId', channelId)
+    if (paymentMethod) params.set('paymentMethod', paymentMethod)
     
     if (performedBy) {
       params.set('performedBy', performedBy)
@@ -99,7 +101,7 @@ export default function SalesPage() {
     }
   }, [token])
 
-  useEffect(() => { fetchSales(page) }, [token, page, saleType, startDate, endDate, channelId, performedBy, mySalesOnly])
+  useEffect(() => { fetchSales(page) }, [token, page, saleType, startDate, endDate, channelId, paymentMethod, performedBy, mySalesOnly])
 
   const fmt = (n: unknown) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(Number(n ?? 0))
   const fmtDateTime = (d: string) => {
@@ -190,6 +192,19 @@ export default function SalesPage() {
             <option value="PRE_ORDER">Pre-Order</option>
           </select>
         </div>
+
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>Payment</label>
+          <select className="input" value={paymentMethod} onChange={e => { setPaymentMethod(e.target.value); setPage(1) }}>
+            <option value="">All Payments</option>
+            <option value="CASH">Cash</option>
+            <option value="MOBILE_MONEY">M-Pesa</option>
+            <option value="CARD">Card</option>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="LOYALTY_POINTS">Loyalty Points</option>
+            <option value="CREDIT">Credit</option>
+          </select>
+        </div>
         <div className="form-group" style={{ margin: 0 }}>
           <label>From Date</label>
           <input type="date" className="input" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1) }} />
@@ -209,9 +224,9 @@ export default function SalesPage() {
           </div>
         )}
 
-        {(saleType || startDate !== today || endDate !== today || channelId || performedBy || mySalesOnly) && (
+        {(saleType || startDate !== today || endDate !== today || channelId || paymentMethod || performedBy || mySalesOnly) && (
           <button className="btn btn-ghost" onClick={() => { 
-            setSaleType(''); setStartDate(today); setEndDate(today); setChannelId(''); setPerformedBy(''); setMySalesOnly(false); setPage(1) 
+            setSaleType(''); setStartDate(today); setEndDate(today); setChannelId(''); setPaymentMethod(''); setPerformedBy(''); setMySalesOnly(false); setPage(1) 
           }}>Clear Filters</button>
         )}
       </div>

@@ -427,6 +427,13 @@ export async function findSales(query: any, actor?: TokenPayload) {
     ...(query.customerId  && { customerId:  query.customerId }),
     ...(query.sessionId   && { sessionId:   query.sessionId }),
     ...(query.performedBy && { performedBy: query.performedBy }),
+    ...(query.paymentMethod && {
+      payments: {
+        some: {
+          method: query.paymentMethod
+        }
+      }
+    }),
     ...(query.startDate || query.endDate ? {
       createdAt: {
         ...(query.startDate && { gte: new Date(`${query.startDate.split('T')[0]}T00:00:00+03:00`) }),
@@ -456,6 +463,11 @@ export async function findSales(query: any, actor?: TokenPayload) {
     WHERE  s."deletedAt" IS NULL
     ${where.channelId ? Prisma.sql`AND s."channelId" = ${where.channelId}` : Prisma.sql``}
     ${query.performedBy ? Prisma.sql`AND s."performedBy" = ${query.performedBy}` : Prisma.sql``}
+    ${query.paymentMethod ? Prisma.sql`AND EXISTS (
+      SELECT 1 FROM "sale_payments" sp 
+      WHERE sp."saleId" = s.id 
+      AND sp."method"::text = ${query.paymentMethod}
+    )` : Prisma.sql``}
     ${(where.createdAt as any)?.gte ? Prisma.sql`AND s."createdAt" >= ${(where.createdAt as any).gte}` : Prisma.sql``}
     ${(where.createdAt as any)?.lte ? Prisma.sql`AND s."createdAt" <= ${(where.createdAt as any).lte}` : Prisma.sql``}
   `

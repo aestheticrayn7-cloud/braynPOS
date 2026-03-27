@@ -74,6 +74,7 @@ export const listSalesQuery = z.object({
   endDate:    z.string().optional(),
   customerId: z.string().uuid().optional(),
   sessionId:  z.string().uuid().optional(),
+  paymentMethod: z.enum(['CASH', 'MOBILE_MONEY', 'CARD', 'BANK_TRANSFER', 'LOYALTY_POINTS', 'CREDIT']).optional(),
   performedBy: z.preprocess(
     (val) => (val === '' ? undefined : val),
     z.string().uuid().optional()
