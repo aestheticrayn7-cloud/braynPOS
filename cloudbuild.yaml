@@ -1,0 +1,56 @@
+steps:
+  # Build the unified Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA', '.']
+
+  # Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA']
+
+  # Deploy API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'brayn-api'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--service-account'
+      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--command'
+      - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
+      - '--set-env-vars'
+      - 'SERVICE_TYPE=api'
+
+  # Deploy Web to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'brayn-web'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--service-account'
+      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--command'
+      - 'sh,-c,cd apps/web && pnpm start'
+      - '--set-env-vars'
+      - 'SERVICE_TYPE=web'
+
+images:
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/braynpos-repo/braynpos-unified:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING

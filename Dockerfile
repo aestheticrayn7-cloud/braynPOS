@@ -30,5 +30,5 @@ RUN test -f apps/api/dist/server.js || (echo "FATAL: dist/server.js not found af
 FROM base AS runner
 COPY --from=builder /app ./
 
-# Switch start command based on service name
-CMD ["sh", "-c", "if [ \"$RAILWAY_SERVICE_NAME\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod; fi"]
+# Switch start command based on SERVICE_TYPE (Cloud Run default is to use entrypoint/command overrides, but this is a fallback)
+CMD ["sh", "-c", "if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start -- -p ${PORT:-3000}; else cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod; fi"]
