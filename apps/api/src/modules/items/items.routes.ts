@@ -194,15 +194,18 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
 
     let movementType: 'ADJUSTMENT_IN' | 'ADJUSTMENT_OUT' | 'OPENING_STOCK'
     if (body.isOpening) {
-      const { settingsService } = await import('../dashboard/settings.service.js')
-      const advancedSettings = await settingsService.getByKey('advancedSettings', request.user.channelId) as any
-      if (!advancedSettings?.globalOpeningStockActive) {
-        throw { statusCode: 403, message: 'Global opening stock window is closed' }
-      }
-      const channel = await prisma.channel.findUniqueOrThrow({ where: { id: body.channelId } })
-      const flags   = (channel.featureFlags as any) || {}
-      if (!flags.openingStockWindowActive && request.user.role !== 'SUPER_ADMIN') {
-        throw { statusCode: 403, message: 'Opening stock window is not active for this channel' }
+      // SUPER_ADMIN bypasses all opening stock window restrictions
+      if (request.user.role !== 'SUPER_ADMIN') {
+        const { settingsService } = await import('../dashboard/settings.service.js')
+        const advancedSettings = await settingsService.getByKey('advancedSettings', request.user.channelId) as any
+        if (!advancedSettings?.globalOpeningStockActive) {
+          throw { statusCode: 403, message: 'Global opening stock window is closed' }
+        }
+        const channel = await prisma.channel.findUniqueOrThrow({ where: { id: body.channelId } })
+        const flags   = (channel.featureFlags as any) || {}
+        if (!flags.openingStockWindowActive) {
+          throw { statusCode: 403, message: 'Opening stock window is not active for this channel' }
+        }
       }
       movementType = 'OPENING_STOCK'
     } else {

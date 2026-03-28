@@ -125,7 +125,7 @@ export class UsersService {
         const user = await tx.user.create({
           data: {
             username:  data.username,
-            email:     data.email,
+            email:     data.email.trim().toLowerCase(),
             passwordHash,
             role:      data.role,
             channelId: data.channelId ?? null,
@@ -181,6 +181,9 @@ export class UsersService {
   }
 
   async update(id: string, data: Prisma.UserUpdateInput, actor: { id: string; role: string; channelId: string | null }) {
+    if (typeof data.email === 'string') {
+      data.email = data.email.trim().toLowerCase()
+    }
     const existing = await this.findById(id, actor)
 
     // FIX 4: Admin count check inside transaction to prevent TOCTOU race

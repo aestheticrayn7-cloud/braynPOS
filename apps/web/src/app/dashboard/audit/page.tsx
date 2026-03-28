@@ -33,19 +33,26 @@ export default function AuditTrailPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const [filters, setFilters] = useState({ action: '', targetType: '', channelId: '' })
+  const today = new Date().toISOString().split('T')[0]
+
+  const [filters, setFilters] = useState({ action: '', targetType: '', channelId: '', date: today })
 
   const fetchLogs = async () => {
     if (!token) return
     setLoading(true)
     try {
-      const query = new URLSearchParams({
+      const params: Record<string, string> = {
         page:  page.toString(),
         limit: '50',
-        ...(filters.action     && { action:     filters.action }),
-        ...(filters.targetType && { targetType: filters.targetType }),
-        ...(filters.channelId  && { channelId:  filters.channelId }),
-      }).toString()
+      }
+      if (filters.action)     params.action     = filters.action
+      if (filters.targetType) params.targetType = filters.targetType
+      if (filters.channelId)  params.channelId  = filters.channelId
+      if (filters.date) {
+        params.startDate = `${filters.date}T00:00:00.000Z`
+        params.endDate   = `${filters.date}T23:59:59.999Z`
+      }
+      const query = new URLSearchParams(params).toString()
       const res = await api.get<{ data: AuditLog[]; meta: { totalPages: number } }>(`/audit?${query}`, token ?? undefined)
       setLogs(res.data)
       setTotalPages(res.meta.totalPages)
@@ -148,9 +155,18 @@ export default function AuditTrailPage() {
               />
             </div>
           )}
+          <div className="form-group" style={{ marginBottom: 0, flex: '1 1 150px', minWidth: 0 }}>
+            <label>Date</label>
+            <input
+              type="date"
+              className="input"
+              value={filters.date}
+              onChange={e => setFilters({ ...filters, date: e.target.value })}
+            />
+          </div>
           <button
             className="btn btn-ghost"
-            onClick={() => setFilters({ action: '', targetType: '', channelId: '' })}
+            onClick={() => setFilters({ action: '', targetType: '', channelId: '', date: today })}
             style={{ flexShrink: 0, alignSelf: 'flex-end' }}
           >
             Reset

@@ -104,6 +104,7 @@ export default function NewItemPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loading) return // Prevent double-clicks
     if (!formData.name.trim()) return alert('Item name is required')
     if (formData.retailPrice <= 0) return alert('Retail price must be greater than 0')
 

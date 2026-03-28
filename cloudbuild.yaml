@@ -39,7 +39,7 @@ steps:
       - '--command'
       - 'sh,-c,cd apps/api && pnpm start:prod'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api'
+      - 'SERVICE_TYPE=api,GEMINI_API_KEY=AIzaSyCE3YNfQWZrPyRJnwSl8ixLtCPHnBHe198'
 
   # Deploy Web to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'

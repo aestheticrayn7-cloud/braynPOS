@@ -660,7 +660,7 @@ tr:hover { background: var(--bg-card-hover); }
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 200;
   padding: 24px 16px;
@@ -674,11 +674,13 @@ tr:hover { background: var(--bg-card-hover); }
   border-radius: var(--radius-lg);
   padding: 28px;
   width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   animation: modal-in 0.2s ease;
   display: flex;
   flex-direction: column;
+  margin: auto 0;
+  flex-shrink: 0;
 }
 
 .modal-header {
@@ -1097,6 +1099,8 @@ tr:hover { background: var(--bg-card-hover); }
     padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
     animation: modal-slide-up 0.22s ease;
     overflow-y: auto;
+    margin: 0;
+    flex-shrink: 1;
   }
   @keyframes modal-slide-up {
     from { transform: translateY(100%); }
