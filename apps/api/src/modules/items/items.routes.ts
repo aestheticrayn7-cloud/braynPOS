@@ -227,10 +227,11 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
         },
       })
 
-      // No DB trigger exists! We must directly update availableQty.
-      await tx.inventoryBalance.update({
+      // Upsert: create balance if missing, increment if it exists
+      await tx.inventoryBalance.upsert({
         where: { itemId_channelId: { itemId: body.itemId, channelId: body.channelId } },
-        data: { availableQty: { increment: body.quantity } }
+        create: { itemId: body.itemId, channelId: body.channelId, availableQty: body.quantity },
+        update: { availableQty: { increment: body.quantity } },
       })
     })
 
