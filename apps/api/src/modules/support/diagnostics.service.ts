@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 
 export interface DiagnosticResult {
   status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL'
+  score: number
   timestamp: string
   checks: {
     ledgerBound: {
@@ -49,8 +50,12 @@ export class DiagnosticsService {
       ? 'CRITICAL' 
       : (pendingCount > 10 ? 'DEGRADED' : 'HEALTHY')
 
+    // Numeric score for backwards-compatible frontends
+    const score = status === 'HEALTHY' ? 100 : status === 'DEGRADED' ? 70 : 20
+
     return {
       status,
+      score,
       timestamp: new Date().toISOString(),
       checks: {
         ledgerBound: ledgerCheck,

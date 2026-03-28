@@ -115,8 +115,8 @@ export default function ChannelsPage() {
       )}
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card" style={{ maxWidth: 440 }}>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content card" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
             <h3>🏪 Add New Channel</h3>
             {error && <p style={{ color: 'var(--danger)', fontSize: '0.9rem', marginTop: 8 }}>{error}</p>}
             <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>

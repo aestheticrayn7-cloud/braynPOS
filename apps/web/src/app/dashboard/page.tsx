@@ -132,6 +132,11 @@ export default function DashboardPage() {
             <div className="stat-card" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--success)' }}>
               <div className="stat-value" style={{ color: 'var(--success)' }}>{formatCurrency(adminData.aggregateMargin)}</div>
               <div className="stat-label">System-Wide Gross Margin</div>
+              {adminData.aggregateMargin === adminData.aggregateRevenue && adminData.aggregateRevenue > 0 && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--warning)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  ⚠️ Margin = Revenue — set item cost prices to calculate real margin
+                </div>
+              )}
             </div>
           </div>
           <div className="card" style={{ padding: 20 }}>

@@ -41,6 +41,9 @@ export default function UsersPage() {
   const [search, setSearch] = useState('')
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [activeTab, setActiveTab] = useState<'users' | 'approvals'>('users')
+  const [userToReset, setUserToReset] = useState<User | null>(null)
+  const [resetTempPassword, setResetTempPassword] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN'
   const isManagerAdmin = currentUser?.role === 'MANAGER_ADMIN'
@@ -48,6 +51,17 @@ export default function UsersPage() {
   
   const canSeeApprovals = isSuperAdmin || isManagerAdmin || isManager
   const availableRoles = isManager ? JUNIOR_ROLES : ALL_ROLES
+
+  // Role hierarchy for reset permission: actor rank must be HIGHER than target
+  const ROLE_RANK: Record<string, number> = {
+    SUPER_ADMIN: 100, ADMIN: 80, MANAGER_ADMIN: 70, MANAGER: 60,
+    CASHIER: 30, STOREKEEPER: 30, PROMOTER: 30, SALES_PERSON: 30
+  }
+  const canResetPassword = (targetRole: string) => {
+    const actorRank = ROLE_RANK[currentUser?.role || ''] ?? 0
+    const targetRank = ROLE_RANK[targetRole] ?? 0
+    return actorRank > targetRank
+  }
 
   const fetchAll = async () => {
     if (!token) return
@@ -186,6 +200,23 @@ export default function UsersPage() {
     }
   }
 
+  const handleResetPassword = async () => {
+    if (!userToReset) return
+    setResetting(true)
+    try {
+      // Generate a random temp password
+      const tempPw = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase() + '!'
+      await api.post(`/users/${userToReset.id}/reset-password`, { password: tempPw }, token!)
+      setResetTempPassword(tempPw)
+      toast.success(`Password reset for ${userToReset.username}`)
+    } catch (err: any) {
+      toast.error('Reset failed: ' + (err.message || 'Unknown error'), { icon: '🛡️' })
+      setUserToReset(null)
+    } finally {
+      setResetting(false)
+    }
+  }
+
   return (
     <div className="animate-fade-in">
       <div className="page-header">
@@ -232,6 +263,9 @@ export default function UsersPage() {
                       <td><span className={`badge ${statusBadge[u.status] || 'badge-info'}`}>{u.status}</span></td>
                       <td style={{ textAlign: 'right', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                         <button className="btn btn-ghost btn-sm" onClick={() => openEditModal(u)} title="Edit User">🔧</button>
+                        {canResetPassword(u.role) && (
+                          <button className="btn btn-ghost btn-sm" onClick={() => { setUserToReset(u); setResetTempPassword('') }} title="Reset Password">🔑</button>
+                        )}
                         <button className="btn btn-ghost btn-sm" onClick={() => handleToggle(u)} title={u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}>{u.status === 'ACTIVE' ? '🔴' : '🟢'}</button>
                         <button className="btn btn-ghost btn-sm text-danger" onClick={() => setUserToDelete(u)} title="Delete User">🗑️</button>
                       </td>
@@ -247,8 +281,8 @@ export default function UsersPage() {
       )}
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card" style={{ maxWidth: 460 }}>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content card" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()}>
             <h3>{editingUser ? '🔧 Edit User' : '👤 Add New User'}</h3>
             <form onSubmit={handleSubmit} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 12 }}>
@@ -309,6 +343,48 @@ export default function UsersPage() {
           onConfirm={handleDelete}
           onCancel={() => setUserToDelete(null)}
         />
+      )}
+
+      {/* Password Reset Modal */}
+      {userToReset && !resetTempPassword && (
+        <div className="modal-overlay" onClick={() => setUserToReset(null)}>
+          <div className="modal-content card" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <h3>🔑 Reset Password</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: 12, fontSize: '0.9rem' }}>
+              You are about to generate a new temporary password for <strong>{userToReset.username}</strong> ({userToReset.role}).
+            </p>
+            <div style={{ marginTop: 8, padding: '10px 14px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, fontSize: '0.85rem', color: 'var(--warning)' }}>
+              ⚠️ The user will need to use this temporary password to log in and should change it immediately.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn btn-ghost" onClick={() => setUserToReset(null)}>Cancel</button>
+              <button className="btn btn-primary" disabled={resetting} onClick={handleResetPassword}>
+                {resetting ? 'Resetting...' : 'Generate & Reset'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show Temp Password After Reset */}
+      {userToReset && resetTempPassword && (
+        <div className="modal-overlay">
+          <div className="modal-content card" style={{ maxWidth: 420 }}>
+            <h3>✅ Password Reset Successfully</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: 12, fontSize: '0.9rem' }}>
+              Share this one-time temporary password with <strong>{userToReset.username}</strong>. It will not be shown again.
+            </p>
+            <div style={{ marginTop: 16, padding: '16px 20px', background: 'var(--bg-elevated)', border: '2px solid var(--accent)', borderRadius: 10, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Temporary Password</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.1em' }}>{resetTempPassword}</div>
+            </div>
+            <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--text-muted)' }}>📋 Copy this password before closing — it cannot be retrieved again.</div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn btn-ghost" onClick={() => navigator.clipboard.writeText(resetTempPassword).then(() => toast.success('Copied!')).catch(() => {})}>📋 Copy</button>
+              <button className="btn btn-primary" onClick={() => { setUserToReset(null); setResetTempPassword('') }}>Done</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

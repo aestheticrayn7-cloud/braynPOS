@@ -18,10 +18,11 @@ export function SystemHealthPill() {
     if (!token || !isAuthorized) return
     const start = Date.now()
     try {
-      const res = await api.get<{ success: boolean; score: number }>(`/dashboard/health`, token)
+      const res = await api.get<{ status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL'; score?: number }>(`/dashboard/health`, token)
       setLatency(Date.now() - start)
-      if (res.score >= 90) setStatus('HEALTHY')
-      else if (res.score >= 60) setStatus('DEGRADED')
+      // Backend returns status directly; fall back to score for compatibility
+      if (res.status === 'HEALTHY' || (res.score !== undefined && res.score >= 90)) setStatus('HEALTHY')
+      else if (res.status === 'DEGRADED' || (res.score !== undefined && res.score >= 60)) setStatus('DEGRADED')
       else setStatus('CRITICAL')
     } catch {
       setStatus('CRITICAL')

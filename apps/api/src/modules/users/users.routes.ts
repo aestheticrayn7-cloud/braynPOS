@@ -270,11 +270,24 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
   // POST /users/:id/reset-password
   app.post('/:id/reset-password', {
     preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
-  }, async (request) => {
+  }, async (request, reply) => {
     const { id } = request.params as { id: string }
-    const { password } = request.body as { password: string }
+    const { password } = z.object({ password: z.string().min(6) }).parse(request.body)
+
+    // Hierarchy check: actor must strictly outrank target
+    const targetUser = await prisma.user.findUnique({ where: { id }, select: { role: true, username: true } })
+    if (!targetUser) return reply.status(404).send({ error: 'User not found' })
+
+    const { roleHierarchy } = await import('../../middleware/authorize.js')
+    const actorRank  = roleHierarchy[request.user.role]  ?? 0
+    const targetRank = roleHierarchy[targetUser.role as any] ?? 0
+
+    if (actorRank <= targetRank) {
+      return reply.status(403).send({ error: 'You can only reset passwords for users with a lower rank than your own' })
+    }
+
     await usersService.resetPassword(id, password)
-    return { message: 'Password reset successfully' }
+    return { message: `Password reset successfully for ${targetUser.username}` }
   })
   // POST /users/:id/reset-mfa
   app.post('/:id/reset-mfa', {
