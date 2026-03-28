@@ -13,6 +13,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID']
 
+  # Clear stale GEMINI_API_KEY secret reference before deploying
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'gcloud run services update brayn-api --region=africa-south1 --remove-secrets=GEMINI_API_KEY 2>/dev/null || true'
+
   # Deploy API to Cloud Run (with Direct VPC Egress)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
