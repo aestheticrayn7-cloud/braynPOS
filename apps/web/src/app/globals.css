@@ -660,10 +660,10 @@ tr:hover { background: var(--bg-card-hover); }
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   z-index: 200;
-  padding: 48px 16px;
+  padding: 24px 16px;
   backdrop-filter: blur(4px);
   overflow-y: auto;
 }
@@ -1093,9 +1093,10 @@ tr:hover { background: var(--bg-card-hover); }
   .modal-overlay { align-items: flex-end; padding: 0; }
   .modal-content {
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    max-height: 92dvh;
+    max-height: 85dvh;
     padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
     animation: modal-slide-up 0.22s ease;
+    overflow-y: auto;
   }
   @keyframes modal-slide-up {
     from { transform: translateY(100%); }
