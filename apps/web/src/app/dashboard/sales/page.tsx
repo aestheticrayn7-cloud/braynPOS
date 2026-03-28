@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { api, ApiError } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 import { toast } from 'react-hot-toast'
 
 interface Sale {
@@ -47,10 +48,8 @@ export default function SalesPage() {
   const isHigherRole = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER'].includes(user?.role || '')
   const canFilterChannels = ['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(user?.role || '')
 
-  const fetchSales = async (p = 1) => {
-    if (!token) return
-    setLoading(true)
-    const params = new URLSearchParams({ limit: '25', page: String(p) })
+  const buildQuery = (p: number, limit: string = '25') => {
+    const params = new URLSearchParams({ limit, page: String(p) })
     if (saleType) params.set('saleType', saleType)
     if (startDate) params.set('startDate', startDate)
     if (endDate) params.set('endDate', endDate)
@@ -62,6 +61,13 @@ export default function SalesPage() {
     } else if (mySalesOnly && user?.id) {
       params.set('performedBy', user.id)
     }
+    return params
+  }
+
+  const fetchSales = async (p = 1) => {
+    if (!token) return
+    setLoading(true)
+    const params = buildQuery(p)
 
     try {
       const res = await api.get<{ data: Sale[]; meta: typeof meta; stats: typeof stats }>(`/sales?${params}`, token)
@@ -77,6 +83,21 @@ export default function SalesPage() {
       }
     }
     finally { setLoading(false) }
+  }
+
+  const getExportData = async () => {
+    const params = buildQuery(1, '5000')
+    const res = await api.get<{ data: Sale[] }>(`/sales?${params}`, token!)
+    return res.data.map(sale => [
+      sale.receiptNo,
+      sale.saleType,
+      fmtDateTime(sale.createdAt),
+      sale.customer?.name || 'Walk-in',
+      sale.items?.reduce((sum, i) => sum + i.quantity, 0) || 0,
+      sale.totalAmount,
+      sale.payments?.map(p => p.method).join(', ') || '—',
+      sale.channel?.name || '—'
+    ])
   }
 
   const fetchChannels = async () => {
@@ -132,9 +153,14 @@ export default function SalesPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header" style={{ alignItems: 'center', marginBottom: 20 }}>
+      <div className="page-header" style={{ alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <h1>{isHigherRole ? 'Sales History' : 'My Sales Record'}</h1>
-        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Sales Report"
+            headers={['Receipt No', 'Type', 'Date', 'Customer', 'Items Sold', 'Total Amount', 'Payments', 'Channel']}
+            getData={getExportData}
+          />
           {user?.role === 'MANAGER' && (
             <button 
               className={`btn ${mySalesOnly ? 'btn-primary' : 'btn-outline'}`}

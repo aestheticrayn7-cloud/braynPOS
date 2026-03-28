@@ -5,6 +5,8 @@ import { setupSupportSocket } from './modules/support/support.socket.js'
 import { startProactiveMonitor } from './modules/support/proactive-monitor.js'
 import { startCommissionListener } from './modules/commission/commission.listener.js'
 import { startNotificationWorker }  from './workers/notification.worker.js'
+import { seedAccounts } from './lib/seed-accounts.js'
+import { cleanupDuplicateItems } from './lib/cleanup-duplicates.js'
 import { basePrisma } from './lib/prisma.js'
 import { redis } from './lib/redis.js'
 
@@ -56,6 +58,12 @@ async function start() {
   console.log('🔗 [BOOT] HOST:', HOST)
 
   try {
+    // Seed system ledger accounts first
+    await seedAccounts().catch(e => console.error('Ledger Seed Error:', e))
+    
+    // Auto-cleanup duplicates from double-click race conditions
+    await cleanupDuplicateItems().catch(e => console.error('Cleanup Error:', e))
+    
     // Wrap syncAdmin in a race to prevent silent DB hangs
     console.log('⌚ [BOOT] Syncing Admin (Maintenance Hook)...')
     const syncPromise = syncAdmin()

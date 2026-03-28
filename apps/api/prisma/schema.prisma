@@ -69,6 +69,13 @@ model User {
   mfaRecoveryCodes   String[]
   channelId          String?
   lastLoginAt        DateTime?
+  
+  // Google OAuth fields
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiresAt DateTime?
+  googleEmail          String?
+
   deletedAt          DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
@@ -943,6 +950,7 @@ enum MovementType {
   WRITE_OFF
   TRANSFER_IN_PENDING
   STOCK_TAKE_CORRECTION
+  OPENING_STOCK
 }
 
 enum SaleType {

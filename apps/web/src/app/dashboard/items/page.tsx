@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { StockAdjustmentModal } from '@/components/shared/StockAdjustmentModal'
 import { OpeningStockAgreement } from '@/components/shared/OpeningStockAgreement'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 import { toast } from 'react-hot-toast'
 
 interface Item {
@@ -83,8 +84,7 @@ export default function ItemsPage() {
     } catch (err) { console.error(err) }
   }
 
-  const fetchItems = async () => {
-    if (!token) return
+  const buildQuery = () => {
     const q = new URLSearchParams()
     if (search) q.append('search', search)
     if (categoryId) q.append('categoryId', categoryId)
@@ -102,15 +102,35 @@ export default function ItemsPage() {
       q.append('sortBy', sortBy)
       q.append('sortOrder', sortOrder)
     }
+    return q
+  }
 
-    const qStr = q.toString() ? `&${q.toString()}` : ''
-    const url = `/items?limit=100${qStr}`
-    // Fetch items with query
+  const fetchItems = async () => {
+    if (!token) return
+    const q = buildQuery()
+    const url = `/items?limit=100&${q.toString()}`
     try {
       const res = await api.get<{ data: Item[] }>(url, token)
       setItems(res.data)
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
+  }
+
+  const getExportData = async () => {
+    const q = buildQuery()
+    const url = `/items?limit=5000&${q.toString()}`
+    const res = await api.get<{ data: Item[] }>(url, token!)
+    return res.data.map(item => [
+      item.sku,
+      item.name,
+      item.category?.name || '—',
+      item.brand?.name || '—',
+      item.supplier?.name || '—',
+      item.availableQty || 0,
+      item.retailPrice,
+      item.wholesalePrice,
+      item.isActive ? 'Active' : 'Inactive'
+    ])
   }
 
   useEffect(() => { 
@@ -203,7 +223,12 @@ export default function ItemsPage() {
     <div className="animate-fade-in">
       <div className="page-header">
         <h1>Items</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Items Inventory Report"
+            headers={['SKU', 'Name', 'Category', 'Brand', 'Supplier', 'Stock Quantity', 'Retail Price', 'Wholesale Price', 'Status']}
+            getData={getExportData}
+          />
           {['SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER'].includes(user?.role || '') && (
             <>
               <Link href="/dashboard/items/categories" className="btn btn-ghost">📁 Categories</Link>

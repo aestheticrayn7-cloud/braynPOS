@@ -4,6 +4,7 @@ import { api } from '@/lib/api-client'
 import { toast } from 'react-hot-toast'
 import { useAuthStore } from '@/stores/auth.store'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface SalesSummary {
   sales: { count: number; grossAmount: number; netAmount: number; discountAmount: number }
@@ -67,6 +68,38 @@ export default function ReportsPage() {
     } finally { setLoading(false) }
   }
 
+  const getExportData = async () => {
+    if (adminReport) {
+      return adminReport.channelStats.map(c => [
+        c.channelName,
+        c.salesCount,
+        c.revenue,
+        c.margin,
+        c.revenue > 0 ? ((c.margin / c.revenue) * 100).toFixed(1) + '%' : '0%'
+      ])
+    }
+    if (report) {
+      const rows = [
+        ['Net Revenue', report.sales?.netAmount || 0],
+        ['Gross Sales', report.sales?.grossAmount || 0],
+        ['Discounts', report.sales?.discountAmount || 0],
+        ['Total Expenses', report.expenses?.totalAmount || 0],
+        ['Total Purchases', report.purchases?.totalAmount || 0],
+        ['Net Profit', report.profit || 0],
+        ['', ''],
+        ['TOP SELLING ITEMS', ''],
+        ['Item Name', 'Qty Sold', 'Revenue']
+      ]
+      if (report.topItems) {
+        report.topItems.forEach(i => {
+          rows.push([i.itemName, i.qty, i.revenue])
+        })
+      }
+      return rows
+    }
+    return []
+  }
+
   const applyPreset = (type: 'today' | 'week' | 'month') => {
     const start = new Date()
     const end = new Date()
@@ -108,18 +141,25 @@ export default function ReportsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header no-print">
+      <div className="page-header no-print" style={{ flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <h1>Reports</h1>
           {loading && <span className="badge badge-warning animate-pulse">Processing...</span>}
         </div>
-        <button 
-          className="btn btn-secondary no-print" 
-          onClick={() => window.print()}
-          disabled={(!report && !adminReport) || loading}
-        >
-          🖨️ Print Report
-        </button>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto' }}>
+          <ExportMenu 
+            title={adminReport ? 'Aggregate_Report' : `Channel_Report_${filters.channelId}`}
+            headers={adminReport ? ['Channel', 'Sales Qty', 'Revenue', 'Margin', 'Profit %'] : ['Metric', 'Value']}
+            getData={getExportData}
+          />
+          <button 
+            className="btn btn-secondary no-print" 
+            onClick={() => window.print()}
+            disabled={(!report && !adminReport) || loading}
+          >
+            🖨️ Print Report
+          </button>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `

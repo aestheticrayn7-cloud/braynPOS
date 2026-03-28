@@ -121,6 +121,9 @@ export async function buildApp() {
     const { managerApproveRoutes } = await import('./modules/auth/manager-approve.routes.js')
     await v1.register(managerApproveRoutes, { prefix: '/auth' })
 
+    const { googleRoutes } = await import('./modules/settings/google.routes.js')
+    await v1.register(googleRoutes, { prefix: '/settings/google' })
+
     await v1.register(channelsRoutes, { prefix: '/channels' })
     await v1.register(usersRoutes,    { prefix: '/users' })
     const { managerApprovalsRoutes } = await import('./modules/users/manager-approvals.routes.js')
@@ -173,6 +176,9 @@ export async function buildApp() {
 
     const { reportsRoutes } = await import('./modules/reports/reports.routes.js')
     await v1.register(reportsRoutes, { prefix: '/reports' })
+
+    const { exportRoutes } = await import('./modules/export/export.routes.js')
+    await v1.register(exportRoutes, { prefix: '/export' })
 
     const { dashboardRoutes } = await import('./modules/dashboard/dashboard.routes.js')
     await v1.register(dashboardRoutes, { prefix: '/dashboard' })

@@ -279,6 +279,25 @@ export default function SettingsPage() {
                   <input className="input" value={(user as unknown as { channel?: { name: string } })?.channel?.name || '—'} readOnly style={{ opacity: 0.6 }} />
                 </div>
                 <button className="btn btn-primary" style={{ width: 'fit-content' }} onClick={() => save('profileSettings', profile)}>Save Profile</button>
+
+                <div style={{ marginTop: 24, padding: 20, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-secondary)' }}>
+                  <h4 style={{ marginBottom: 12 }}>🔗 Linked Accounts</h4>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 16 }}>Connect your Google workspace account to enable one-click direct exports to Google Sheets and Docs from any dashboard table.</p>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={async () => {
+                      try {
+                        const res = await api.get<{ url: string }>('/settings/google/auth', token!)
+                        if (res.url) window.location.href = res.url
+                      } catch (err) {
+                        toast.error('Failed to initiate Google connection')
+                      }
+                    }}
+                  >
+                    Connect Google Workspace
+                  </button>
+                </div>
               </div>
             </div>
           )}

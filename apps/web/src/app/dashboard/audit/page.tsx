@@ -6,6 +6,8 @@ import { api } from '@/lib/api-client'
 import { toast } from 'react-hot-toast'
 import { JsonViewModal } from '@/components/shared/JsonViewModal'
 
+import { ExportMenu } from '@/components/shared/ExportMenu'
+
 interface AuditLog {
   id: string
   action: string
@@ -28,7 +30,6 @@ export default function AuditTrailPage() {
   const [loading, setLoading]     = useState(true)
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [exporting, setExporting] = useState(false)
   
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -65,31 +66,16 @@ export default function AuditTrailPage() {
 
   useEffect(() => { fetchLogs() }, [token, page, filters])
 
-  const exportToCsv = async () => {
-    setExporting(true)
-    try {
-      const res = await api.get<{ data: AuditLog[] }>(`/audit?limit=1000`, token ?? undefined)
-      const headers = ['Timestamp', 'Action', 'Actor', 'Role', 'Target', 'Details']
-      const rows = res.data.map(log => [
-        new Date(log.createdAt).toLocaleString(),
-        log.action,
-        log.actorDetail.username,
-        log.actorRole,
-        `${log.targetType || ''} ${log.targetId || ''}`,
-        JSON.stringify(log.newValues || {}).replace(/"/g, '""'),
-      ])
-      const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n')
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `audit_trail_${new Date().toISOString().split('T')[0]}.csv`
-      link.click()
-      toast.success('Audit trail exported successfully')
-    } catch {
-      toast.error('Failed to export audit logs')
-    } finally {
-      setExporting(false)
-    }
+  const getExportData = async () => {
+    const res = await api.get<{ data: AuditLog[] }>(`/audit?limit=1000`, token ?? undefined)
+    return res.data.map(log => [
+      new Date(log.createdAt).toLocaleString(),
+      log.action,
+      log.actorDetail.username,
+      log.actorRole,
+      `${log.targetType || ''} ${log.targetId || ''}`,
+      JSON.stringify(log.newValues || {}).substring(0, 500),
+    ])
   }
 
   const formatAction = (action: string) =>
@@ -99,8 +85,6 @@ export default function AuditTrailPage() {
     <div className="animate-fade-in" style={{ padding: '16px 20px' }}>
 
       {/* ── Header ────────────────────────────────────────────────── */}
-      {/* FIX: page-header now uses flex-wrap so the Export button
-              never gets pushed off-screen on narrow phones */}
       <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 4 }}>
@@ -110,13 +94,11 @@ export default function AuditTrailPage() {
             Track all administrative and financial actions across the system.
           </p>
         </div>
-        <button
-          className="btn btn-ghost"
-          onClick={exportToCsv}
-          disabled={exporting}
-        >
-          {exporting ? '📦 Exporting...' : '📥 Export CSV'}
-        </button>
+        <ExportMenu 
+          title="Audit Trail Report"
+          headers={['Timestamp', 'Action', 'Actor', 'Role', 'Target', 'Details']}
+          getData={getExportData}
+        />
       </div>
 
       {/* ── Filters ───────────────────────────────────────────────── */}

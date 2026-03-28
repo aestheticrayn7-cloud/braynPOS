@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface SalaryRun {
   id: string; month: number; year: number; status: string; totalGross: unknown; totalNet: unknown;
@@ -70,6 +71,32 @@ export default function PayrollPage() {
       setPayslips(res.payslips ?? [])
     } catch (e) { console.error(e) }
     finally { setLoadingPayslips(false) }
+  }
+
+  const getExportData = async () => {
+    if (selectedRun) {
+      return payslips.map(ps => [
+        ps.staffProfile?.user?.username || 'Unknown',
+        ps.staffProfile?.jobTitle || 'Staff',
+        ps.staffProfile?.user?.channel?.name || 'HQ',
+        Number(ps.grossSalary) + Number(ps.allowancesTotal) + Number(ps.breakdown?.commission?.amount ?? 0),
+        ps.deductionsTotal,
+        ps.netSalary,
+        ps.breakdown?.commission?.amount || 0,
+        ps.status || 'DRAFT'
+      ])
+    } else {
+      return runs.map(r => [
+        `${MONTHS[r.month]} ${r.year}`,
+        r.channel?.name || 'All',
+        r.totalGross,
+        r.totalNet,
+        r.totalDeductions,
+        r.status,
+        r.payslipsCount,
+        r.finalizedAt ? new Date(r.finalizedAt).toLocaleString() : '—'
+      ])
+    }
   }
 
   useEffect(() => { 
@@ -156,7 +183,7 @@ export default function PayrollPage() {
 
   return (
     <div className="animate-fade-in" style={{ padding: '0 0 40px' }}>
-      <div className="page-header" style={{ marginBottom: 24 }}>
+      <div className="page-header" style={{ marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: 800 }}>💰 Payroll Management</h1>
           <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '8px 12px', borderRadius: 8, marginTop: 8 }}>
@@ -165,7 +192,18 @@ export default function PayrollPage() {
             </p>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowNewRun(true)}>+ New Salary Run</button>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <ExportMenu 
+             title={selectedRun ? `Payroll_${MONTHS[selectedRun.month]}_${selectedRun.year}` : 'Salary_Runs_History'}
+             headers={
+                selectedRun 
+                  ? ['Employee', 'Position', 'Channel', 'Gross Payment', 'Deductions', 'Net Salary', 'Included Commission', 'Status']
+                  : ['Period', 'Channel', 'Gross', 'Net', 'Deductions', 'Status', 'Payslips', 'Finalized On']
+             }
+             getData={getExportData}
+          />
+          <button className="btn btn-primary" onClick={() => setShowNewRun(true)}>+ New Salary Run</button>
+        </div>
       </div>
 
       {/* Summary Stats */}

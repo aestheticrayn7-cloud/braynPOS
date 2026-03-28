@@ -663,7 +663,7 @@ tr:hover { background: var(--bg-card-hover); }
   align-items: flex-start;
   justify-content: center;
   z-index: 200;
-  padding: 24px 16px;
+  padding: 20px 16px;
   backdrop-filter: blur(4px);
   overflow-y: auto;
 }
@@ -674,13 +674,11 @@ tr:hover { background: var(--bg-card-hover); }
   border-radius: var(--radius-lg);
   padding: 28px;
   width: 100%;
-  max-height: none;
-  overflow-y: visible;
   animation: modal-in 0.2s ease;
   display: flex;
   flex-direction: column;
-  margin: auto 0;
-  flex-shrink: 0;
+  margin-top: 4vh;
+  margin-bottom: 4vh;
 }
 
 .modal-header {

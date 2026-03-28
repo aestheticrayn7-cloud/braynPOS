@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface Expense { id: string; description: string; amount: unknown; category: string; receiptRef?: string; createdAt: string; channel?: { name: string }; recordedBy?: { username: string } }
 interface Channel { id: string; name: string }
@@ -56,6 +57,18 @@ export default function ExpensesPage() {
     finally { setLoading(false) }
   }
 
+  const getExportData = async () => {
+    return filtered.map(e => [
+        e.id.slice(0, 8).toUpperCase(),
+        e.description,
+        e.category || '—',
+        e.channel?.name || '—',
+        e.amount,
+        new Date(e.createdAt).toLocaleString(),
+        e.receiptRef || '—'
+    ])
+  }
+
   useEffect(() => {
     fetchAll()
     if (user?.channelId && !form.channelId) setForm(f => ({ ...f, channelId: user.channelId! }))
@@ -88,9 +101,16 @@ export default function ExpensesPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Expenses</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Record Expense</button>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Expenses_Report"
+            headers={['ID', 'Description', 'Category', 'Channel', 'Amount', 'Date & Time', 'Receipt Ref']}
+            getData={getExportData}
+          />
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Record Expense</button>
+        </div>
       </div>
 
       {expenses.length > 0 && (

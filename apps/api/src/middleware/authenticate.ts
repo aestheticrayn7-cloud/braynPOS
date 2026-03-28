@@ -24,12 +24,18 @@ export async function authenticate(
   reply:   FastifyReply
 ) {
   const authHeader = request.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    reply.status(401).send({ error: 'Missing or invalid authorization header' })
-    return
+  let token: string | undefined
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7)
+  } else if ((request.query as { token?: string })?.token) {
+    token = (request.query as { token?: string }).token
   }
 
-  const token = authHeader.slice(7)
+  if (!token) {
+    reply.status(401).send({ error: 'Missing or invalid authorization header/token' })
+    return
+  }
 
   try {
     const payload = verifyToken(token)

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 import { toast } from 'react-hot-toast'
 
 interface Channel { id: string; name: string; code: string }
@@ -66,6 +67,17 @@ export default function TransfersPage() {
       setItems(iRes.data ?? [])
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
+  }
+
+  const getExportData = async () => {
+    return filtered.map(t => [
+        t.transferNo,
+        t.fromChannel?.name,
+        t.toChannel?.name,
+        t.lines?.map(l => `${l.item?.name} (${l.sentQuantity})`).join(', '),
+        t.status,
+        new Date(t.createdAt).toLocaleDateString()
+    ])
   }
 
   useEffect(() => { fetchAll() }, [token, startDate, endDate, selectedChannel])
@@ -178,9 +190,16 @@ export default function TransfersPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Transfers</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Transfer</button>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Transfers_Report"
+            headers={['Transfer #', 'From Channel', 'To Channel', 'Items (Qty)', 'Status', 'Date']}
+            getData={getExportData}
+          />
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Transfer</button>
+        </div>
       </div>
 
       {successMsg && (

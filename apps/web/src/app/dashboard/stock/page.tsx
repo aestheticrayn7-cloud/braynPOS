@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import Link from 'next/link'
 import { StockAdjustmentModal } from '@/components/shared/StockAdjustmentModal'
 import { OpeningStockAgreement } from '@/components/shared/OpeningStockAgreement'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface StockBalance {
   itemId: string
@@ -67,6 +68,20 @@ export default function StockPage() {
       .finally(() => setLoading(false))
   }
 
+  const getExportData = async () => {
+    return filtered.map(b => [
+        b.itemName || b.itemId,
+        b.sku || '—',
+        b.category || '—',
+        b.availableQty,
+        b.incomingQty,
+        b.reservedQty || 0,
+        b.reorderLevel || '—',
+        stockStatus(b).label,
+        b.lastMovementAt ? new Date(b.lastMovementAt).toLocaleString() : '—'
+    ])
+  }
+
   useEffect(() => {
     if (!token) return
     api.get<Channel[]>('/channels', token)
@@ -120,14 +135,19 @@ export default function StockPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Stock Levels</h1>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Stock_Levels_Report"
+            headers={['Item', 'SKU', 'Category', 'Available', 'Incoming', 'Reserved', 'Reorder At', 'Status', 'Last Movement']}
+            getData={getExportData}
+          />
           <Link href="/dashboard/stock/take" className="btn btn-ghost">📊 Physical Counts</Link>
           {['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(user?.role || '') && (
             <select 
               className="input" 
-              style={{ width: 220 }} 
+              style={{ width: 140 }} 
               value={selectedChannel} 
               onChange={e => setSelectedChannel(e.target.value)}
             >
@@ -137,14 +157,13 @@ export default function StockPage() {
           )}
           <select 
             className="input" 
-            style={{ width: 220 }} 
+            style={{ width: 140 }} 
             value={categoryId} 
             onChange={e => setCategoryId(e.target.value)}
           >
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          <span className="badge badge-info" style={{ alignSelf: 'center' }}>Live from inventory_balances</span>
         </div>
       </div>
 

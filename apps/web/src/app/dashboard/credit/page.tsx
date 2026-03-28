@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface Customer { id: string; name: string; phone?: string; email?: string }
 interface CreditBalance { 
@@ -71,6 +72,26 @@ export default function CreditPage() {
     finally { setLoadingBalances(false) }
   }
 
+  const getExportData = async () => {
+    if (selected) {
+      return creditSales.map(s => [
+        s.receiptNo,
+        s.totalAmount,
+        s.totalPaid,
+        s.outstanding,
+        fmtDate(s.saleDate),
+        fmtDate(s.dueDate)
+      ])
+    }
+    return balances.map(b => [
+        b.customerName,
+        b.customerPhone || '—',
+        b.unpaidCount,
+        fmtDate(b.earliestDueDate),
+        b.totalOutstanding
+    ])
+  }
+
   const searchCustomers = async (q: string) => {
     if (!token || q.length < 2) { setCustomers([]); return }
     try {
@@ -125,8 +146,15 @@ export default function CreditPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Credit Management</h1>
+        <div style={{ marginLeft: 'auto' }}>
+          <ExportMenu 
+            title={selected ? `Credit_History_${selected.name}` : 'Debtors_List'}
+            headers={selected ? ['Receipt #', 'Total', 'Paid', 'Outstanding', 'Date', 'Due Date'] : ['Customer', 'Phone', 'Unpaid Count', 'Earliest Due', 'Outstanding Total']}
+            getData={getExportData}
+          />
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>

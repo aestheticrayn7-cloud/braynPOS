@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { api, ApiError } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 import { toast } from 'react-hot-toast'
 
 export default function AccountingPage() {
@@ -66,15 +67,72 @@ export default function AccountingPage() {
     finally { setLoading(false) }
   }
 
+  const getExportHeaders = () => {
+    switch(tab) {
+      case 'chart': return ['Code', 'Name', 'Type', 'Level', 'Status']
+      case 'trial': return ['Account Code', 'Account Name', 'Debit', 'Credit']
+      case 'pnl': return ['Category', 'Account', 'Amount']
+      case 'balance': return ['Category', 'Account', 'Amount']
+      default: return []
+    }
+  }
+
+  const getExportData = async () => {
+    switch(tab) {
+      case 'chart': {
+        const flatten = (accs: any[], depth = 0): any[] => {
+            return accs.flatMap(a => [
+                [a.code, a.name, a.type, depth === 0 ? 'Primary' : depth === 1 ? 'Sub-account' : 'Detail', a.isActive ? 'Active' : 'Inactive'],
+                ...flatten(a.children || [], depth + 1)
+            ])
+        }
+        return flatten(data || [])
+      }
+      case 'trial': {
+        if (!data || !data.rows) return []
+        return data.rows.map((r: any) => [
+          r.accountCode, r.accountName, r.totalDebit || 0, r.totalCredit || 0
+        ])
+      }
+      case 'pnl': {
+        if (!data) return []
+        const rows: any[] = []
+        data.revenue?.forEach((r: any) => rows.push(['Revenue', r.accountName, r.amount]))
+        data.expenses?.forEach((e: any) => rows.push(['Expense', e.accountName, e.amount]))
+        rows.push(['Total Revenue', '—', data.totalRevenue])
+        rows.push(['Total Expenses', '—', data.totalExpenses])
+        rows.push(['Net Profit', '—', data.netProfit])
+        return rows
+      }
+      case 'balance': {
+         if (!data) return []
+         const rows: any[] = []
+         data.assets?.forEach((a: any) => rows.push(['Asset', a.accountName, a.balance]))
+         data.liabilities?.forEach((l: any) => rows.push(['Liability', l.accountName, l.balance]))
+         data.equity?.forEach((e: any) => rows.push(['Equity', e.accountName, e.balance]))
+         rows.push(['Total Assets', '—', data.totalAssets])
+         rows.push(['Total Liabilities', '—', data.totalLiabilities])
+         rows.push(['Total Equity', '—', data.totalEquity])
+         return rows
+      }
+      default: return []
+    }
+  }
+
   useEffect(() => { loadTab(tab) }, [tab, token])
 
   const fmt = (n: number) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(n)
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Accounting</h1>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title={`Accounting_Report_${tab}`}
+            headers={getExportHeaders()}
+            getData={getExportData}
+          />
           {tab === 'pnl' && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input type="date" className="input" value={startDate} onChange={e => setStartDate(e.target.value)} />

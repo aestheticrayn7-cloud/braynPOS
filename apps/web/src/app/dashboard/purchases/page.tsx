@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ExportMenu } from '@/components/shared/ExportMenu'
 
 interface PurchaseLine { itemId: string; quantity: number; unitCost: number; item?: { name: string; sku: string } }
 interface Purchase {
@@ -86,6 +87,33 @@ export default function PurchasesPage() {
     finally { setLoading(false) }
   }
 
+  const getExportData = async () => {
+    const start = new Date(startDate)
+    start.setHours(0,0,0,0)
+    const end = new Date(endDate)
+    end.setHours(23,59,59,999)
+
+    const params = new URLSearchParams({
+      limit:     '5000',
+      startDate: start.toISOString(),
+      endDate:   end.toISOString(),
+    })
+    
+    if (selectedChannel) params.append('channelId', selectedChannel)
+    if (tab === 'supplier' && selectedSupplier) params.append('supplierId', selectedSupplier)
+
+    const res = await api.get<{ data: Purchase[] }>(`/purchases?${params.toString()}`, token!)
+    return res.data.map(p => [
+      p.purchaseNo,
+      p.supplier?.name || '—',
+      p.channel?.name || '—',
+      p.lines?.length || 0,
+      p.totalCost,
+      p.status,
+      new Date(p.createdAt).toLocaleString()
+    ])
+  }
+
   useEffect(() => { fetchAll(page) }, [token, page, startDate, endDate, selectedChannel])
   useEffect(() => {
     if (tab === 'supplier' && selectedSupplier) fetchBySupplier(selectedSupplier)
@@ -109,9 +137,14 @@ export default function PurchasesPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: 12 }}>
         <h1>Purchases</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <ExportMenu 
+            title="Purchases Report"
+            headers={['Purchase No', 'Supplier', 'Channel', 'Lines', 'Total', 'Status', 'Date']}
+            getData={getExportData}
+          />
           <Link href="/dashboard/purchases/lpo" className="btn btn-ghost">📝 LPOs</Link>
           <Link href="/dashboard/purchases/new" className="btn btn-primary">+ New Purchase</Link>
         </div>

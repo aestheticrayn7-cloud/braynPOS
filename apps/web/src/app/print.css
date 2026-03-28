@@ -1,0 +1,97 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ * Global Print Styles (Ctrl+P)
+ * Hides sidebars, floating widgets, and optimizes POS layout for A4/Thermal
+ * ────────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide unnecessary UI elements */
+  .sidebar,
+  .mobile-topbar,
+  .chat-interface,
+  .toast-custom,
+  button,
+  a[href^="http"],
+  #logout-btn {
+    display: none !important;
+  }
+
+  /* Reset main layout */
+  body, html {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-size: 12pt;
+    color: black;
+  }
+
+  /* Expand main content area */
+  .layout, .main-content {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Optimize tables for A4 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    color: black !important;
+  }
+  th {
+    background-color: #f8f8f8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Strip background colors for ink saving (unless specifically requested via thermal) */
+  * {
+    color: black !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #999 !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Hide elements exclusively for screen */
+  .no-print {
+    display: none !important;
+  }
+
+  /* For thermal specific receipts */
+  .thermal-receipt {
+    width: 80mm !important;
+    margin: 0 auto;
+    font-family: monospace;
+    font-size: 10pt;
+    border: none !important;
+  }
+
+  /* Restore text for print */
+  .thermal-receipt * {
+    background: transparent !important;
+    color: black !important;
+  }
+}

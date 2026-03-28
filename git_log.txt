@@ -1,0 +1,5 @@
+﻿a4384e6 fix: resolve 6 production issues (modals, audit UI, duplicate items, gemini key, opening stock, user login case sensitivity)
+20691b5 fix: use upsert for inventoryBalance in stock adjustment to handle missing records
+5c738ed fix: center modals vertically and prevent content cutoff on mobile and desktop
+a8e11bc fix: remove prisma migrate deploy from API startup command to avoid Cloud Run timeouts
+c687455 fix: bake NEXT_PUBLIC_API_URL into Next.js bundle at build time
