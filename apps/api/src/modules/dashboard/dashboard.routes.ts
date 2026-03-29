@@ -37,8 +37,10 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     const isHQ               = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)
     const effectiveChannelId = isHQ ? undefined : (request.user.channelId || undefined)
 
-    const now   = new Date()
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+    // FIX: Use EAT (UTC+3) start-of-day to ensure sales made after midnight show up correctly
+    const now     = new Date()
+    const eatNow  = new Date(now.getTime() + 3 * 60 * 60 * 1000)
+    const today   = new Date(eatNow.toISOString().slice(0, 10) + 'T00:00:00+03:00')
 
     const [
       todaySalesRaw,
