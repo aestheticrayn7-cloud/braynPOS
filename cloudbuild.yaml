@@ -13,13 +13,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID']
 
-  # Clear stale GEMINI_API_KEY secret reference before deploying
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: bash
-    args:
-      - '-c'
-      - 'gcloud run services update brayn-api --region=africa-south1 --remove-secrets=GEMINI_API_KEY 2>/dev/null || true'
-
   # Deploy API to Cloud Run (with Direct VPC Egress)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -42,11 +35,11 @@ steps:
       - '--subnet=braynpos-subnet-af'
       - '--vpc-egress=private-ranges-only'
       - '--set-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+      - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest'
       - '--command'
       - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - 'SERVICE_TYPE=api'
 
   # Deploy Web to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
