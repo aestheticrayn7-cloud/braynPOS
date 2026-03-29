@@ -129,7 +129,10 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
     const { id }            = request.params as { id: string }
-    const { approvalToken } = z.object({ approvalToken: z.string().optional() }).parse(request.body || {})
+    const { password, approvalToken } = z.object({ 
+      password:      z.string().optional(),
+      approvalToken: z.string().optional() 
+    }).parse(request.body || {})
 
     if (request.user.role === 'MANAGER') {
       if (!approvalToken) {
@@ -157,7 +160,7 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    return itemsService.softDelete(id)
+    return itemsService.softDelete(id, password)
   })
 
   // POST /items/stock-adjustment

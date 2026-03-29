@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { StockAdjustmentModal } from '@/components/shared/StockAdjustmentModal'
 import { OpeningStockAgreement } from '@/components/shared/OpeningStockAgreement'
 import { ExportMenu } from '@/components/shared/ExportMenu'
+import { PasswordConfirmModal } from '@/components/shared/PasswordConfirmModal'
 import { toast } from 'react-hot-toast'
 
 interface Item {
@@ -46,6 +47,9 @@ export default function ItemsPage() {
   
   const [globalWindowActive, setGlobalWindowActive] = useState(false)
   const [hasAgreed, setHasAgreed] = useState(false)
+  
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [itemToDel, setItemToDel] = useState<Item | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 150)
@@ -177,19 +181,22 @@ export default function ItemsPage() {
     }
   }
 
-  const handleDelete = async (item: Item) => {
-    if (!confirm(`Delete "${item.name}"? This will soft-delete the item.`)) return
+  const handleDelete = (item: Item) => {
+    setItemToDel(item)
+    setDeleteId(item.id)
+  }
+
+  const confirmDelete = async (password: string) => {
+    if (!deleteId) return
     try {
-      await api.delete(`/items/${item.id}`, token!)
-      setItems(prev => prev.filter(i => i.id !== item.id))
-      toast.success('Item deleted')
+      await api.delete(`/items/${deleteId}`, token!, { password })
+      setItems(prev => prev.filter(i => i.id !== deleteId))
+      toast.success('Item deleted successfully')
+      setDeleteId(null)
+      setItemToDel(null)
     } catch (err) { 
-      const msg = (err as Error).message
-      if ((err as any).status === 403) {
-        toast.error(msg, { id: 'security-block', icon: '🛡️' })
-      } else {
-        toast.error('Deletion failed: ' + msg)
-      }
+      const msg = (err as any).response?.data?.message || (err as Error).message
+      throw new Error(msg) // PasswordConfirmModal handles catch and shows error
     }
   }
 
@@ -391,6 +398,15 @@ export default function ItemsPage() {
           </tbody>
         </table>
       </div>
+
+      {deleteId && itemToDel && (
+        <PasswordConfirmModal
+          title="Confirm Secure Deletion"
+          message={`Are you sure you want to delete "${itemToDel.name}"? This action requires your password and will be recorded in the audit trail.`}
+          onConfirm={confirmDelete}
+          onCancel={() => { setDeleteId(null); setItemToDel(null); }}
+        />
+      )}
     </div>
   )
 }

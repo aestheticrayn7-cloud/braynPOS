@@ -246,10 +246,18 @@ export class ItemsService {
       const oldItem = await tx.item.findUnique({ where: { id } })
       const item = await tx.item.update({ where: { id }, data: updateData })
 
+      let balanceResult = null
       if (channelId && Object.keys(balanceData).length > 0) {
-        // ... (existing upsert logic)
+        // FIX: Actually save the Cost Price and Retail Price to the channel balance
+        balanceResult = await (tx as any).inventoryBalance.upsert({
+          where:  { itemId_channelId: { itemId: id, channelId } },
+          create: { itemId: id, channelId, ...balanceData },
+          update: balanceData,
+        })
       }
 
+      // FIX: Enhance Audit Log to include channel-specific price/cost changes
+      // This ensures 'Cost Price' and 'Retail Price' show up in the Audit Trail comparison
       logAction({
         action:     AUDIT.ITEM_UPDATE,
         actorId:    ctx?.userId || 'SYSTEM',
@@ -257,18 +265,31 @@ export class ItemsService {
         channelId:  channelId   || ctx?.channelId || undefined,
         targetType: 'Item',
         targetId:   id,
-        oldValues:  oldItem,
-        newValues:  item,
+        oldValues:  { ...oldItem, ...(balanceResult ? { costPrice: oldItem?.weightedAvgCost } : {}) },
+        newValues:  { ...item,    ...(balanceResult ? { costPrice: balanceResult.weightedAvgCost } : {}) },
       })
 
-      return item
+      return { ...item, ...(balanceResult || {}) }
     })
   }
 
-  async softDelete(id: string) {
+  async softDelete(id: string, password?: string) {
     const ctx = requestContext.getStore()
     const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(ctx?.role || '')
     const channelId = ctx?.channelId
+    const userId = ctx?.userId
+
+    // SECURITY: Requirement for password confirmation on deletion
+    if (!password) {
+      throw { statusCode: 400, message: 'Password confirmation required for deletion' }
+    }
+
+    if (userId) {
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } })
+      const { verifyPassword } = await import('../../lib/password.js')
+      const valid = await verifyPassword(user.passwordHash, password)
+      if (!valid) throw { statusCode: 401, message: 'Invalid password. Deletion aborted.' }
+    }
 
     if (!isAdmin && channelId) {
       const hasBalance = await prisma.inventoryBalance.findUnique({

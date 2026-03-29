@@ -1,12 +1,30 @@
 import { prisma } from '../../lib/prisma.js'
 
-// FIX 5: Validate and parse date strings safely
+// FIX 5: Validate and parse date strings safely with Kenya Time (EAT, UTC+3) Awareness
 function parseDate(dateStr: string, endOfDay = false): Date {
-  const d = new Date(dateStr)
+  // If we receive just a date "YYYY-MM-DD", treat it as start of day in Kenya (+3)
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+  let d: Date
+  
+  if (isDateOnly) {
+    d = new Date(dateStr + 'T00:00:00+03:00')
+  } else {
+    d = new Date(dateStr)
+  }
+
   if (isNaN(d.getTime())) {
     throw { statusCode: 400, message: `Invalid date: "${dateStr}"` }
   }
-  if (endOfDay) d.setUTCHours(23, 59, 59, 999)
+
+  if (endOfDay) {
+    // If it's a date only, set it to the very end of that day in Kenya time
+    if (isDateOnly) {
+       d = new Date(dateStr + 'T23:59:59.999+03:00')
+    } else {
+       // Otherwise, cap the provided UTC timestamp to the end of its UTC day (legacy behavior)
+       d.setUTCHours(23, 59, 59, 999)
+    }
+  }
   return d
 }
 
