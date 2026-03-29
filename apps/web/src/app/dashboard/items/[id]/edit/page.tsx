@@ -31,6 +31,7 @@ export default function EditItemPage() {
     unitOfMeasure: 'PCS',
     retailPrice: 0,
     wholesalePrice: 0,
+    weightedAvgCost: 0,
     minRetailPrice: 0,
     minWholesalePrice: 0,
     reorderLevel: 0,
@@ -82,6 +83,7 @@ export default function EditItemPage() {
         unitOfMeasure: item.unitOfMeasure || 'PCS',
         retailPrice: Number(item.retailPrice) || 0,
         wholesalePrice: Number(item.wholesalePrice) || 0,
+        weightedAvgCost: Number(item.weightedAvgCost) || 0,
         minRetailPrice: Number(item.minRetailPrice) || 0,
         minWholesalePrice: Number(item.minWholesalePrice) || 0,
         reorderLevel: item.reorderLevel || 0,
@@ -133,10 +135,12 @@ export default function EditItemPage() {
         brandId: formData.brandId,
         supplierId: formData.supplierId,
         unitOfMeasure: formData.unitOfMeasure,
+        weightedAvgCost: Number(formData.weightedAvgCost) || 0,
         wholesalePrice: Number(formData.wholesalePrice) || 0,
         minRetailPrice: Number(formData.minRetailPrice) || 0,
         minWholesalePrice: Number(formData.minWholesalePrice) || 0,
         reorderLevel: Number(formData.reorderLevel) || 0,
+        channelId: useAuthStore.getState().user?.channelId || '',
       }
 
       await api.patch(`/items/${id}`, payload, token!)
@@ -253,6 +257,10 @@ export default function EditItemPage() {
 
         {/* Pricing */}
         <div style={{ display: 'flex', gap: 16 }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label>Cost Price (KES) *</label>
+            <input type="number" className="input" min="0" step="0.01" value={formData.weightedAvgCost} onChange={e => set('weightedAvgCost', e.target.value)} required />
+          </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label>Retail Price (KES) *</label>
             <input type="number" className="input" min="0" step="0.01" value={formData.retailPrice} onChange={e => set('retailPrice', e.target.value)} required />

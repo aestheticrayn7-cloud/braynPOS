@@ -31,6 +31,7 @@ export default function NewItemPage() {
     unitOfMeasure: 'PCS',
     retailPrice: 0,
     wholesalePrice: 0,
+    weightedAvgCost: 0,
     minRetailPrice: 0,
     minWholesalePrice: 0,
     reorderLevel: 5,
@@ -114,6 +115,7 @@ export default function NewItemPage() {
         name: formData.name,
         retailPrice: Number(formData.retailPrice) || 0,
         wholesalePrice: Number(formData.wholesalePrice) || 0,
+        weightedAvgCost: Number(formData.weightedAvgCost) || 0,
         minRetailPrice: Number(formData.minRetailPrice) || 0,
         minWholesalePrice: Number(formData.minWholesalePrice) || 0,
         isActive: formData.isActive,
@@ -125,6 +127,7 @@ export default function NewItemPage() {
       if (formData.brandId)      payload.brandId = formData.brandId
       if (formData.supplierId)   payload.supplierId = formData.supplierId
       if (formData.unitOfMeasure) payload.unitOfMeasure = formData.unitOfMeasure
+      if (Number(formData.weightedAvgCost) > 0) payload.weightedAvgCost = Number(formData.weightedAvgCost)
       if (Number(formData.wholesalePrice) > 0) payload.wholesalePrice = Number(formData.wholesalePrice)
       if (Number(formData.reorderLevel) > 0) payload.reorderLevel = Number(formData.reorderLevel)
 
@@ -251,6 +254,10 @@ export default function NewItemPage() {
 
         {/* Pricing */}
         <div style={{ display: 'flex', gap: 16 }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label>Cost Price (KES) *</label>
+            <input type="number" className="input" min="0" step="0.01" value={formData.weightedAvgCost} onChange={e => set('weightedAvgCost', e.target.value)} required />
+          </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label>Retail Price (KES) *</label>
             <input type="number" className="input" min="0" step="0.01" value={formData.retailPrice} onChange={e => set('retailPrice', e.target.value)} required />

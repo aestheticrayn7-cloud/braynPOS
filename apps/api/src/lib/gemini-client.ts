@@ -47,7 +47,7 @@ export async function* streamText(prompt: string, systemInstruction?: string) {
  * Text Embeddings (replacing Ollama nomic-embed-text)
  */
 export async function embedText(text: string): Promise<number[]> {
-  const model = genAI.getGenerativeModel({ model: "embedding-001" });
+  const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
   const result = await model.embedContent(text);
   return result.embedding.values;
 }

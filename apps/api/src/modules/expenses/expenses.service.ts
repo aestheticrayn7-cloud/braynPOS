@@ -14,11 +14,13 @@ export class ExpensesService {
     createdBy:   string
   }) {
     return prisma.$transaction(async (tx) => {
+      const strictAmount = Math.round(data.amount * 100) / 100;
+
       const expense = await tx.expense.create({
         data: {
           channelId:   data.channelId,
           description: data.description,
-          amount:      data.amount,
+          amount:      strictAmount,
           category:    data.category   ?? null,
           receiptRef:  data.receiptRef ?? null,
           notes:       data.notes      ?? null,

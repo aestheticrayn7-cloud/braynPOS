@@ -12,6 +12,7 @@ import { validateApprovalToken }  from '../auth/manager-approve.routes.js'
 import { RATE }                   from '../../lib/rate-limit.plugin.js'
 import { z }                      from 'zod'
 import { eventBus }               from '../../lib/event-bus.js'
+import { logAction, AUDIT }       from '../../lib/audit.js'
 import '@fastify/multipart'
 import { MultipartFile } from '@fastify/multipart'
 
@@ -248,6 +249,16 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
       channelId:    body.channelId,
       availableQty: Number(updatedBalance?.availableQty || 0),
       movementType: movementType
+    })
+
+    logAction({
+      action:     AUDIT.STOCK_ADJUST,
+      actorId:    request.user.sub,
+      actorRole:  request.user.role,
+      channelId:  body.channelId,
+      targetType: 'Item',
+      targetId:   body.itemId,
+      newValues:  { quantityChange: body.quantity, reasonCode: body.reasonCode, notes: body.reason },
     })
 
     return { message: 'Stock adjustment recorded', movementType, quantity: body.quantity }

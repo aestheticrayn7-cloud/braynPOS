@@ -279,9 +279,14 @@ export class ItemsService {
       }
     }
 
+    const itemToDel = await prisma.item.findUnique({ where: { id } })
     const item = await prisma.item.update({
       where: { id },
-      data:  { deletedAt: new Date(), isActive: false },
+      data:  { 
+        deletedAt: new Date(), 
+        isActive: false,
+        sku: `${itemToDel?.sku}_del_${Date.now()}`
+      },
     })
 
     logAction({

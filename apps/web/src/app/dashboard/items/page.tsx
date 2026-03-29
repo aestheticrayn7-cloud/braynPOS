@@ -376,7 +376,7 @@ export default function ItemsPage() {
                           style={{ marginRight: 4 }}
                         >{item.isActive ? '🔴' : '🟢'}</button>
                       )}
-                      {['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(user?.role || '') && (
+                      {['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role || '') && (
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => handleDelete(item)}
