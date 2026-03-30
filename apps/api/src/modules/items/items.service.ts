@@ -242,6 +242,12 @@ export class ItemsService {
       if ((itemData as any)[f] !== undefined) balanceData[f] = (itemData as any)[f]
     })
 
+    // FIX: If user is an Admin, their price edits should update the global Catalog Item, 
+    // not just the local InventoryBalance (which might be skipped if channelId is missing)
+    if (isAdmin) {
+      Object.assign(updateData, balanceData)
+    }
+
     return prisma.$transaction(async (tx) => {
       const oldItem = await tx.item.findUnique({ where: { id } })
       const item = await tx.item.update({ where: { id }, data: updateData })
