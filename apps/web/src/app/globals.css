@@ -346,9 +346,9 @@ tr:hover { background: var(--bg-card-hover); }
 }
 
 .pos-price-input {
-  width: 88px;
+  width: 104px;
   padding: 6px 8px;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   min-height: 40px;
   text-align: center;
 }

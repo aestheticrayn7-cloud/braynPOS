@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast'
 export default function AccountingPage() {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
-  const [tab, setTab] = useState<'chart' | 'trial' | 'pnl' | 'balance'>('chart')
+  const [tab, setTab] = useState<'chart' | 'trial' | 'pnl' | 'balance' | 'assets'>('chart')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -49,6 +49,9 @@ export default function AccountingPage() {
         case 'balance':
           params.set('asOfDate', asOfDate)
           res = await api.get(`/accounting/balance-sheet?${params}`, token)
+          break
+        case 'assets':
+          res = await api.get(`/accounting/assets?${params}`, token)
           break
       }
       setData(res)
@@ -152,7 +155,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="tab-group" style={{ marginBottom: 24 }}>
-        {(['chart', 'trial', 'pnl', 'balance'] as const).map(t => (
+        {(['chart', 'trial', 'pnl', 'balance', 'assets'] as const).map(t => (
           <button 
             key={t} 
             className={`btn ${tab === t ? 'btn-primary' : 'btn-ghost'}`} 
@@ -161,7 +164,8 @@ export default function AccountingPage() {
             {t === 'chart' ? 'Chart of Accounts' : 
              t === 'trial' ? 'Trial Balance' : 
              t === 'pnl' ? 'Profit & Loss' : 
-             'Balance Sheet'}
+             t === 'balance' ? 'Balance Sheet' :
+             'Fixed Assets'}
           </button>
         ))}
       </div>
@@ -180,6 +184,7 @@ export default function AccountingPage() {
           {tab === 'trial' && renderTrialBalance(data)}
           {tab === 'pnl' && renderProfitLoss(data)}
           {tab === 'balance' && renderBalanceSheet(data)}
+          {tab === 'assets' && renderAssets(data)}
         </div>
       )}
     </div>
@@ -407,4 +412,62 @@ export default function AccountingPage() {
       </div>
     )
   }
+
+  function renderAssets(assets: any[]) {
+    if (!assets || !Array.isArray(assets)) return null
+
+    return (
+      <div className="animate-scale-in">
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+           <h3 style={{ margin: 0 }}>Business Fixed Assets</h3>
+           <button className="btn btn-primary btn-sm" onClick={() => {
+              const name = prompt('Asset Name?')
+              const code = prompt('Asset Code?')
+              const price = Number(prompt('Purchase Price?'))
+              const rate = Number(prompt('Depreciation Rate (Annual %)?'))
+              if (!name || !code || isNaN(price)) return
+              
+              api.post('/accounting/assets', {
+                name, code, 
+                category: 'GENERAL',
+                purchaseDate: new Date().toISOString(),
+                purchasePrice: price,
+                depreciationRate: rate,
+                channelId: user?.channelId || ''
+              }, token!).then(() => loadTab('assets'))
+           }}>+ Add Asset</button>
+        </div>
+        <div className="table-container card">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Asset Name</th>
+                <th>Purchase Date</th>
+                <th style={{ textAlign: 'right' }}>Purchase Price</th>
+                <th style={{ textAlign: 'right' }}>Depreciation Rate</th>
+                <th style={{ textAlign: 'right' }}>Current Book Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.map(a => (
+                <tr key={a.id}>
+                  <td><code>{a.code}</code></td>
+                  <td><strong>{a.name}</strong></td>
+                  <td>{new Date(a.purchaseDate).toLocaleDateString()}</td>
+                  <td style={{ textAlign: 'right' }}>{fmt(Number(a.purchasePrice))}</td>
+                  <td style={{ textAlign: 'right' }}>{Number(a.depreciationRate)}%</td>
+                  <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: 700 }}>{fmt(a.bookValue)}</td>
+                </tr>
+              ))}
+              {assets.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No fixed assets recorded yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 }
+

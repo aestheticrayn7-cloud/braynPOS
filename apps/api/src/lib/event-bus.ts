@@ -19,6 +19,8 @@ export interface DomainEvents {
   'stock.adjustment':        { itemId: string; quantityChange: number; reason: string; ticketId?: string }
   'approval.requested':      { approvalId: string; requesterId: string; channelId: string | null; action: string; notes?: string | null }
   'inventory.updated':       { itemId: string; channelId: string; availableQty: number; movementType: string }
+  'sale.zero_cost':          { receiptNo: string; itemSku: string; channelId: string }
+  'transfer.zero_cost':      { itemSku: string; fromChannelId: string; toChannelId: string }
 }
 
 class TypedEventBus {

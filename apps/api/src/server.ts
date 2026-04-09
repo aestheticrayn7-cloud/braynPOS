@@ -90,6 +90,9 @@ async function start() {
   })
 
   setupSupportSocket(io)
+  const { setupNotificationSocket } = await import('./modules/notifications/notifications.socket.js')
+  setupNotificationSocket(io)
+
   const { setupApprovalSocket } = await import('./modules/users/approval.socket.js')
   setupApprovalSocket(io)
   
@@ -98,6 +101,8 @@ async function start() {
 
   startProactiveMonitor()
   startCommissionListener()
+  const { startLoyaltyListener } = await import('./modules/loyalty/loyalty.listener.js')
+  startLoyaltyListener()
   startNotificationWorker()
 
   // FIX: listen() comes LAST — after all handlers are ready

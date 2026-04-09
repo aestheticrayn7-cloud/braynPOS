@@ -1,4 +1,4 @@
-import { prisma, basePrisma }           from '../../lib/prisma.js'
+import { prisma, basePrisma, type TransactionClient } from '../../lib/prisma.js'
 import { Prisma }                        from '@prisma/client'
 import { buildShrinkageJournalEntry }    from '../../lib/ledger.js'
 import { eventBus }                      from '../../lib/event-bus.js'
@@ -37,6 +37,30 @@ export class TransfersService {
       throw error
     }
 
+    // ── Cost existence check (HARD BLOCK) ──────────────────────────
+    const missingCostItems: string[] = []
+    for (const line of data.lines) {
+      const balance = await (prisma as any).inventoryBalance.findUnique({
+        where:  { itemId_channelId: { itemId: line.itemId, channelId: data.fromChannelId } },
+        select: { weightedAvgCost: true },
+      })
+      const cost = Number((balance as any)?.weightedAvgCost ?? 0)
+      if (cost <= 0) {
+        const item = await prisma.item.findUnique({
+          where:  { id: line.itemId },
+          select: { name: true, sku: true },
+        })
+        missingCostItems.push(`${item?.name || line.itemId} (${item?.sku || 'N/A'})`)
+      }
+    }
+
+    if (missingCostItems.length > 0) {
+      throw {
+        statusCode: 422,
+        message: `Transfer Blocked: The following items have no recorded cost price. You must record a purchase or update the cost before transferring:\n${missingCostItems.join('\n')}`
+      }
+    }
+
     const uniqueSuffix = randomBytes(3).toString('hex').toUpperCase()
     const transferNo   = `TRF-${Date.now()}-${uniqueSuffix}`
 
@@ -67,7 +91,7 @@ export class TransfersService {
 
     // ── Stock movements in a transaction ───────────────────────────
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: TransactionClient) => {
         for (const line of data.lines) {
           await tx.stockMovement.create({
             data: {
@@ -153,8 +177,7 @@ export class TransfersService {
       sourceItemsForMetadata[line.itemId] = sourceItemForMeta
       ensuredMetadata[line.itemId] = await itemsService.ensureMetadata(t.toChannelId, sourceItemForMeta)
     }
-
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       for (const line of lines) {
         const transferLine = t.lines?.find((tl: any) => tl.itemId === line.itemId)
         if (!transferLine) continue
@@ -283,7 +306,7 @@ export class TransfersService {
       throw { statusCode: 400, message: `Only SENT transfers can be cancelled. Current: ${t.status}` }
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       for (const line of t.lines ?? []) {
         await tx.stockMovement.create({
           data: {

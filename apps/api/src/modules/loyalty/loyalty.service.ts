@@ -1,9 +1,17 @@
 import { prisma } from '../../lib/prisma.js'
 
 export class LoyaltyService {
-  async earnPoints(customerId: string, saleId: string, amount: number) {
-    const points = Math.floor(amount / 100)
-    if (points <= 0) return
+  /**
+   * Earn Points based on Gross Margin (Profit)
+   * This strategy ensures points are only awarded if the sale was profitable.
+   * Logic: 1 point for every 50 profit units (e.g. KES 50 profit = 1 point)
+   */
+  async earnPoints(customerId: string, saleId: string, margin: number) {
+    if (margin <= 0) return { earned: 0, reason: 'Zero or negative margin' }
+
+    // PROFIT-BASED ACCRUAL: 1 point per 50 units of profit
+    const points = Math.floor(margin / 50)
+    if (points <= 0) return { earned: 0, reason: 'Profit below reward threshold' }
 
     const customer = await prisma.customer.findUniqueOrThrow({
       where:  { id: customerId },
@@ -12,7 +20,6 @@ export class LoyaltyService {
 
     if (!customer.channelId) throw { statusCode: 400, message: 'Customer has no assigned channel' }
 
-    // FIX 1: null-safe channelId — nullable field, cannot use !
     await prisma.$transaction([
       prisma.loyaltyTransaction.create({
         data: {
@@ -21,7 +28,7 @@ export class LoyaltyService {
           type:        'EARN',
           points,
           referenceId: saleId,
-          notes:       'Earned from sale',
+          notes:       `Earned from profit margin on Sale ${saleId}`,
         },
       }),
       prisma.customer.update({

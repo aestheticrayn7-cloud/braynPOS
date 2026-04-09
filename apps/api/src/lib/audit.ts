@@ -86,6 +86,11 @@ export const AUDIT = {
 
   // Approvals
   MANAGER_APPROVAL:      'manager.approval',
+
+  // Offline & Sync
+  OFFLINE_OVERRIDE:      'offline.override',
+  OFFLINE_SYNC:          'offline.sync',
+  SERIAL_ADJUST:         'serial.adjust',
 } as const
 
 // Derive a union type from the constants for type-safe action strings

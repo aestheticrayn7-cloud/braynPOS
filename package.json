@@ -22,5 +22,8 @@
   },
   "overrides": {
     "ioredis": "5.10.0"
+  },
+  "devDependencies": {
+    "@next/swc-win32-x64-msvc": "14.2.33"
   }
 }

@@ -84,4 +84,61 @@ export const receiptsRoutes: FastifyPluginAsync = async (app) => {
       date:    sale.createdAt,
     }
   })
+
+  // GET /receipts/public/:saleId (No authentication required)
+  // Audit finding: Permanent Digital Receipt Links
+  app.get('/public/:saleId', {
+    config: {
+      rateLimit: {
+        max:        20,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (request, reply) => {
+    const { saleId } = request.params as { saleId: string }
+
+    const sale = await prisma.sale.findFirst({
+      where: { id: saleId, deletedAt: null },
+      include: {
+        items:    { include: { item: { select: { name: true, sku: true } } } },
+        payments: true,
+        channel:  { include: { settings: true } },
+      },
+    })
+
+    if (!sale) return reply.status(404).send({ error: 'Receipt not found' })
+
+    const cashierUser = await prisma.user.findUnique({
+      where:  { id: sale.performedBy },
+      select: { username: true },
+    })
+
+    // Sanitize: No PII besides name if public
+    return {
+      receiptNo: sale.receiptNo,
+      channel:   {
+        name:    sale.channel.name,
+        address: sale.channel.address,
+        phone:   sale.channel.phone,
+        email:   sale.channel.email,
+      },
+      items: sale.items.map(i => ({
+        name:      i.item.name,
+        quantity:  i.quantity,
+        unitPrice: Number(i.unitPrice),
+        lineTotal: Number(i.lineTotal),
+      })),
+      totals: {
+        subtotal: Number(sale.totalAmount),
+        discount: Number(sale.discountAmount),
+        total:    Number(sale.netAmount),
+      },
+      payments: sale.payments.map(p => ({
+        method: p.method,
+        amount: Number(p.amount),
+      })),
+      cashier: cashierUser?.username,
+      date:    sale.createdAt,
+    }
+  })
 }

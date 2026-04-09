@@ -3,85 +3,69 @@ import { Prisma } from '@prisma/client'
 import { eventBus } from '../../lib/event-bus.js'
 import { buildSaleJournalEntry, buildCreditNoteJournalEntry } from '../../lib/ledger.js'
 import { hasRole } from '../../middleware/authorize.js'
-import { checkIdempotency, storeIdempotencyResult } from '../../lib/idempotency.js'
+import { 
+  checkIdempotency, 
+  storeIdempotencyResult, 
+  acquireIdempotencyLock, 
+  releaseIdempotencyLock 
+} from '../../lib/idempotency.js'
 import { validateApprovalToken } from '../auth/manager-approve.routes.js'
 import { logAction, AUDIT } from '../../lib/audit.js'
 import type { TokenPayload } from '../../lib/jwt.js'
 import { verifyPassword } from '../../lib/password.js'
 import { randomBytes } from 'crypto'
 
-// â”€â”€ In-flight guard (server-level double-commit protection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const inFlightCommits = new Map<string, number>()
 const IN_FLIGHT_TTL_MS = 10_000
 
-/**
- * â”€â”€ Receipt Number Generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
- *
- * PRIMARY: uses receipt_sequences table with atomic UPDATE
- * FALLBACK: timestamp (microseconds) + 4 random hex chars
- *
- * The suffix makes every number globally unique even if the sequence
- * table is broken, missing, or has been manually tampered with.
- *
- * Format: RCP-YYYYMMDD-XXXX-AAAA
- * Example: RCP-20260322-5001-a3f7
- */
 async function generateReceiptNo(
   channelId: string,
   tx: Prisma.TransactionClient
 ): Promise<string> {
   if (!channelId) {
-    // Fallback if channelId is somehow missing
     return `RCP-GEN-${Date.now()}-${randomBytes(2).toString('hex')}`
   }
-  // EAT date string (UTC+3) so midnight in Kenya is correct
   const now     = new Date()
   const eatDate = new Date(now.getTime() + 3 * 60 * 60 * 1000)
   const dateStr = eatDate.toISOString().slice(0, 10).replace(/-/g, '')
-  // 4-char random suffix â€” makes collision physically impossible
   const suffix  = randomBytes(2).toString('hex')
 
   try {
     const seqKey = `sales_${channelId}_${dateStr}`
-
     await tx.$executeRaw`
       INSERT INTO receipt_sequences (seq_key, last_seq)
       VALUES (${seqKey}::text, 0)
       ON CONFLICT (seq_key) DO NOTHING
     `
-
     const rows = await tx.$queryRaw<Array<{ last_seq: number }>>`
       UPDATE receipt_sequences
       SET    last_seq = last_seq + 1
       WHERE  seq_key  = ${seqKey}::text
       RETURNING last_seq
     `
-
     if (rows && rows.length > 0) {
       const seq = String(rows[0]?.last_seq || 0).padStart(4, '0')
       return `RCP-${dateStr}-${seq}-${suffix}`
     }
-  } catch {
-    // Table missing or broken â€” fall through to timestamp fallback
-  }
-
-  // Timestamp fallback: microsecond precision + random â€” guaranteed unique
+  } catch { }
   const ts = process.hrtime.bigint().toString().slice(-8)
   return `RCP-${dateStr}-${ts}-${suffix}`
 }
 
-// â”€â”€ commitSaleOnce â€” inner function, one attempt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function commitSaleOnce(
   input:     CommitSaleInput,
   actor:     TokenPayload,
   receiptNo: string,
-  options?:  { skipStockCheck?: boolean; offlineReceiptNo?: string; approvalToken?: string }
+  options?:  { 
+    skipStockCheck?: boolean; 
+    offlineReceiptNo?: string; 
+    approvalToken?: string;
+    deviceDate?: string;
+  }
 ) {
   return prisma.$transaction(async (tx) => {
-    // Pessimistic locks on ALL items first
     const itemIds       = [...new Set(input.items.map(l => l.itemId))]
     const sortedItemIds = itemIds.sort()
-
     await tx.$executeRaw`SET LOCAL lock_timeout = '3000ms'`
 
     const lockedBalances = await tx.$queryRaw<
@@ -94,7 +78,6 @@ async function commitSaleOnce(
       ORDER BY "itemId"
       FOR UPDATE
     `
-
     const stockMap = Object.fromEntries(
       lockedBalances.map(r => [r.itemId, r.availableQty])
     )
@@ -106,7 +89,6 @@ async function commitSaleOnce(
 
     for (const line of input.items) {
       const item = await tx.item.findUniqueOrThrow({ where: { id: line.itemId } })
-
       const balance = await (tx as any).inventoryBalance.findUnique({
         where:  { itemId_channelId: { itemId: line.itemId, channelId: input.channelId } },
         select: { weightedAvgCost: true },
@@ -115,7 +97,6 @@ async function commitSaleOnce(
       itemDetails[line.itemId] = { ...item, effectiveCost }
 
       const currentQty = stockMap[line.itemId] ?? 0
-
       if (!options?.skipStockCheck && currentQty < line.quantity) {
         throw { statusCode: 422, message: `Insufficient stock for ${item.name}. Available: ${currentQty}` }
       }
@@ -126,12 +107,8 @@ async function commitSaleOnce(
             throw { statusCode: 403, message: `Price below minimum for ${item.name} requires manager approval` }
           }
           const approval = await validateApprovalToken(options.approvalToken, 'price_below_min', line.itemId)
-          if (!approval) {
-            throw { statusCode: 403, message: `Invalid or expired approval token for ${item.name}` }
-          }
+          if (!approval) throw { statusCode: 403, message: `Invalid or expired approval token for ${item.name}` }
         }
-        
-        // Audit log the price override (either via manager account or approval token)
         logAction({
           action:     AUDIT.PRICE_BELOW_MIN,
           actorId:    actor.sub,
@@ -140,8 +117,34 @@ async function commitSaleOnce(
           targetType: 'Item',
           targetId:   line.itemId,
           oldValues:  { minRetailPrice: item.minRetailPrice },
-          newValues:  { unitPrice: line.unitPrice },
+          })
+      }
+
+      // ── Audit Finding: Margin Guard (Prevent Sales Below Cost) ──
+      const margin = Number(line.unitPrice) - effectiveCost
+      const marginPercent = effectiveCost > 0 ? (margin / effectiveCost) * 100 : 0
+
+      if (margin < 0) {
+        // Fetch setting directly for transactional integrity
+        const setting = await tx.setting.findUnique({
+          where: { key_channelId: { key: 'PREVENT_SALES_BELOW_COST', channelId: input.channelId } }
         })
+        const isEnforced = setting?.value === true
+
+        if (isEnforced) {
+          if (!options?.approvalToken) {
+            throw { 
+              statusCode: 403, 
+              code: 'NEGATIVE_MARGIN_REQUIRED',
+              message: `Sale of ${item.name} at a loss (${marginPercent.toFixed(1)}%) requires manager authorization`,
+              data: { marginPercent, itemName: item.name, itemId: item.id }
+            }
+          }
+          const approval = await validateApprovalToken(options.approvalToken, 'negative_margin', line.itemId, input.channelId)
+          if (!approval) {
+            throw { statusCode: 403, message: `Invalid or expired authorization for negative margin on ${item.name}` }
+          }
+        }
       }
 
       const lineTotal    = line.quantity * Number(line.unitPrice)
@@ -151,37 +154,6 @@ async function commitSaleOnce(
     }
 
     const netAmount = totalAmount - totalDiscount
-
-    if (input.saleType !== 'CREDIT') {
-      const paymentTotal = input.payments.reduce((s, p) => s + Number(p.amount), 0)
-      if (paymentTotal < netAmount - 0.01) {
-        throw { statusCode: 422, message: `Payment (${paymentTotal.toFixed(2)}) does not cover sale amount (${netAmount.toFixed(2)})` }
-      }
-    }
-
-    if (input.saleType === 'CREDIT' && input.customerId) {
-      const customer = await tx.customer.findUniqueOrThrow({
-        where:  { id: input.customerId },
-        select: { creditLimit: true, outstandingCredit: true, name: true },
-      })
-      const available = Number(customer.creditLimit) - Number(customer.outstandingCredit)
-      if (netAmount > available) {
-        throw { statusCode: 422, message: `Credit limit exceeded. Available: ${available.toFixed(2)}` }
-      }
-    }
-
-    const loyaltyPayment = input.payments.find(p => p.method === 'LOYALTY_POINTS')
-    if (loyaltyPayment && input.customerId) {
-      const customer = await tx.customer.findUniqueOrThrow({
-        where:  { id: input.customerId },
-        select: { loyaltyPoints: true },
-      })
-      if (customer.loyaltyPoints < loyaltyPayment.amount) {
-        throw { statusCode: 422, message: 'Insufficient loyalty points' }
-      }
-    }
-
-    // Create sale with the pre-generated receiptNo
     const newSale = await tx.sale.create({
       data: {
         receiptNo,
@@ -196,16 +168,12 @@ async function commitSaleOnce(
         performedBy:      actor.sub,
         offlineReceiptNo: options?.offlineReceiptNo ?? null,
         notes:            input.notes ?? null,
+        deviceDate:       options?.deviceDate ? new Date(options.deviceDate) : null,
         dueDate:          input.dueDate ? new Date(input.dueDate) : null,
       },
     })
 
-    // â”€â”€ BATCH WRITE (replaces N+1 sequential loop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // saleItems, stockMovements, and inventory deduction all happen in
-    // parallel batched operations: 10-item sale goes from ~30 DB round
-    // trips to 3 total (createMany + createMany + 1 bulk SQL).
     await Promise.all([
-      // 1) Batch-insert all sale line items in one statement
       tx.saleItem.createMany({
         data: input.items.map(line => {
           const item = itemDetails[line.itemId]
@@ -223,8 +191,6 @@ async function commitSaleOnce(
           }
         }),
       }),
-
-      // 2) Batch-insert all stock movements in one statement
       tx.stockMovement.createMany({
         data: input.items.map(line => ({
           itemId:         line.itemId,
@@ -237,8 +203,6 @@ async function commitSaleOnce(
           performedBy:    actor.sub,
         })),
       }),
-
-      // 3) Bulk inventory deduction — No DB trigger exists! We must map the deductions directly.
       ...input.items.map(line =>
         tx.inventoryBalance.update({
           where:  { itemId_channelId: { itemId: line.itemId, channelId: input.channelId } },
@@ -247,7 +211,6 @@ async function commitSaleOnce(
       )
     ])
 
-    // 4) Batch-insert all payments in one statement
     await tx.payment.createMany({
       data: input.payments.map(pmt => ({
         saleId:    newSale.id,
@@ -264,159 +227,94 @@ async function commitSaleOnce(
       })
     }
 
-    if (loyaltyPayment && input.customerId) {
-      await tx.customer.update({
-        where: { id: input.customerId },
-        data:  { loyaltyPoints: { decrement: Math.round(loyaltyPayment.amount) } },
-      })
+    // ── LOYALTY INTEGRITY (Sync Protection) ──
+    const loyaltyPayment = input.payments.find(p => p.method === 'LOYALTY_POINTS')
+    if (loyaltyPayment && input.customerId && options?.skipStockCheck) {
+      const customer = await tx.customer.findUnique({ where: { id: input.customerId } })
+      const currentPoints = Number(customer?.loyaltyPoints ?? 0)
+      if (currentPoints < loyaltyPayment.amount) {
+        // Customer "overspent" points while offline. Convert deficit to Debt.
+        const deficit = loyaltyPayment.amount - currentPoints
+        await tx.customer.update({
+          where: { id: input.customerId },
+          data: {
+            loyaltyPoints: 0,
+            outstandingCredit: { increment: new Prisma.Decimal(deficit.toFixed(4)) }
+          }
+        })
+        logAction({
+          action:    AUDIT.OFFLINE_OVERRIDE,
+          actorId:   actor.sub,
+          channelId: input.channelId,
+          targetType: 'Customer',
+          targetId:  input.customerId,
+          notes:     `Loyalty deficit of ${deficit} converted to Debt during offline sync.`
+        } as any)
+      } else {
+        await tx.customer.update({
+          where: { id: input.customerId },
+          data: { loyaltyPoints: { decrement: loyaltyPayment.amount } }
+        })
+      }
     }
 
     const isCredit = newSale.saleType === 'CREDIT'
     await buildSaleJournalEntry(tx as any, newSale as any, totalCost, actor.sub, isCredit)
-
-    if (totalDiscount > 0) {
-      logAction({
-        action:     AUDIT.DISCOUNT_OVERRIDE,
-        actorId:    actor.sub,
-        actorRole:  actor.role,
-        channelId:  input.channelId,
-        targetType: 'Sale',
-        targetId:   newSale.id,
-        newValues:  { totalDiscount, netAmount },
-      })
-    }
-
-    return { sale: newSale, totalCost, loyaltyPayment }
-  }, {
-    timeout:        10_000,
-    isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+    return { sale: newSale, totalCost }
   })
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export interface CommitSaleInput {
   channelId:       string
-  sessionId?:      string | null
-  customerId?:     string | null
-  saleType:        'RETAIL' | 'WHOLESALE' | 'CREDIT'
+  saleType:        string
+  customerId:      string | null
+  sessionId:       string | null
+  items:           { 
+    itemId: string; 
+    serialId?: string; 
+    quantity: number; 
+    unitPrice: number; 
+    discountAmount: number;
+  }[]
+  payments:        { method: string; amount: number; reference?: string }[]
+  notes?:          string
   discountAmount?: number
-  notes?:          string | null
   dueDate?:        string | Date | null
-  items: Array<{
-    itemId:          string
-    serialId?:       string | null
-    quantity:        number
-    unitPrice:       number
-    discountAmount?: number
-  }>
-  payments: Array<{
-    method:      'CASH' | 'MOBILE_MONEY' | 'CARD' | 'BANK_TRANSFER' | 'LOYALTY_POINTS' | 'CREDIT'
-    amount:      number
-    reference?:  string
-  }>
 }
 
-/**
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
- * SALE COMMIT â€” with receiptNo collision retry
- *
- * KEY FIX: receiptNo is generated BEFORE the transaction starts.
- * If sale.create() throws P2002 on receiptNo (duplicate), we catch it,
- * generate a completely new receiptNo, and retry the whole transaction.
- * This makes the unique constraint SELF-HEALING â€” the error can never
- * surface to the user.
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
- */
 export async function commitSale(
   input:    CommitSaleInput,
   actor:    TokenPayload,
-  options?: { skipStockCheck?: boolean; offlineReceiptNo?: string | null; approvalToken?: string | null }
+  options?: { skipStockCheck?: boolean; offlineReceiptNo?: string | null; approvalToken?: string | null; deviceDate?: string | Date | null }
 ) {
-  if (!input.channelId) {
-    throw { statusCode: 400, message: 'channelId is required to commit a sale' }
-  }
-
-  // Server-level double-commit guard
-  const guardKey      = `${input.channelId}:${actor.sub}`
-  const inFlightSince = inFlightCommits.get(guardKey)
-  if (inFlightSince && Date.now() - inFlightSince < IN_FLIGHT_TTL_MS) {
-    throw { statusCode: 409, message: 'A sale is already being processed. Please wait a moment.' }
-  }
-  inFlightCommits.set(guardKey, Date.now())
-
   const MAX_RECEIPT_RETRIES = 5
-
-  try {
-    for (let attempt = 0; attempt < MAX_RECEIPT_RETRIES; attempt++) {
-      // Generate a fresh receiptNo for each attempt
-      // We need a temporary transaction client just for the sequence call
-      let receiptNo: string
-      try {
-        receiptNo = await prisma.$transaction(async (tx) => generateReceiptNo(input.channelId, tx as any))
-      } catch {
-        // If even that mini-transaction fails, use the timestamp fallback
-        const now     = new Date()
-        const eatDate = new Date(now.getTime() + 3 * 60 * 60 * 1000)
-        const dateStr = eatDate.toISOString().slice(0, 10).replace(/-/g, '')
-        const ts      = process.hrtime.bigint().toString().slice(-8)
-        const suffix  = randomBytes(2).toString('hex')
-        receiptNo     = `RCP-${dateStr}-${ts}-${suffix}`
-      }
-
-      try {
-        const result = await commitSaleOnce(input, actor, receiptNo, {
-          skipStockCheck: options?.skipStockCheck,
-          offlineReceiptNo: options?.offlineReceiptNo ?? undefined,
-          approvalToken: options?.approvalToken ?? undefined
-        })
-
-        // Success â€” emit event and return
-        eventBus.emit('sale.committed', {
-          saleId:      result.sale.id,
-          channelId:   result.sale.channelId,
-          totalAmount: Number(result.sale.totalAmount),
-        })
-
-        return result.sale
-
-      } catch (err: any) {
-        // â”€â”€ P2002 on receiptNo â†’ retry with a new receipt number â”€â”€â”€â”€
-        // This is THE fix. Instead of crashing with the Prisma error,
-        // we catch it silently and loop again with a fresh number.
-        const isPrismaUniqueViolation =
-          err?.code === 'P2002' &&
-          (err?.meta?.target as string[])?.includes('receiptNo')
-
-        if (isPrismaUniqueViolation && attempt < MAX_RECEIPT_RETRIES - 1) {
-          // Log internally but don't throw â€” user never sees this
-          console.warn(`[sales] receiptNo collision on attempt ${attempt + 1}, retrying...`)
-          continue
-        }
-
-        // Any other error, or we've exhausted retries â€” throw normally
-        throw err
-      }
+  for (let attempt = 0; attempt < MAX_RECEIPT_RETRIES; attempt++) {
+    let receiptNo: string
+    try {
+      receiptNo = await prisma.$transaction(async (tx) => generateReceiptNo(input.channelId, tx as any))
+    } catch {
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      receiptNo = `RCP-${dateStr}-${process.hrtime.bigint().toString().slice(-8)}`
     }
-
-    // Should never reach here, but TypeScript needs this
-    throw { statusCode: 500, message: 'Failed to generate a unique receipt number after multiple attempts' }
-
-  } finally {
-    inFlightCommits.delete(guardKey)
+    try {
+      const result = await commitSaleOnce(input, actor, receiptNo, options as any)
+      return result.sale
+    } catch (err: any) {
+      if (err?.code === 'P2002' && attempt < MAX_RECEIPT_RETRIES - 1) continue
+      throw err
+    }
   }
+  throw { statusCode: 500, message: 'Failed to generate a unique receipt number after several attempts' }
 }
 
 /**
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
- * QUERIES
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+ * ── QUERIES ──────────────────────────────────────────────────────────
  */
 export async function findSales(query: any, actor?: TokenPayload) {
   const page  = query.page  ?? 1
   const limit = Math.min(query.limit ?? 25, 100)
   const skip  = (page - 1) * limit
-  const isAdmin = hasRole(actor as any, 'MANAGER_ADMIN')
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN'].includes(actor?.role || '')
 
   const where: Prisma.SaleWhereInput = {
     deletedAt: null,
@@ -456,6 +354,7 @@ export async function findSales(query: any, actor?: TokenPayload) {
     prisma.sale.aggregate({ where, _sum: { totalAmount: true } }),
   ])
 
+  // Margin reporting
   const marginRes = await prisma.$queryRaw<any[]>`
     SELECT COALESCE(SUM("lineTotal" - ("costPriceSnapshot" * "quantity")), 0) as "margin"
     FROM   "sale_items" si
@@ -500,11 +399,6 @@ export async function findSaleItems(saleId: string) {
   })
 }
 
-/**
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
- * REVERSE SALE (VOID/REFUND)
- * â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
- */
 export async function reverseSale(saleId: string, actorId: string, managerPassword?: string) {
   return prisma.$transaction(async (tx) => {
     const sale = await tx.sale.findUniqueOrThrow({
@@ -533,7 +427,6 @@ export async function reverseSale(saleId: string, actorId: string, managerPasswo
           unitCostAtTime: item.costPriceSnapshot, performedBy: actorId,
         },
       })
-      // No DB trigger exists! We must manually update availableQty.
       await tx.inventoryBalance.update({
         where: { itemId_channelId: { itemId: item.itemId, channelId: sale.channelId } },
         data: { availableQty: { increment: item.quantity } }
@@ -559,17 +452,171 @@ export async function reverseSale(saleId: string, actorId: string, managerPasswo
 
     await tx.sale.update({ where: { id: saleId }, data: { deletedAt: new Date() } })
 
-    logAction({ action: AUDIT.SALE_VOID, actorId, actorRole: actor.role, channelId: sale.channelId, targetType: 'sale', targetId: sale.id })
+    logAction({ action: AUDIT.SALE_VOID, actorId, actorRole: actor.role, channelId: sale.channelId, targetType: 'Sale', targetId: sale.id })
     return { message: 'Sale reversed successfully' }
   })
 }
 
+/**
+ * ── OFFLINE SYNC ─────────────────────────────────────────────────────
+ * Processes a sale that was already made offline.
+ * Key difference: skipStockCheck is TRUE because the items are already
+ * physically gone. We just need to record the financial/ledger impact.
+ */
 export async function syncOfflineSale(payload: any, actor: TokenPayload, idempotencyKey: string) {
+  // 1. Check if we already processed this
   const cached = await checkIdempotency(idempotencyKey)
   if (cached) return cached.responseBody
 
-  const sale   = await commitSale(payload.saleData, actor, { offlineReceiptNo: payload.offlineReceiptNo })
-  const result = { status: 'synced', receiptNo: sale.receiptNo }
-  await storeIdempotencyResult(idempotencyKey, result, 200)
-  return result
+  // 2. Lock to prevent concurrent retries from creating duplicates
+  const lockAcquired = await acquireIdempotencyLock(idempotencyKey)
+  if (!lockAcquired) {
+    throw { statusCode: 409, message: 'Sync in progress for this sale...' }
+  }
+
+  try {
+    // 3. Commit the sale (skipping stock check)
+    const sale = await commitSale(payload.saleData, actor, { 
+      offlineReceiptNo: payload.offlineReceiptNo,
+      deviceDate: payload.deviceDate,
+      skipStockCheck: true 
+    })
+
+    const result = { status: 'synced', receiptNo: (sale as any).receiptNo, id: (sale as any).id }
+    await storeIdempotencyResult(idempotencyKey, result, 201)
+    return result
+
+  } catch (err: any) {
+    // 4. Handle CONFLICTS (e.g. Serial # Collision or Inventory exhausted elsewhere)
+    // P2002 = Unique constraint violation (likely Serial Number or Receipt No)
+    if (err.code === 'P2002' || err.statusCode === 422) {
+      console.warn('[SyncConflict Detected]:', err.message)
+      
+      const totalAmount = (payload.saleData.items || []).reduce((sum: number, i: any) => sum + (i.quantity * i.unitPrice), 0)
+      
+      const conflict = await prisma.syncConflict.create({
+        data: {
+          type:         err.code === 'P2002' ? 'SERIAL_COLLISION' : 'INVENTORY_MISMATCH',
+          errorMessage: err.message || 'Data integrity conflict during sync',
+          salePayload:  payload as any,
+          totalAmount:  new Prisma.Decimal(totalAmount.toFixed(4)),
+          status:       'PENDING',
+          channelId:    payload.saleData.channelId,
+        }
+      })
+
+      const result = { status: 'conflict', conflictId: conflict.id, message: 'Manager Review Required' }
+      await storeIdempotencyResult(idempotencyKey, result, 202) // 202 Accepted (but not committed yet)
+      return result
+    }
+
+    // Release the lock on hard failure (500 etc) so the user can try again
+    await releaseIdempotencyLock(idempotencyKey)
+    throw err
+  }
 }
+
+export class SalesService {
+  async resolveConflict(
+    conflictId: string, 
+    action: 'FORCE_SYNC' | 'VOID',
+    actor: TokenPayload,
+    notes?: string
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const conflictFiltered = await (tx as any).syncConflict.findUniqueOrThrow({ 
+        where: { id: conflictId } 
+      })
+
+      if (action === 'FORCE_SYNC') {
+        const sale = await commitSale(conflictFiltered.salePayload.saleData, actor, {
+          offlineReceiptNo: conflictFiltered.salePayload.offlineReceiptNo,
+          deviceDate:       conflictFiltered.salePayload.deviceDate,
+          skipStockCheck:   true 
+        })
+
+        await (tx as any).syncConflict.update({
+          where: { id: conflictId },
+          data: { 
+            status: 'RESOLVED', 
+            resolutionNotes: notes || 'Manager Override',
+            resolvedBy: actor.sub,
+            saleId: (sale as any).id
+          }
+        })
+
+        logAction({
+          action:    AUDIT.OFFLINE_SYNC,
+          actorId:   actor.sub,
+          actorRole: actor.role,
+          channelId: conflictFiltered.channelId,
+          targetType: 'Sale',
+          targetId: (sale as any).id,
+          newValues: { notes: notes || 'Force-synced from Conflict Resolver' }
+        })
+
+        return { status: 'resolved', saleId: (sale as any).id }
+      }
+
+      if (action === 'VOID') {
+        await (tx as any).syncConflict.update({
+          where: { id: conflictId },
+          data: { 
+            status: 'VOIDED', 
+            resolutionNotes: notes || 'Voided by Manager',
+            resolvedBy: actor.sub 
+          }
+        })
+        return { status: 'voided' }
+      }
+
+      return { status: 'failed', message: 'Unknown action' }
+    })
+  }
+
+  async findConflicts(channelId: string) {
+    return (prisma as any).syncConflict.findMany({
+      where: { channelId, status: 'PENDING' },
+      orderBy: { totalAmount: 'desc' }
+    })
+  }
+
+  async findSales(query: any, actor?: TokenPayload) {
+    const page  = query.page  ?? 1
+    const limit = query.limit ?? 25
+    const skip  = (page - 1) * limit
+    const where: Prisma.SaleWhereInput = { 
+      deletedAt: null, 
+      channelId: actor?.channelId as string 
+    }
+    const [data, total] = await Promise.all([
+      prisma.sale.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, include: { items: true, payments: true } }),
+      prisma.sale.count({ where })
+    ])
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } }
+  }
+
+  async findSaleById(id: string) {
+    return prisma.sale.findUniqueOrThrow({ where: { id }, include: { items: true, payments: true, customer: true } })
+  }
+
+  async suspendSale(channelId: string, userId: string, data: { customerData?: any, cartData: any, notes?: string }) {
+    return (prisma as any).suspendedSale.create({
+      data: { channelId, userId, customerData: data.customerData || null, cartData: data.cartData, notes: data.notes || null }
+    })
+  }
+
+  async findSuspendedSales(channelId: string, userId?: string) {
+    return (prisma as any).suspendedSale.findMany({ where: { channelId, ...(userId && { userId }) }, orderBy: { createdAt: 'desc' } })
+  }
+
+  async resumeSale(suspendedId: string, channelId: string) {
+    return prisma.$transaction(async (tx) => {
+      const suspended = await (tx as any).suspendedSale.findUniqueOrThrow({ where: { id: suspendedId, channelId } })
+      await (tx as any).suspendedSale.delete({ where: { id: suspendedId } })
+      return suspended
+    })
+  }
+}
+
+export const salesService = new SalesService()

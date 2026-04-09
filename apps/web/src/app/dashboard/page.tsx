@@ -8,6 +8,8 @@ interface DashboardData {
   todaySales: number
   todayRevenue: number
   todayExpenses: number
+  todayProfit: number
+  markupPercent: number
   activeChannels: number
   lowStockItems: number
   pendingTransfers: number
@@ -95,6 +97,15 @@ export default function DashboardPage() {
           <div className="stat-card" id="stat-expenses">
             <div className="stat-value">{formatCurrency(data?.todayExpenses ?? 0)}</div>
             <div className="stat-label">Today&apos;s Expenses</div>
+          </div>
+          <div className="stat-card" id="stat-profit" style={{ borderLeft: '4px solid var(--success)' }}>
+            <div className="stat-value" style={{ color: 'var(--success)' }}>{formatCurrency(data?.todayProfit ?? 0)}</div>
+            <div className="stat-label">Expected Profit (Today)</div>
+            {data?.markupPercent !== undefined && (
+              <div style={{ fontSize: '0.75rem', marginTop: 4, opacity: 0.8 }}>
+                Markup: {data.markupPercent.toFixed(1)}%
+              </div>
+            )}
           </div>
           <div className="stat-card" id="stat-channels">
             <div className="stat-value">{data?.activeChannels ?? 0}</div>

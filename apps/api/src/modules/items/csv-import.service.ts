@@ -93,6 +93,10 @@ export class CsvImportService {
           supplierId: supplierId ?? null,
         }
 
+        if (itemData.weightedAvgCost <= 0) {
+          throw new Error('Import Refused: A valid Cost Price is mandatory for every item to ensure margin integrity.')
+        }
+
         if (existing) {
           await prisma.item.update({
             where: { id: existing.id },

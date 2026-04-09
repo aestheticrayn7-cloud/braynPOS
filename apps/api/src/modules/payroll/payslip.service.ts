@@ -100,6 +100,11 @@ export class PayslipService {
         const commissionTotal = n(payout?.totalCommission)
         const netWithCommission = calc.netSalary + commissionTotal
 
+        // Refetch the exact entries included in this payout for the breakdown
+        const payoutEntries = payout?.payoutId 
+          ? await tx.commissionEntry.findMany({ where: { payoutId: payout.payoutId } })
+          : []
+
         // FIX 4: Guard against NaN before any DB write
         const fieldsToCheck = {
           grossSalary:   calc.grossSalary,
@@ -131,10 +136,10 @@ export class PayslipService {
               commission: {
                 amount:        commissionTotal,
                 payoutId:      payout?.payoutId ?? null,
-                totalMargin:   entries.reduce((s: number, e: any) => s + Number(e.grossMargin), 0),
-                avgRate:       entries.length > 0 ? entries.reduce((s: number, e: any) => s + Number(e.rateApplied), 0) / entries.length : 0,
-                saleCount:     entries.length,
-                note:          commissionTotal > 0 ? `Earned from ${entries.length} sales` : 'No commission earned',
+                totalMargin:   payoutEntries.reduce((s: number, e: any) => s + Number(e.grossMargin), 0),
+                avgRate:       payoutEntries.length > 0 ? payoutEntries.reduce((s: number, e: any) => s + Number(e.rateApplied), 0) / payoutEntries.length : 0,
+                saleCount:     payoutEntries.length,
+                note:          commissionTotal > 0 ? `Earned from ${payoutEntries.length} sales` : 'No commission earned',
               },
             } as any,
           },

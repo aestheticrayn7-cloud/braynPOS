@@ -147,10 +147,17 @@ export class ItemsService {
   async create(data: CreateItemInput & { creatorChannelId?: string; creatorId?: string }) {
     const { creatorChannelId, creatorId, ...itemData } = data
 
-    // FIX 12: Use cryptographically random suffix ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Math.random() exhausts
+    // FIX 12: Use cryptographically random suffix — Math.random() exhausts
     // easily under bulk imports with concurrent requests.
     const sku = itemData.sku
       || `ITEM-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`
+
+    if (!itemData.weightedAvgCost || Number(itemData.weightedAvgCost) <= 0) {
+      throw {
+        statusCode: 422,
+        message: `Product Creation Blocked: A valid Cost Price is mandatory. You cannot create a product with zero cost as it breaks margin calculations.`
+      }
+    }
 
     try {
       return await prisma.$transaction(async (tx) => {
@@ -177,6 +184,17 @@ export class ItemsService {
               minWholesalePrice: itemData.minWholesalePrice ?? itemData.wholesalePrice ?? itemData.retailPrice,
               weightedAvgCost:   itemData.weightedAvgCost   ?? 0,
             },
+          })
+
+          await (tx as any).costAudit.create({
+            data: {
+              itemId:      item.id,
+              channelId:   creatorChannelId,
+              oldCost:     0,
+              newCost:     itemData.weightedAvgCost || 0,
+              reason:      'INITIAL_CREATION',
+              performedBy: creatorId,
+            }
           })
 
           await tx.stockMovement.create({
@@ -228,7 +246,6 @@ export class ItemsService {
     }
 
     const { channelId, ...itemData } = data
-    // ... rest of the logic
     const itemFields    = ['sku', 'barcode', 'name', 'description', 'categoryId', 'brandId', 'supplierId', 'unitOfMeasure', 'reorderLevel', 'isSerialized', 'taxClass', 'imageUrl', 'isActive']
     const balanceFields = ['retailPrice', 'wholesalePrice', 'minRetailPrice', 'minWholesalePrice', 'weightedAvgCost']
 
@@ -242,8 +259,6 @@ export class ItemsService {
       if ((itemData as any)[f] !== undefined) balanceData[f] = (itemData as any)[f]
     })
 
-    // FIX: If user is an Admin, their price edits should update the global Catalog Item, 
-    // not just the local InventoryBalance (which might be skipped if channelId is missing)
     if (isAdmin) {
       Object.assign(updateData, balanceData)
     }
@@ -252,18 +267,32 @@ export class ItemsService {
       const oldItem = await tx.item.findUnique({ where: { id } })
       const item = await tx.item.update({ where: { id }, data: updateData })
 
-      let balanceResult = null
+      let balanceResult: any = null
       if (channelId && Object.keys(balanceData).length > 0) {
-        // FIX: Actually save the Cost Price and Retail Price to the channel balance
+        const oldBalance = await (tx as any).inventoryBalance.findUnique({
+           where: { itemId_channelId: { itemId: id, channelId } }
+        })
+
         balanceResult = await (tx as any).inventoryBalance.upsert({
           where:  { itemId_channelId: { itemId: id, channelId } },
           create: { itemId: id, channelId, ...balanceData },
           update: balanceData,
         })
+
+        if (balanceData.weightedAvgCost !== undefined && Number(oldBalance?.weightedAvgCost || 0) !== Number(balanceData.weightedAvgCost)) {
+           await (tx as any).costAudit.create({
+             data: {
+               itemId:      id,
+               channelId,
+               oldCost:     oldBalance?.weightedAvgCost || 0,
+               newCost:     balanceData.weightedAvgCost,
+               reason:      'MANUAL_ADJUST',
+               performedBy: ctx?.userId || 'SYSTEM',
+             }
+           })
+        }
       }
 
-      // FIX: Enhance Audit Log to include channel-specific price/cost changes
-      // This ensures 'Cost Price' and 'Retail Price' show up in the Audit Trail comparison
       logAction({
         action:     AUDIT.ITEM_UPDATE,
         actorId:    ctx?.userId || 'SYSTEM',
@@ -285,7 +314,6 @@ export class ItemsService {
     const channelId = ctx?.channelId
     const userId = ctx?.userId
 
-    // SECURITY: Requirement for password confirmation on deletion
     if (!password) {
       throw { statusCode: 400, message: 'Password confirmation required for deletion' }
     }
@@ -328,7 +356,7 @@ export class ItemsService {
     return item
   }
 
-  async recalculateWAC(itemId: string, channelId: string, incomingQty: number, incomingCost: number) {
+  async recalculateWAC(itemId: string, channelId: string, incomingQty: number, incomingCost: number, referenceId?: string) {
     const balance = await (prisma as any).inventoryBalance.findUnique({
       where: { itemId_channelId: { itemId, channelId } },
     })
@@ -344,6 +372,21 @@ export class ItemsService {
       create: { itemId, channelId, weightedAvgCost: newWAC },
       update: { weightedAvgCost: newWAC },
     })
+
+    if (currentWAC !== newWAC) {
+       const ctx = requestContext.getStore()
+       await (prisma as any).costAudit.create({
+         data: {
+           itemId,
+           channelId,
+           oldCost:     currentWAC,
+           newCost:     newWAC,
+           reason:      'PURCHASE_RECALCULATION',
+           referenceId,
+           performedBy: ctx?.userId || 'SYSTEM',
+         }
+       })
+    }
 
     return newWAC
   }
@@ -440,19 +483,15 @@ export class ItemsService {
       orderBy: { name: 'asc' },
     })
     
-    // Deduplicate so we don't show "Electronics" 10 times
     const deduplicated = this.deDuplicateByName(categories)
     
-    // RECONSTRUCT HIERARCHY BY NAME
     const idMapByName = new Map<string, string>()
     deduplicated.forEach(c => idMapByName.set(c.name, c.id))
 
     return deduplicated.map(c => {
-      // Find original parent node
       const parentNode = categories.find(o => o.id === c.parentId)
       const representativeParentId = parentNode ? idMapByName.get(parentNode.name) : null
       
-      // Merge children by name
       const childrenNames = new Set(c.children?.map(ch => ch.name) || [])
       const childrenNodes = deduplicated.filter(d => d.parentId === c.id || childrenNames.has(d.name))
       
@@ -525,12 +564,160 @@ export class ItemsService {
     await prisma.supplier.findFirstOrThrow({ where: { id, channelId } })
     return prisma.supplier.update({ where: { id }, data })
   }
+
+  async getSerialAging(channelId: string) {
+    const serials = await prisma.serial.findMany({
+      where: { channelId, status: 'IN_STOCK', deletedAt: null },
+      include: { item: { select: { name: true, sku: true } } }
+    })
+    const now = new Date()
+    return serials.map(s => {
+      const days = Math.floor((now.getTime() - s.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      return {
+        id: s.id,
+        serialNo: s.serialNo,
+        itemName: s.item.name,
+        sku: s.item.sku,
+        daysInStock: days,
+        status: days > 90 ? 'CRITICAL' : days > 60 ? 'WARNING' : 'STABLE'
+      }
+    })
+  }
+
+  async swapSerial(serialId: string, newSerialNo: string, reason: string, performedBy: string) {
+    return prisma.$transaction(async (tx) => {
+      const oldSerial = await tx.serial.findUniqueOrThrow({ where: { id: serialId } })
+      const updated = await tx.serial.update({
+        where: { id: serialId },
+        data: { serialNo: newSerialNo }
+      })
+      await (tx as any).serialAudit.create({
+        data: {
+          serialId,
+          action: 'SWAP',
+          oldSerialNo: oldSerial.serialNo,
+          newSerialNo,
+          reason,
+          performedBy
+        }
+      })
+      return updated
+    })
+  }
+
+  async initializeMultiBranchStock(itemId: string, branches: { channelId: string; qty: number; cost: number }[], performedBy: string) {
+    return prisma.$transaction(async (tx) => {
+      for (const b of branches) {
+        await (tx as any).inventoryBalance.upsert({
+          where: { itemId_channelId: { itemId, channelId: b.channelId } },
+          create: { itemId, channelId: b.channelId, availableQty: b.qty, weightedAvgCost: b.cost },
+          update: { availableQty: { increment: b.qty }, weightedAvgCost: b.cost }
+        })
+        if (b.qty > 0) {
+          await tx.stockMovement.create({
+            data: {
+              itemId,
+              channelId: b.channelId,
+              movementType: 'ADJUSTMENT_IN',
+              quantityChange: b.qty,
+              referenceId: 'INITIAL_STOCK',
+              referenceType: 'adjustment',
+              performedBy,
+              notes: 'Multi-branch initial stock seeding'
+            }
+          })
+        }
+      }
+    })
+  }
+  async purgeEmptyBrands(channelId?: string) {
+    // Audit finding: Bulk Brands (Delete All Empty)
+    const emptyBrands = await prisma.brand.findMany({
+      where: {
+        channelId: channelId ?? undefined,
+        deletedAt: null,
+        items: { none: {} }
+      }
+    })
+
+    const ids = emptyBrands.map(b => b.id)
+    if (ids.length === 0) return { count: 0 }
+
+    return prisma.brand.updateMany({
+      where: { id: { in: ids } },
+      data: { deletedAt: new Date() }
+    })
+  }
+
+  /**
+   * Bulk Opening Stock Entry — handles multi-branch inventory onboarding.
+   * This logic specifically follows the "Opening Stock" pattern:
+   * 1. Updates inventory balances directly.
+   * 2. Logs as 'OPENING_STOCK' movement.
+   * 3. Does NOT affect General Ledger (Accounting) per parity audit.
+   */
+  async bulkOpeningStock(data: {
+    itemId: string
+    actorId: string
+    allocations: Array<{
+      channelId: string
+      quantity:  number
+      costPrice: number
+    }>
+  }) {
+    const { itemId, actorId, allocations } = data
+
+    return prisma.$transaction(async (tx) => {
+      const item = await tx.item.findUniqueOrThrow({ where: { id: itemId } })
+
+      for (const alloc of allocations) {
+        // Find or Create balance record for this channel
+        const balance = await (tx as any).inventoryBalance.upsert({
+          where: { itemId_channelId: { itemId, channelId: alloc.channelId } },
+          create: {
+            itemId,
+            channelId:       alloc.channelId,
+            availableQty:    alloc.quantity,
+            weightedAvgCost: alloc.costPrice,
+            retailPrice:     item.retailPrice,
+          },
+          update: {
+            availableQty:    { increment: alloc.quantity },
+            // Update cost if it was zero or explicitly requested (simplified: update always if provided)
+            ...(alloc.costPrice > 0 && { weightedAvgCost: alloc.costPrice })
+          }
+        })
+
+        // Log the Movement
+        await tx.stockMovement.create({
+          data: {
+            itemId,
+            channelId:      alloc.channelId,
+            quantityChange: alloc.quantity,
+            movementType:   'OPENING_STOCK',
+            referenceId:    'BULK-ONBOARD',
+            referenceType:  'ONBOARDING',
+            performedBy:    actorId,
+            notes:          `Opening stock allocation of ${alloc.quantity}`
+          }
+        })
+
+        // Log Cost Audit if cost changed
+        await (tx as any).costAudit.create({
+          data: {
+            itemId,
+            channelId:   alloc.channelId,
+            oldCost:     0, // We assume opening stock sets or increments from an initial state
+            newCost:     alloc.costPrice,
+            reason:      'OPENING_STOCK',
+            performedBy: actorId
+          }
+        })
+      }
+
+      return { success: true, count: allocations.length }
+    })
+  }
 }
 
 export const itemsService = new ItemsService()
-
-
-
-
-
-

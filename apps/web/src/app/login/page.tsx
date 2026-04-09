@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { ROLE_LANDING_PAGES } from '@/lib/nav-config'
 import QRCode from 'qrcode'
 
-type Mode = 'login' | 'mfa-verify' | 'mfa-setup' | 'mfa-recovery'
+type Mode = 'login' | 'mfa-verify' | 'mfa-setup' | 'mfa-recovery' | 'mfa-lost-device'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [qrCode, setQrCode] = useState('')
   const [setupCode, setSetupCode] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
+  const [recoveryCode, setRecoveryCode] = useState('')
 
   useEffect(() => {
     useAuthStore.getState().logout()
@@ -116,6 +117,23 @@ export default function LoginPage() {
     }
   }
 
+  const handleMfaRecovery = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      await api.post('/auth/mfa/recovery', { tempToken, recoveryCode: recoveryCode.trim().toUpperCase() })
+      setError('')
+      setMode('login')
+      alert('MFA has been disabled. Please sign in again with your password.')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const proceedToVerify = () => {
     setMode('mfa-verify')
     setTotpCode('')
@@ -127,7 +145,7 @@ export default function LoginPage() {
       <div className="login-card animate-fade-in">
         <div className="brand">
           <h1>◆ BRAYN</h1>
-          <p>Hybrid Edition • Enterprise POS [Build: 13:17]</p>
+          <p>Hybrid Edition • Enterprise POS [Last Updated: Apr 9, 2026]</p>
         </div>
 
         {error && <div className="login-error">{error}</div>}
@@ -200,6 +218,56 @@ export default function LoginPage() {
             >
               {loading ? 'Verifying...' : 'Verify'}
             </button>
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+              <button
+                type="button"
+                className="btn-link"
+                style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}
+                onClick={() => setMode('mfa-lost-device')}
+              >
+                Lost your device? Use a recovery code
+              </button>
+            </div>
+          </form>
+        )}
+
+        {mode === 'mfa-lost-device' && (
+          <form onSubmit={handleMfaRecovery}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 24, textAlign: 'center' }}>
+              🛡️ Enter one of your 8-character recovery codes to disable MFA and regain access.
+            </p>
+            <div className="form-group">
+              <label htmlFor="recovery-code">Recovery Code</label>
+              <input
+                id="recovery-code"
+                className="input"
+                type="text"
+                value={recoveryCode}
+                onChange={(e) => setRecoveryCode(e.target.value)}
+                placeholder="ABC123XY"
+                maxLength={8}
+                style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}
+                required
+              />
+            </div>
+            <button
+              className="btn btn-primary btn-lg"
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {loading ? 'Checking...' : 'Disable MFA & Reset Access'}
+            </button>
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+              <button
+                type="button"
+                className="btn-link"
+                style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}
+                onClick={() => setMode('mfa-verify')}
+              >
+                Back to 6-digit verification
+              </button>
+            </div>
           </form>
         )}
 

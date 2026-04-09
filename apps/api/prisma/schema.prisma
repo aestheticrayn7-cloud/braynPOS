@@ -54,6 +54,15 @@ model Channel {
   settings            Setting[]
   customerPayments    CustomerPayment[]
   loyaltyTransactions LoyaltyTransaction[]
+  fixedAssets         FixedAsset[]
+  userTargets         UserTarget[]
+  serviceChecklists   ServiceChecklist[]
+  banks               ChannelBank[]
+  repairs             RepairRequest[]
+  suspendedSales      SuspendedSale[]
+  costAudits          CostAudit[]
+  syncConflicts       SyncConflict[]
+  kraPin              String?
 
   @@map("channels")
 }
@@ -95,6 +104,9 @@ model User {
   assignedTickets    SupportTicket[]    @relation("AssignedTickets")
   sentTransfers      Transfer[]         @relation("SentTransfers")
   receivedTransfers  Transfer[]         @relation("ReceivedTransfers")
+  targets            UserTarget[]
+  repairsAssigned    RepairRequest[]    @relation("AssignedRepairs")
+  resolvedConflicts  SyncConflict[]     @relation("ResolvedConflicts")
 
   @@index([channelId])
   @@index([role])
@@ -256,6 +268,7 @@ model Item {
   stockMovements    StockMovement[]
   transferLines     TransferLine[]
   stockTakeItems    StockTakeItem[]
+  costAudits        CostAudit[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -325,14 +338,20 @@ model Sale {
   deletedAt        DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+  deviceDate       DateTime?        @map("device_date")
   dueDate          DateTime?        @db.Timestamptz(6)
   payments         Payment[]
   items            SaleItem[]
+  conflicts        SyncConflict[]
   channel          Channel          @relation(fields: [channelId], references: [id])
   customer         Customer?        @relation(fields: [customerId], references: [id])
   session          SalesSession?    @relation(fields: [sessionId], references: [id])
   serials          Serial[]
   commissionEntry  CommissionEntry?
+  vatOverride      Boolean          @default(false)
+  manualVatAmount  Decimal?         @db.Decimal(14, 4)
+  selectedBankId   String?
+  bankSnapshot     Json?            // Snapshot for PDF rendering
 
   @@index([channelId, createdAt])
   @@index([customerId])
@@ -360,6 +379,7 @@ model SaleItem {
   @@index([itemId])
   @@index([createdAt])
   @@index([itemId, createdAt])
+  @@index([saleId, costPriceSnapshot])
   @@map("sale_items")
 }
 
@@ -391,10 +411,12 @@ model Customer {
   deletedAt            DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
+  kraPin               String?
   successfulRepayments Int                  @default(0)
   customerPayments     CustomerPayment[]
   loyaltyTransactions  LoyaltyTransaction[]
   sales                Sale[]
+  repairs              RepairRequest[]
   channel              Channel?             @relation(fields: [channelId], references: [id])
 
   @@unique([channelId, phone])
@@ -817,6 +839,7 @@ model InventoryBalance {
   channel           Channel  @relation(fields: [channelId], references: [id])
 
   @@id([itemId, channelId])
+  @@index([weightedAvgCost])
   @@map("inventory_balances")
 }
 
@@ -1250,4 +1273,157 @@ model ReceiptSequence {
   lastSeq Int    @default(0) @map("last_seq")
 
   @@map("receipt_sequences")
+}
+
+model FixedAsset {
+  id              String    @id @default(uuid())
+  name            String
+  code            String    @unique
+  category        String    @default("GENERAL") // e.g. FURNITURE, COMPUTER, MACHINERY
+  purchaseDate    DateTime
+  purchasePrice   Decimal   @db.Decimal(14, 4)
+  depreciationRate Decimal  @default(0) @db.Decimal(8, 4) // Annual %
+  currentValue    Decimal   @default(0) @db.Decimal(14, 4)
+  channelId       String
+  channel         Channel   @relation(fields: [channelId], references: [id])
+  notes           String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([channelId])
+  @@map("fixed_assets")
+}
+
+
+model UserTarget {
+  id              String      @id @default(uuid())
+  userId          String
+  channelId       String
+  targetType      String      // MARGIN, REVENUE, SALES_COUNT
+  period          String      // WEEKLY, MONTHLY
+  targetValue     Decimal     @db.Decimal(14, 4)
+  currentValue    Decimal     @default(0) @db.Decimal(14, 4)
+  startDate       DateTime
+  endDate         DateTime
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  user            User        @relation(fields: [userId], references: [id])
+  channel         Channel     @relation(fields: [channelId], references: [id])
+
+  @@map("user_targets")
+}
+
+model ServiceChecklist {
+  id              String      @id @default(uuid())
+  name            String
+  channelId       String
+  fields          Json        // Array of {label, type, required}
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  channel         Channel     @relation(fields: [channelId], references: [id])
+
+  @@map("service_checklists")
+}
+
+model SerialAudit {
+  id              String      @id @default(uuid())
+  serialId        String
+  action          String      // SWAP, ADJUST, DELETE
+  oldSerialNo     String?
+  newSerialNo     String?
+  reason          String
+  performedBy     String
+  createdAt       DateTime    @default(now())
+  
+  @@map("serial_audits")
+}
+
+model ChannelBank {
+  id              String      @id @default(uuid())
+  channelId       String
+  bankName        String
+  accountName     String
+  accountNumber   String
+  paybill         String?
+  branch          String?
+  isActive        Boolean     @default(true)
+  channel         Channel     @relation(fields: [channelId], references: [id])
+  
+  @@map("channel_banks")
+}
+
+model RepairRequest {
+  id              String      @id @default(uuid())
+  repairNo        String      @unique
+  customerId      String
+  channelId       String
+  itemName        String
+  problemCategory String?     // SCREEN, BATTERY, MOTHERBOARD, etc.
+  description     String
+  status          String      @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, DELIVERED
+  estimatedCost   Decimal?    @db.Decimal(14, 4)
+  actualCost      Decimal?    @db.Decimal(14, 4)
+  assignedTo      String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  channel         Channel     @relation(fields: [channelId], references: [id])
+  assignedUser    User?       @relation("AssignedRepairs", fields: [assignedTo], references: [id])
+
+  @@map("repair_requests")
+}
+
+model SuspendedSale {
+  id              String      @id @default(uuid())
+  channelId       String
+  userId          String
+  customerData    Json?       // Snapshot of customer info
+  cartData        Json        // Snapshot of line items
+  notes           String?
+  createdAt       DateTime    @default(now())
+  channel         Channel     @relation(fields: [channelId], references: [id])
+
+  @@map("suspended_sales")
+}
+
+model CostAudit {
+  id              String      @id @default(uuid())
+  itemId          String
+  channelId       String
+  oldCost         Decimal     @db.Decimal(12, 4)
+  newCost         Decimal     @db.Decimal(12, 4)
+  reason          String      // PURCHASE, MANUAL_ADJUST, CORRECTION
+  referenceId     String?     // e.g. Purchase ID or Audit ID
+  performedBy     String
+  createdAt       DateTime    @default(now())
+  item            Item        @relation(fields: [itemId], references: [id])
+  channel         Channel     @relation(fields: [channelId], references: [id])
+
+  @@index([itemId, channelId])
+  @@map("cost_audits")
+}
+
+model SyncConflict {
+  id              String      @id @default(uuid())
+  type            String      // SERIAL_COLLISION, INVENTORY_MISMATCH, LOYALTY_ERROR
+  errorMessage    String
+  salePayload     Json        // The data that failed to sync
+  totalAmount     Decimal     @db.Decimal(14, 4)
+  status          String      @default("PENDING") // PENDING, RESOLVED, VOIDED
+  resolutionNotes String?
+  channelId       String
+  branchId        String?     // Optional branch specific
+  resolvedBy      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  channel         Channel     @relation(fields: [channelId], references: [id])
+  resolver        User?       @relation("ResolvedConflicts", fields: [resolvedBy], references: [id])
+  sale            Sale?       @relation(fields: [saleId], references: [id])
+  saleId          String?
+
+  @@index([channelId, status])
+  @@map("sync_conflicts")
 }

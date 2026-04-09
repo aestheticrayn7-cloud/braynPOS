@@ -115,6 +115,10 @@ export async function buildApp() {
   // ── Idempotency middleware ───────────────────────────────────────
   await app.register(idempotencyCheckMiddleware)
 
+  // ── Public Catalog routes ───────────────────────────────────────
+  const { catalogRoutes } = await import('./modules/catalog/catalog.routes.js')
+  await app.register(catalogRoutes, { prefix: '/v1/public/catalog' })
+
   // ── API v1 routes ───────────────────────────────────────────────
   await app.register(async (v1) => {
     await v1.register(authRoutes, { prefix: '/auth' })
@@ -146,6 +150,9 @@ export async function buildApp() {
 
     const { ledgerRoutes } = await import('./modules/accounting/ledger.routes.js')
     await v1.register(ledgerRoutes, { prefix: '/accounting' })
+
+    const { assetsRoutes } = await import('./modules/accounting/assets.routes.js')
+    await v1.register(assetsRoutes, { prefix: '/accounting/assets' })
 
     const { sessionsRoutes } = await import('./modules/sessions/sessions.routes.js')
     await v1.register(sessionsRoutes, { prefix: '/sessions' })
@@ -183,6 +190,9 @@ export async function buildApp() {
     const { dashboardRoutes } = await import('./modules/dashboard/dashboard.routes.js')
     await v1.register(dashboardRoutes, { prefix: '/dashboard' })
 
+    const { checklistRoutes } = await import('./modules/settings/checklists.routes.js')
+    await v1.register(checklistRoutes, { prefix: '/settings' })
+
     const { payrollRoutes } = await import('./modules/payroll/payroll.routes.js')
     await v1.register(payrollRoutes, { prefix: '/payroll' })
 
@@ -200,8 +210,17 @@ export async function buildApp() {
     const { receiptsRoutes } = await import('./modules/receipts/receipts.routes.js')
     await v1.register(receiptsRoutes, { prefix: '/receipts' })
 
-    const { auditRoutes } = await import('./modules/audit/audit.routes.js')
+    const { aiRoutes } = await import('./modules/ai/ai.routes.js')
+    await v1.register(aiRoutes, { prefix: '/ai' })
+
+    const { notificationRoutes } = await import('./modules/notifications/notifications.routes.js')
+  await app.register(notificationRoutes, { prefix: '/notifications' })
+
+  const { auditRoutes } = await import('./modules/audit/audit.routes.js')
     await v1.register(auditRoutes, { prefix: '/audit' })
+
+    const { marginCorrectionRoutes } = await import('./modules/audit/margin-correction.routes.js')
+    await v1.register(marginCorrectionRoutes, { prefix: '/audit/margin-correction' })
 
   }, { prefix: '/v1' })
 

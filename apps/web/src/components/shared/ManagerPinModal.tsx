@@ -4,8 +4,9 @@ import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 
 interface ManagerPinModalProps {
-  action:     'void' | 'refund' | 'discount_override' | 'price_below_min'
+  action:     'void' | 'refund' | 'discount_override' | 'price_below_min' | 'negative_margin'
   contextId:  string
+  marginPercent?: number
   onApproved: (token: string) => void
   onCancel:   () => void
 }
@@ -13,7 +14,7 @@ interface ManagerPinModalProps {
 // Virtual numpad keys
 const NUMPAD_KEYS = ['1','2','3','4','5','6','7','8','9','C','0','⌫']
 
-export function ManagerPinModal({ action, contextId, onApproved, onCancel }: ManagerPinModalProps) {
+export function ManagerPinModal({ action, contextId, marginPercent, onApproved, onCancel }: ManagerPinModalProps) {
   const [pin, setPin]       = useState('')
   const [error, setError]   = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,7 +35,7 @@ export function ManagerPinModal({ action, contextId, onApproved, onCancel }: Man
     setLoading(true)
     try {
       const res = await api.post<{ approvalToken: string }>('/auth/manager-approve', {
-        action, pin, contextId, channelId: user?.channelId,
+        action, pin, contextId, channelId: user?.channelId, marginPercent,
       })
       onApproved(res.approvalToken)
     } catch (err: any) {

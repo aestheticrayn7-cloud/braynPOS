@@ -41,8 +41,9 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
   const token = useAuthStore((s) => s.accessToken)
   const [data, setData]     = useState<ReceiptData | null>(null)
   const [settings, setSettings] = useState<ReceiptSettings>({
-    showBusinessName: true, showBusinessAddress: true, showBusinessPhone: true, paperWidth: '80mm', fontSize: 'md', showPoweredBy: true
+    showBusinessName: true, showBusinessAddress: true, showBusinessPhone: true, paperWidth: '80mm', fontSize: 'md', showPoweredBy: true, showLogo: true
   })
+  const [branding, setBranding] = useState<{ logo?: string }>({})
   const [loading, setLoading] = useState(true)
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
@@ -54,6 +55,7 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
       ]).then(([rData, sData]) => {
         setData(rData)
         if (sData.receiptSettings) setSettings(sData.receiptSettings)
+        if (sData.brandingSettings) setBranding(sData.brandingSettings)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -81,6 +83,25 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
     }
   }
 
+  const handleWhatsAppShare = () => {
+    if (!data) return
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const publicLink = `${baseUrl}/p/r/${saleId}`
+    
+    // Audit finding: Automated CRM Lead Capture
+    const promoText = "\n\n🎁 *SPECIAL OFFER:* Show this message on your next visit for 5% OFF your next purchase! 🛒"
+    
+    const text = `*Receipt from ${data.channel.name}*\n` +
+                 `ID: ${data.receiptNo}\n` +
+                 `Total: ${data.totals.total.toLocaleString()}\n\n` +
+                 `View your full digital receipt here:\n${publicLink}` +
+                 promoText
+    
+    const encodedText = encodeURIComponent(text)
+    const phone = data.customer?.phone?.replace(/\D/g, '') || ''
+    window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank')
+  }
+
   if (loading) return null
 
   return (
@@ -89,6 +110,13 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
         #receipt-print-area * {
           background-color: transparent !important;
           color: #000000 !important;
+        }
+        .btn-whatsapp {
+          background-color: #25D366 !important;
+          color: white !important;
+        }
+        .btn-whatsapp:hover {
+          background-color: #128C7E !important;
         }
         #receipt-print-area {
           background-color: #ffffff !important;
@@ -124,6 +152,11 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
           )}
 
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            {settings.showLogo && branding.logo && (
+              <div style={{ marginBottom: 12 }}>
+                <img src={branding.logo} style={{ maxWidth: 100, maxHeight: 60, objectFit: 'contain', filter: 'grayscale(1)' }} alt="Business Logo" />
+              </div>
+            )}
             {settings.showBusinessName !== false && (
               <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#000' }}>{data?.channel.name}</h2>
             )}
@@ -229,27 +262,22 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
           </div>
         </div>
 
-        <div className="modal-actions" style={{ padding: '16px' }}>
+        <div className="modal-actions" style={{ padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <button className="btn btn-whatsapp" style={{ gridColumn: '1 / -1' }} onClick={handleWhatsAppShare}>
+            📲 Send via WhatsApp
+          </button>
+          
           {isMobile ? (
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleShare}>
-              📤 Share Receipt
-            </button>
-          ) : (
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handlePrint}>
-              🖨️ Print Receipt
-            </button>
-          )}
-          {!isMobile && (
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={handleShare}>
+            <button className="btn btn-primary" onClick={handleShare}>
               📤 Share
             </button>
-          )}
-          {isMobile && (
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={handlePrint}>
+          ) : (
+            <button className="btn btn-primary" onClick={handlePrint}>
               🖨️ Print
             </button>
           )}
-          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onClose}>
+
+          <button className="btn btn-ghost" onClick={onClose}>
             ✓ Done
           </button>
         </div>

@@ -47,8 +47,11 @@ export class ReportsService {
     // all rows. Also excludes voided sales via deletedAt: null.
     // COGS = sum(costPriceSnapshot * quantity) — use a raw aggregation
     // since Prisma aggregate doesn't support computed fields
-    const cogsRaw = await prisma.$queryRaw<Array<{ cogs: number }>>`
-      SELECT COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) AS cogs
+    // AUDIT FIX: We now explicitly track "unreliable" items where cost is 0.
+    const cogsRaw = await prisma.$queryRaw<Array<{ cogs: number, unreliableCount: number }>>`
+      SELECT 
+        COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) AS cogs,
+        COUNT(*) FILTER (WHERE si."costPriceSnapshot" <= 0) AS "unreliableCount"
       FROM   sale_items si
       JOIN   sales s ON s.id = si."saleId"
       WHERE  s."channelId" = ${channelId}
@@ -57,6 +60,7 @@ export class ReportsService {
         AND  s."deletedAt" IS NULL
     `
     const cogs = Number(cogsRaw[0]?.cogs ?? 0)
+    const unreliableCount = Number(cogsRaw[0]?.unreliableCount ?? 0)
 
     const expenses = await prisma.expense.aggregate({
       where: {
@@ -77,6 +81,8 @@ export class ReportsService {
       qty:      i.totalQtySold,
       revenue:  i.totalRevenue,
     }))
+
+    const topCustomers = await this.topCustomers(channelId, startDate, endDate, 5)
 
     const purchases = await prisma.purchase.aggregate({
       where: {
@@ -100,12 +106,15 @@ export class ReportsService {
         discountAmount: Number(sales._sum.discountAmount ?? 0),
         netAmount:      netSales,
         cogs,
+        unreliableCount,
       },
       expenses:  { count: expenses._count,  totalAmount: totalExpenses  },
       purchases: { count: purchases._count, totalAmount: totalPurchases },
       topItems,
+      topCustomers,
       grossMargin,
       profit: grossMargin - totalExpenses,
+      marginStatus: unreliableCount > 0 ? 'UNCERTAIN' : 'VERIFIED',
     }
   }
 
@@ -144,6 +153,42 @@ export class ReportsService {
     }))
   }
 
+  async topCustomers(channelId: string, startDate: string, endDate: string, limit = 10) {
+    const start = parseDate(startDate)
+    const end   = parseDate(endDate, true)
+
+    const sales = await prisma.sale.groupBy({
+      by: ['customerId'],
+      where: {
+        channelId,
+        createdAt: { gte: start, lte: end },
+        deletedAt: null,
+        customerId: { not: null }
+      },
+      _sum: { netAmount: true },
+      _count: true,
+      orderBy: { _sum: { netAmount: 'desc' } },
+      take: limit,
+    })
+
+    const customerIds = sales.map(s => s.customerId).filter(Boolean) as string[]
+    if (customerIds.length === 0) return []
+
+    const customers = await prisma.customer.findMany({
+      where: { id: { in: customerIds } },
+      select: { id: true, name: true, phone: true }
+    })
+    const customerMap = Object.fromEntries(customers.map(c => [c.id, c]))
+
+    return sales.map(s => ({
+      customerId: s.customerId as string,
+      name: customerMap[s.customerId as string]?.name || 'Unknown',
+      phone: customerMap[s.customerId as string]?.phone || '',
+      totalSpent: Number(s._sum.netAmount ?? 0),
+      visitCount: s._count
+    }))
+  }
+
   async stockFlowReport(channelId: string, startDate: string, endDate: string) {
     const start = parseDate(startDate)
     const end   = parseDate(endDate, true)
@@ -166,18 +211,39 @@ export class ReportsService {
     const start = parseDate(startDate)
     const end   = parseDate(endDate, true)
 
-    return prisma.$queryRaw<Array<{ date: string; totalSales: number; saleCount: number }>>`
+    return prisma.$queryRaw<Array<{ date: string; totalSales: number; saleCount: number; profit: number }>>`
+      WITH daily_sales AS (
+        SELECT
+          DATE("createdAt") AS date,
+          COALESCE(SUM("netAmount"), 0) AS "totalSales",
+          COUNT(*)::int AS "saleCount"
+        FROM sales
+        WHERE "channelId" = ${channelId}
+          AND "deletedAt" IS NULL
+          AND "createdAt" >= ${start}
+          AND "createdAt" <= ${end}
+        GROUP BY DATE("createdAt")
+      ),
+      daily_cogs AS (
+        SELECT
+          DATE(s."createdAt") AS date,
+          COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) AS cogs
+        FROM sale_items si
+        JOIN sales s ON s.id = si."saleId"
+        WHERE s."channelId" = ${channelId}
+          AND s."deletedAt" IS NULL
+          AND s."createdAt" >= ${start}
+          AND s."createdAt" <= ${end}
+        GROUP BY DATE(s."createdAt")
+      )
       SELECT
-        DATE("createdAt")          AS date,
-        COALESCE(SUM("netAmount"), 0) AS "totalSales",
-        COUNT(*)::int              AS "saleCount"
-      FROM  sales
-      WHERE "channelId" = ${channelId}
-        AND "deletedAt"  IS NULL
-        AND "createdAt"  >= ${start}
-        AND "createdAt"  <= ${end}
-      GROUP BY DATE("createdAt")
-      ORDER BY date
+        ds.date,
+        ds."totalSales",
+        ds."saleCount",
+        (ds."totalSales" - COALESCE(dc.cogs, 0)) AS profit
+      FROM daily_sales ds
+      LEFT JOIN daily_cogs dc ON ds.date = dc.date
+      ORDER BY ds.date
     `
   }
 
@@ -286,6 +352,179 @@ export class ReportsService {
     })
 
     return { period: { startDate, endDate }, performance }
+  }
+
+  async salesForecast(channelId: string) {
+    const today = new Date()
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(today.getDate() - 30)
+
+    const trends = await this.dailySalesTrend(channelId, thirtyDaysAgo.toISOString().split('T')[0]!, today.toISOString().split('T')[0]!)
+    
+    // Simple linear regression to predict next 7 days
+    if (trends.length < 3) return { forecast: [], status: 'INSUFFICIENT_DATA' }
+
+    const x = trends.map((_, i) => i)
+    const y = trends.map(t => Number(t.totalSales || 0))
+
+    const n = x.length
+    const sumX = x.reduce((a, b) => a + b, 0)
+    const sumY = y.reduce((a, b) => a + b, 0)
+    
+    let sumXY = 0
+    let sumX2 = 0
+    for (let i = 0; i < n; i++) {
+      sumXY += x[i]! * (y[i] ?? 0)
+      sumX2 += x[i]! * x[i]!
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+    const intercept = (sumY - slope * sumX) / n
+
+    const forecast = []
+    for (let i = 1; i <= 7; i++) {
+      const nextX = n + i - 1
+      const predictedValue = Math.max(0, slope * nextX + intercept)
+      const date = new Date()
+      date.setDate(today.getDate() + i)
+      forecast.push({
+        date: date.toISOString().split('T')[0],
+        predictedRevenue: Math.round(predictedValue * 100) / 100
+      })
+    }
+
+    return { 
+      history: trends,
+      forecast, 
+      confidence: trends.length > 20 ? 'HIGH' : 'MEDIUM',
+      status: 'SUCCESS'
+    }
+  }
+
+  async agingAnalysis(channelId: string) {
+    const today = new Date()
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(today.getDate() - 30)
+    const sixtyDaysAgo = new Date()
+    sixtyDaysAgo.setDate(today.getDate() - 60)
+
+    const sales = await prisma.sale.findMany({
+      where: {
+        channelId,
+        saleType: 'CREDIT',
+        deletedAt: null,
+      },
+      include: {
+        customer: true,
+        payments: true
+      }
+    })
+
+    const bucketing = {
+      p1: { label: '0-30 Days', amount: 0, customers: new Set<string>() },
+      p2: { label: '31-60 Days', amount: 0, customers: new Set<string>() },
+      p3: { label: '61+ Days', amount: 0, customers: new Set<string>() },
+    }
+
+    sales.forEach(sale => {
+      const paid = sale.payments.reduce((acc, p) => acc + Number(p.amount), 0)
+      const balance = Number(sale.netAmount) - paid
+      
+      if (balance <= 0) return
+
+      const diffDays = Math.ceil((today.getTime() - sale.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      
+      if (diffDays <= 30) {
+        bucketing.p1.amount += balance
+        if (sale.customer) bucketing.p1.customers.add(sale.customer.name)
+      } else if (diffDays <= 60) {
+        bucketing.p2.amount += balance
+        if (sale.customer) bucketing.p2.customers.add(sale.customer.name)
+      } else {
+        bucketing.p3.amount += balance
+        if (sale.customer) bucketing.p3.customers.add(sale.customer.name)
+      }
+    })
+
+    return {
+      buckets: [
+        { ...bucketing.p1, customers: Array.from(bucketing.p1.customers) },
+        { ...bucketing.p2, customers: Array.from(bucketing.p2.customers) },
+        { ...bucketing.p3, customers: Array.from(bucketing.p3.customers) }
+      ],
+      totalOutstanding: bucketing.p1.amount + bucketing.p2.amount + bucketing.p3.amount
+    }
+  }
+
+  async salesPerformance(channelId: string) {
+    // Audit finding: Markup Visibility / Today's Profit
+    const today = new Date()
+    today.setHours(0,0,0,0)
+    
+    // We pass today's date both as start and end (summary handles end-of-day)
+    const summary = await this.salesSummary(channelId, today.toISOString(), today.toISOString())
+    return {
+      todayProfit: summary.profit,
+      todayRevenue: summary.sales.netAmount,
+      todayMargin: summary.sales.netAmount > 0 ? (summary.profit / summary.sales.netAmount) * 100 : 0,
+      verified: summary.marginStatus === 'VERIFIED'
+    }
+  }
+
+  async dayOfWeekTrends(channelId: string) {
+    // Audit finding: DOW Analysis (Busiest Days)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const sales = await prisma.$queryRaw<Array<{ dow: number; totalRevenue: number; saleCount: number }>>`
+      SELECT 
+        EXTRACT(DOW FROM "createdAt") as dow,
+        SUM("netAmount") as "totalRevenue",
+        COUNT(*)::int as "saleCount"
+      FROM sales
+      WHERE "channelId" = ${channelId}
+        AND "createdAt" >= ${thirtyDaysAgo}
+        AND "deletedAt" IS NULL
+      GROUP BY dow
+      ORDER BY dow
+    `
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return sales.map(s => ({
+      day: days[Number(s.dow)],
+      revenue: Number(s.totalRevenue),
+      count: s.saleCount
+    }))
+  }
+
+  async getForensicMarginAudit(channelId: string, startDate: string, endDate: string) {
+    const start = parseDate(startDate)
+    const end   = parseDate(endDate, true)
+
+    // Audit finding: The "Loss-Leader" Audit Report
+    return prisma.$queryRaw<any[]>`
+      SELECT 
+        s.id,
+        s."receiptNo",
+        s."createdAt",
+        s."saleType",
+        s."netAmount",
+        s."totalAmount",
+        s."discountAmount",
+        s.notes,
+        (SELECT username FROM users WHERE id = s."performedBy") as "performedBy",
+        COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) as "totalCost",
+        (s."netAmount" - COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0)) as "margin"
+      FROM sales s
+      JOIN sale_items si ON s.id = si."saleId"
+      WHERE s."channelId" = ${channelId}
+        AND s."createdAt" >= ${start}
+        AND s."createdAt" <= ${end}
+        AND s."deletedAt" IS NULL
+      GROUP BY s.id, s."receiptNo", s."createdAt", s."saleType", s."netAmount", s."totalAmount", s."discountAmount", s.notes, s."performedBy"
+      HAVING (s."netAmount" - COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0)) < 0
+      ORDER BY s."createdAt" DESC
+    `
   }
 }
 

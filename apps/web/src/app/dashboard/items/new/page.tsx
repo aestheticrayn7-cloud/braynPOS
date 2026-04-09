@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { toast } from 'react-hot-toast'
+import { ScannerModal } from '@/components/shared/ScannerModal'
 
 interface Category { id: string; name: string; parentId: string | null; children?: Category[] }
 interface Brand { id: string; name: string }
@@ -18,13 +20,17 @@ export default function NewItemPage() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [allChannels, setAllChannels] = useState<any[]>([])
   const [openingWindowActive, setOpeningWindowActive] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   
   const initialFormData = {
     sku: '',
     barcode: '',
     name: '',
     description: '',
+    imageUrl: '',
     categoryId: '',
     brandId: '',
     supplierId: '',
@@ -37,6 +43,7 @@ export default function NewItemPage() {
     reorderLevel: 5,
     isActive: true,
     initialStock: 0,
+    channelInventory: {} as Record<string, number>,
   }
 
   const [formData, setFormData] = useState(initialFormData)
@@ -57,6 +64,7 @@ export default function NewItemPage() {
       setCategories(cats)
       setBrands(brnds)
       setSuppliers(supps)
+      setAllChannels(Array.isArray(chRes) ? chRes : [])
 
       const currentChannelId = user?.channelId || (Array.isArray(chRes) ? chRes[0]?.id : chRes?.id)
       
@@ -130,18 +138,25 @@ export default function NewItemPage() {
       if (Number(formData.weightedAvgCost) > 0) payload.weightedAvgCost = Number(formData.weightedAvgCost)
       if (Number(formData.wholesalePrice) > 0) payload.wholesalePrice = Number(formData.wholesalePrice)
       if (Number(formData.reorderLevel) > 0) payload.reorderLevel = Number(formData.reorderLevel)
+      if (formData.imageUrl) payload.imageUrl = formData.imageUrl
 
       const item = await api.post<any>('/items', payload, token!)
       
-      // If initial stock provided and window active, record it
-      if (openingWindowActive && Number(formData.initialStock) !== 0) {
-        await api.post('/items/stock-adjustment', {
-          itemId: item.id,
-          channelId: user?.channelId || '',
-          quantity: Number(formData.initialStock),
-          reason: 'Initial Opening Stock',
-          isOpening: true
-        }, token!)
+      // If multi-branch initialization is active, loop through all channels with stock
+      if (openingWindowActive) {
+        const inventoryEntries = Object.entries(formData.channelInventory || {})
+          .filter(([_, qty]) => Number(qty) !== 0)
+
+        // Process all channel adjustments
+        await Promise.all(inventoryEntries.map(([cid, qty]) => 
+          api.post('/items/stock-adjustment', {
+            itemId: item.id,
+            channelId: cid,
+            quantity: Number(qty),
+            reason: 'Multi-branch Opening Stock',
+            isOpening: true
+          }, token!)
+        ))
       }
 
       localStorage.removeItem(persistenceKey)
@@ -156,6 +171,42 @@ export default function NewItemPage() {
   }
 
   const flatCats = flattenCategories(categories.filter(c => !c.parentId))
+
+  const handleGenerateAI = async () => {
+    if (!formData.name) return toast.error('Please enter an Item Name first to guide the AI.')
+    setAiLoading(true)
+    try {
+      const selectedCategory = flatCats.find(c => c.id === formData.categoryId)?.label?.trim() || 'General'
+      const selectedBrand = brands.find(b => b.id === formData.brandId)?.name || 'Unknown'
+      
+      const res = await api.post<{ description: string }>('/ai/generate-description', {
+        name: formData.name,
+        category: selectedCategory,
+        brand: selectedBrand
+      }, token!)
+      
+      set('description', res.description)
+      toast.success('AI description generated!')
+    } catch (err) {
+      console.error(err)
+      toast.error('AI Generation failed. Check your API key.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) return alert('Image must be under 2MB')
+    
+    // Convert to Base64 locally for demonstration/DB storage payload readiness
+    const reader = new FileReader()
+    reader.onload = () => {
+       set('imageUrl', reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: 700 }}>
@@ -173,35 +224,53 @@ export default function NewItemPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* SKU & Name */}
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>SKU <span style={{ color: 'var(--text-muted)', fontSize: '0.8em' }}>(auto-generated if empty)</span></label>
-            <input className="input" placeholder="e.g. ITEM-001" value={formData.sku} onChange={e => set('sku', e.target.value)} />
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          {/* Image Upload Area */}
+          <div className="form-group" style={{ width: 140, margin: 0 }}>
+            <label>Product Image</label>
+            <div 
+              style={{ width: 140, height: 140, border: '2px dashed var(--border)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.imageUrl ? `url(${formData.imageUrl}) center/cover` : 'var(--bg-hover)', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+              onClick={() => document.getElementById('image-upload')?.click()}
+              title="Click to specify image"
+            >
+              {!formData.imageUrl && <span style={{ fontSize: '2.5rem', opacity: 0.3 }}>📷</span>}
+              {formData.imageUrl && <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '0.7em', textAlign: 'center', padding: '2px 0' }}>Change</div>}
+              <input id="image-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect} />
+            </div>
           </div>
-          <div className="form-group" style={{ flex: 2 }}>
-            <label>Item Name *</label>
-            <input className="input" placeholder="e.g. Wireless Laser Mouse" value={formData.name} onChange={e => set('name', e.target.value)} required />
-          </div>
-        </div>
 
-        {/* Barcode & UoM */}
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>Barcode</label>
-            <input className="input" placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
-          </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>Unit of Measure</label>
-            <select className="input" value={formData.unitOfMeasure} onChange={e => set('unitOfMeasure', e.target.value)}>
-              <option value="PCS">Pieces (PCS)</option>
-              <option value="KG">Kilograms (KG)</option>
-              <option value="LTR">Litres (LTR)</option>
-              <option value="MTR">Meters (MTR)</option>
-              <option value="BOX">Box</option>
-              <option value="PACK">Pack</option>
-              <option value="DOZEN">Dozen</option>
-            </select>
+          <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* SKU & Name */}
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>SKU <span style={{ color: 'var(--text-muted)', fontSize: '0.8em' }}>(auto-generated if empty)</span></label>
+                <input className="input" placeholder="e.g. ITEM-001" value={formData.sku} onChange={e => set('sku', e.target.value)} />
+              </div>
+              <div className="form-group" style={{ flex: 2, margin: 0 }}>
+                <label>Item Name *</label>
+                <input className="input" placeholder="e.g. Wireless Laser Mouse" value={formData.name} onChange={e => set('name', e.target.value)} required />
+              </div>
+            </div>
+
+            {/* Barcode & UoM */}
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>Barcode</label>
+                <input className="input" placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
+              </div>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>Unit of Measure</label>
+                <select className="input" value={formData.unitOfMeasure} onChange={e => set('unitOfMeasure', e.target.value)}>
+                   <option value="PCS">Pieces (PCS)</option>
+                   <option value="KG">Kilograms (KG)</option>
+                   <option value="LTR">Litres (LTR)</option>
+                   <option value="MTR">Meters (MTR)</option>
+                   <option value="BOX">Box</option>
+                   <option value="PACK">Pack</option>
+                   <option value="DOZEN">Dozen</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -246,12 +315,6 @@ export default function NewItemPage() {
           </select>
         </div>
 
-        {/* Description */}
-        <div className="form-group">
-          <label>Description</label>
-          <textarea className="input" rows={2} placeholder="Optional item description..." value={formData.description} onChange={e => set('description', e.target.value)} style={{ resize: 'vertical' }} />
-        </div>
-
         {/* Pricing */}
         <div style={{ display: 'flex', gap: 16 }}>
           <div className="form-group" style={{ flex: 1 }}>
@@ -283,18 +346,45 @@ export default function NewItemPage() {
           </div>
         </div>
 
+        {/* Description */}
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <label style={{ marginBottom: 0 }}>Description</label>
+            <button type="button" className="btn btn-ghost btn-xs" style={{ color: 'var(--accent)' }} onClick={handleGenerateAI} disabled={aiLoading}>
+              {aiLoading ? '⌛ Generating...' : '🤖 Generate with AI'}
+            </button>
+          </div>
+          <textarea className="input" rows={3} placeholder="Optional item description..." value={formData.description} onChange={e => set('description', e.target.value)} style={{ resize: 'vertical' }} />
+        </div>
+
         {openingWindowActive && (
           <div className="form-group card" style={{ padding: 16, background: 'rgba(var(--accent-rgb), 0.05)', border: '1px dashed var(--accent)' }}>
-            <label style={{ color: 'var(--accent)', fontWeight: 600 }}>Initial Stock (Opening Window Active)</label>
-            <input 
-              type="number" 
-              className="input" 
-              value={formData.initialStock} 
-              onChange={e => set('initialStock', Number(e.target.value))} 
-              placeholder="Enter initial quantity in stock"
-            />
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              * This will be recorded as Opening Stock (no financial impact).
+            <label style={{ color: 'var(--accent)', fontWeight: 600, marginBottom: 12, display: 'block' }}>🏩 Multi-Branch Initial Stock</label>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {allChannels.map(ch => (
+                <div key={ch.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{ch.name}</span>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>{ch.code} • {ch.type}</span>
+                  </div>
+                  <input 
+                    type="number" 
+                    className="input" 
+                    style={{ width: 100, textAlign: 'right' }} 
+                    placeholder="0"
+                    value={formData.channelInventory[ch.id] || ''}
+                    onChange={e => {
+                      const newInv = { ...formData.channelInventory, [ch.id]: Number(e.target.value) }
+                      set('channelInventory', newInv)
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 12 }}>
+              * Quantities entered here will be recorded as <strong>Opening Stock</strong> across all selected branches.
             </p>
           </div>
         )}
@@ -311,6 +401,17 @@ export default function NewItemPage() {
           {loading ? '⏳ Creating...' : '✅ Create Item'}
         </button>
       </form>
+      {showScanner && (
+        <ScannerModal
+          isOpen={showScanner}
+          onClose={() => setShowScanner(false)}
+          onScan={(code) => {
+            set('barcode', code)
+            setShowScanner(false)
+            toast.success('Barcode scanned!')
+          }}
+        />
+      )}
     </div>
   )
 }

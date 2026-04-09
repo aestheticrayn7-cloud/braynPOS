@@ -76,11 +76,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const isAuthorized = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN', 'MANAGER'].includes(user.role)
     if (!isAuthorized) return
 
-    const socket = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/approvals`, {
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', {
       auth: { token },
       transports: ['websocket'],
     })
 
+    // 1. Listen for Approval Requests
     socket.on('new_approval_request', (data: any) => {
       toast.custom((t) => (
         <div className={`toast-custom ${t.visible ? 'animate-enter' : 'animate-leave'}`} style={{
@@ -88,13 +89,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           padding: '16px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
           display: 'flex', flexDirection: 'column', gap: 8, minWidth: 280, maxWidth: 340,
         }}>
-          <div style={{ fontWeight: 600, color: 'var(--accent)' }}>🔔 Approval Requested</div>
+          <div style={{ fontWeight: 600, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🔔</span> Approval Requested
+          </div>
           <div style={{ fontSize: '0.9rem' }}>{data.notes || `${data.action.replace('_', ' ')} request`}</div>
           <button className="btn btn-primary btn-sm" onClick={() => { toast.dismiss(t.id); router.push('/dashboard/approvals') }}>
             Review Request
           </button>
         </div>
       ), { duration: 10000, position: 'top-right' })
+    })
+
+    // 2. Listen for General Omni-Channel Notifications (Low Stock, Margins, etc)
+    socket.on('notification', (data: any) => {
+        const isVulnerability = data.message.includes('VULNERABILITY')
+        const icon = isVulnerability ? '⚠️' : '📢'
+        const color = isVulnerability ? 'var(--error)' : 'var(--primary)'
+
+        toast.custom((t) => (
+          <div className={`toast-custom ${t.visible ? 'animate-enter' : 'animate-leave'}`} style={{
+            background: 'var(--bg-elevated)', borderLeft: `4px solid ${color}`,
+            padding: '16px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+            display: 'flex', flexDirection: 'column', gap: 8, minWidth: 280, maxWidth: 340,
+          }}>
+            <div style={{ fontWeight: 600, color, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>{icon}</span> {data.type.replace('_', ' ')}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{data.message}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+                 <button className="btn btn-ghost btn-sm" onClick={() => toast.dismiss(t.id)}>Dismiss</button>
+                 {isVulnerability && (
+                   <button className="btn btn-primary btn-sm" onClick={() => { toast.dismiss(t.id); router.push('/dashboard/reports/margins') }}>
+                     Fix Cost
+                   </button>
+                 )}
+            </div>
+          </div>
+        ), { duration: 8000, position: 'top-right' })
     })
 
     return () => { socket.disconnect() }

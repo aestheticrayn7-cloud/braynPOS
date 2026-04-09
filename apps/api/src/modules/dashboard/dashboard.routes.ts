@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import net from 'node:net'
 import { Prisma }           from '@prisma/client'
 import { prisma }           from '../../lib/prisma.js'
 import { settingsService }  from './settings.service.js'
@@ -50,6 +51,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
       suggestedReorder,
       pendingTransfersRaw,
       recentSales,
+      todayCogsRaw,
     ] = await Promise.all([
       // Sales Summary
       prisma.$queryRaw<Array<{ count: number; revenue: string | number | null }>>`
@@ -139,16 +141,31 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
         ORDER  BY s."createdAt" DESC
         LIMIT  5
       `,
+      // Profit / Markup
+      prisma.$queryRaw<Array<{ cogs: number }>>`
+        SELECT COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) AS cogs
+        FROM   sale_items si
+        JOIN   sales s ON s.id = si."saleId"
+        WHERE  s."deletedAt" IS NULL
+          AND  s."createdAt" >= ${today}
+          ${effectiveChannelId
+            ? Prisma.sql`AND s."channelId" = ${effectiveChannelId}`
+            : Prisma.empty}
+      `,
     ])
     // ── Safe Data Mapping ──────────────────────────────────────────
-    const salesRow     = todaySalesRaw[0] || { count: 0, revenue: 0 }
-    const salesCount   = Number(salesRow.count)
-    const salesRevenue = Number(salesRow.revenue)
+    const salesRow      = todaySalesRaw[0] || { count: 0, revenue: 0 }
+    const salesCount    = Number(salesRow.count)
+    const salesRevenue  = Number(salesRow.revenue)
     const totalExpenses = Number(todayExpenses._sum.amount ?? 0)
+    const cogs          = Number(todayCogsRaw[0]?.cogs ?? 0)
+    const todayProfit   = salesRevenue - cogs
 
     return {
       todaySales:            salesCount,
       todayRevenue:          salesRevenue,
+      todayProfit:           todayProfit,
+      markupPercent:         salesRevenue > 0 ? (todayProfit / salesRevenue) * 100 : 0,
       todayExpenses:         totalExpenses,
       activeChannels:        isHQ ? activeChannelsCount : 1,
       lowStockItems:         (criticalStock[0]?.count    ?? 0)
@@ -186,5 +203,27 @@ export const dashboardRoutes: FastifyPluginAsync = async (app) => {
     preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN')],
   }, async (request) => {
     return diagnosticsService.runFullDiagnostic(request.user.channelId ?? undefined)
+  })
+
+  // POST /dashboard/settings/printers/test
+  app.post('/settings/printers/test', {
+    config: RATE.APPROVAL,
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+  }, async (request) => {
+    const { host, port = 9100 } = request.body as { host: string; port?: number }
+    if (!host) throw app.httpErrors.badRequest('Printer host/IP is required')
+
+    return new Promise((resolve) => {
+      const socket = new net.Socket()
+      let status = 'error'
+
+      socket.setTimeout(3000)
+      socket.on('connect', () => { status = 'online'; socket.destroy() })
+      socket.on('timeout', () => { status = 'timeout'; socket.destroy() })
+      socket.on('error', ()   => { status = 'offline'; })
+      socket.on('close', ()   => { resolve({ status }) })
+
+      socket.connect(port, host)
+    })
   })
 }

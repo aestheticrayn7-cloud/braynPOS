@@ -104,6 +104,30 @@ export class CustomersService {
       data: { deletedAt: new Date() },
     })
   }
+
+  async findCustomersByBrandPurchased(channelId: string, brandId: string, daysLookback = 90) {
+    // Audit finding: CRM Outreach (Filter by Brand Purchase)
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - daysLookback)
+
+    const customerIds = await prisma.$queryRaw<Array<{ customerId: string }>>`
+      SELECT DISTINCT s."customerId"
+      FROM sales s
+      JOIN sale_items si ON si."saleId" = s.id
+      JOIN items i ON i.id = si."itemId"
+      WHERE s."channelId" = ${channelId}
+        AND i."brandId" = ${brandId}
+        AND s."createdAt" >= ${startDate}
+        AND s."deletedAt" IS NULL
+        AND s."customerId" IS NOT NULL
+    `
+    
+    if (customerIds.length === 0) return []
+
+    return prisma.customer.findMany({
+      where: { id: { in: customerIds.map(c => c.customerId) }, deletedAt: null }
+    })
+  }
 }
 
 export const customersService = new CustomersService()

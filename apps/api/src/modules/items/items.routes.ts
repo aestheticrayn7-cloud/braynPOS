@@ -267,6 +267,27 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Stock adjustment recorded', movementType, quantity: body.quantity }
   })
 
+  // POST /items/bulk-opening-stock
+  app.post('/bulk-opening-stock', {
+    config:     RATE.APPROVAL,
+    preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+  }, async (request) => {
+    const schema = z.object({
+      itemId: z.string().uuid(),
+      allocations: z.array(z.object({
+        channelId: z.string().uuid(),
+        quantity:  z.number().positive(),
+        costPrice: z.number().nonnegative(),
+      }))
+    })
+
+    const body = schema.parse(request.body)
+    return itemsService.bulkOpeningStock({
+      ...body,
+      actorId: request.user.sub
+    })
+  })
+
   // ── Brands ──────────────────────────────────────────────────────────
   app.get('/brands', { config: RATE.READ }, async (request) => {
     const isHQ = ['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(request.user.role)

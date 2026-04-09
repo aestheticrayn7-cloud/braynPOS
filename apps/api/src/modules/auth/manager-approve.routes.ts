@@ -12,11 +12,12 @@ const ApproveSchema = z.object({
     'void', 'refund', 'discount_override', 'price_below_min',
     'user_create', 'user_delete', 'user_update',
     'customer_delete', 'item_create', 'item_update', 'item_delete',
-    'purchase_delete', 'expense_delete', 'credit_sale'
+    'purchase_delete', 'expense_delete', 'credit_sale', 'negative_margin'
   ]),
   pin:       z.string().min(4).max(8),
   contextId: z.string(),
   channelId: z.string().uuid(),
+  marginPercent: z.number().optional(),
 })
 
 export async function managerApproveRoutes(app: FastifyInstance) {
@@ -54,6 +55,16 @@ export async function managerApproveRoutes(app: FastifyInstance) {
       approverRoles = actor.channelId
         ? ['MANAGER', 'MANAGER_ADMIN', 'SUPER_ADMIN']
         : ['MANAGER_ADMIN', 'SUPER_ADMIN']
+    } else if (action === 'negative_margin' && typeof (request.body as any).marginPercent === 'number') {
+      const margin = (request.body as any).marginPercent
+      // Audit finding: Stepped Authority
+      // Floor Managers can authorize down to -5% margin.
+      // Anything deeper requires MANAGER_ADMIN, ADMIN or SUPER_ADMIN.
+      if (margin < -5) {
+        approverRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN']
+      } else {
+        approverRoles = ['MANAGER', 'MANAGER_ADMIN', 'ADMIN', 'SUPER_ADMIN']
+      }
     } else {
       approverRoles = ['MANAGER', 'MANAGER_ADMIN', 'SUPER_ADMIN']
     }

@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js'
+import { prisma, type TransactionClient } from '../../lib/prisma.js'
 import { hashPassword } from '../../lib/password.js'
 import { logAction, AUDIT } from '../../lib/audit.js'
 import type { Prisma, UserRole } from '@prisma/client'
@@ -107,7 +107,7 @@ export class UsersService {
     const passwordHash = await hashPassword(data.password)
 
     try {
-      return await prisma.$transaction(async (tx) => {
+      return await prisma.$transaction(async (tx: TransactionClient) => {
         // FIX 4: Count inside transaction to make the admin cap atomic.
         // Both checks and the create happen in the same serializable unit.
         if (data.role === 'MANAGER_ADMIN' || data.role === 'ADMIN') {
@@ -189,7 +189,7 @@ export class UsersService {
     // FIX 4: Admin count check inside transaction to prevent TOCTOU race
     if (data.role === 'MANAGER_ADMIN' || data.role === 'ADMIN') {
       if (!['MANAGER_ADMIN', 'ADMIN'].includes(existing.role)) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: TransactionClient) => {
           const count = await tx.user.count({
             where: { role: { in: ['MANAGER_ADMIN', 'ADMIN'] } },
           })

@@ -90,4 +90,36 @@ export const reportsRoutes: FastifyPluginAsync = async (app) => {
     }).parse(request.query)
     return reportsService.adminDashboardAnalytics(q.startDate, q.endDate)
   })
+
+  // GET /reports/sales-forecast
+  app.get('/sales-forecast', { config: RATE.READ }, async (request) => {
+    const q = z.object({ channelId: z.string().uuid().optional() }).parse(request.query)
+    const cid = resolveChannelId(request.user.role, request.user.channelId, q.channelId)
+    return reportsService.salesForecast(cid)
+  })
+
+  // GET /reports/forensic-audit
+  // Audit finding: The "Loss-Leader" Audit Report
+  app.get('/forensic-audit', {
+    config:     RATE.READ,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN')],
+  }, async (request) => {
+    const q   = dateRangeSchema.parse(request.query)
+    const cid = resolveChannelId(request.user.role, request.user.channelId, q.channelId)
+    return reportsService.getForensicMarginAudit(cid, q.startDate, q.endDate)
+  })
+
+  // GET /reports/aging-analysis
+  app.get('/aging-analysis', { config: RATE.READ }, async (request) => {
+    const q   = z.object({ channelId: z.string().uuid().optional() }).parse(request.query)
+    const cid = resolveChannelId(request.user.role, request.user.channelId, q.channelId)
+    return reportsService.agingAnalysis(cid)
+  })
+
+  // GET /reports/dow-trends
+  app.get('/dow-trends', { config: RATE.READ }, async (request) => {
+    const q   = z.object({ channelId: z.string().uuid().optional() }).parse(request.query)
+    const cid = resolveChannelId(request.user.role, request.user.channelId, q.channelId)
+    return reportsService.dayOfWeekTrends(cid)
+  })
 }

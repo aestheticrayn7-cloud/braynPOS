@@ -11,6 +11,10 @@ import { ManagerPinModal } from '@/components/shared/ManagerPinModal'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { SerialSelectorModal } from '@/components/shared/SerialSelectorModal'
 import { ReceiptModal } from '@/components/shared/ReceiptModal'
+import { ScannerModal } from '@/components/shared/ScannerModal'
+import { FiCamera } from 'react-icons/fi'
+import { CatalogSyncService } from '@/lib/catalog-sync'
+import { ConnectivityStatus } from '@/components/shared/ConnectivityStatus'
 
 interface ItemResult {
   id: string
@@ -56,10 +60,11 @@ export default function POSPage() {
   const [newCustForm, setNewCustForm] = useState({ name: '', phone: '', email: '' })
   const [savingCustomer, setSavingCustomer] = useState(false)
   const [dueDate, setDueDate] = useState('')
-  const [approvalTarget, setApprovalTarget] = useState<{ action: any; contextId: string } | null>(null)
+  const [approvalTarget, setApprovalTarget] = useState<{ action: any; contextId: string; marginPercent?: number } | null>(null)
   const [approvalToken, setApprovalToken] = useState<string | null>(null)
   const [serialPickerItem, setSerialPickerItem] = useState<ItemResult | null>(null)
   const [lastSaleId, setLastSaleId] = useState<string | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
   const [selectedCustomerDetails, setSelectedCustomerDetails] = useState<{ id: string; loyaltyPoints: number } | null>(null)
   const [activeSession, setActiveSession] = useState<{ id: string; status: 'OPEN' } | null>(null)
   const [sessionLoading, setSessionLoading] = useState(true)
@@ -114,18 +119,38 @@ export default function POSPage() {
       .catch(console.error)
   }, [customerId, token])
 
+// Inside POSPage component
   useEffect(() => {
     if (!token) return
-    const query = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''
-    api.get<{ data: ItemResult[] }>(`/items?limit=50${query}`, token)
-      .then((res) => setItems(res.data))
-      .catch(err => {
-        console.error('[POS Item Search Error]:', err)
-        if ((err as any).status === 403) {
-          toast.error('Item search restricted to your channel.', { id: 'security-block', icon: '🛡️' })
-        }
-      })
-  }, [token, searchQuery])
+    
+    // Background sync catalog if online
+    if (isOnline) {
+      CatalogSyncService.sync(token).catch(console.error)
+    }
+
+    if (isOnline) {
+      // ── ONLINE SEARCH ──
+      const query = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''
+      api.get<{ data: ItemResult[] }>(`/items?limit=50${query}`, token)
+        .then((res) => setItems(res.data))
+        .catch(err => {
+          console.error('[POS Item Search Error]:', err)
+          if ((err as any).status === 403) {
+            toast.error('Item search restricted to your channel.', { id: 'security-block', icon: '🛡️' })
+          }
+        })
+    } else {
+      // ── OFFLINE SEARCH ──
+      CatalogSyncService.searchOffline(searchQuery)
+        .then((res: any[]) => setItems(res))
+        .catch(console.error)
+    }
+  }, [token, searchQuery, isOnline])
+
+  const handleBarcodeScan = (code: string) => {
+    setSearchQuery(code)
+    toast.success(`Scanned: ${code}`, { icon: '🔍' })
+  }
 
   useEffect(() => { searchRef.current?.focus() }, [])
 
@@ -210,7 +235,14 @@ export default function POSPage() {
       setApprovalToken(null)
       toast.success(isOnline ? 'Sale completed!' : 'Saved offline — will sync when reconnected')
     } catch (err: any) {
-      if (err.status === 403) {
+      if (err.statusCode === 403 && err.code === 'NEGATIVE_MARGIN_REQUIRED') {
+        setApprovalTarget({ 
+          action: 'negative_margin', 
+          contextId: err.data.itemId,
+          marginPercent: err.data.marginPercent 
+        })
+        toast.error(err.message, { id: 'margin-block', icon: '🛡️' })
+      } else if (err.status === 403) {
         toast.error(err.message || 'Access Denied: You do not have permission to commit this sale.', { id: 'security-block', icon: '🛡️' })
       } else {
         toast.error(err.message || 'Sale failed')
@@ -270,14 +302,42 @@ export default function POSPage() {
 
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 4px' }}>×</span>
 
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className={`input pos-price-input ${item.unitPrice < (saleType === 'WHOLESALE' ? item.minWholesalePrice : item.minRetailPrice) ? 'input-error' : ''}`}
-                    value={item.unitPrice}
-                    onChange={(e) => updatePrice(item.itemId, Number(e.target.value))}
-                    aria-label="Unit price"
-                  />
+                  {/* ── Audit Finding: Intelligent Visual Warnings ── */}
+                  {(() => {
+                    const cost = item.costPrice || 0
+                    const margin = item.unitPrice - cost
+                    const marginPct = (item.unitPrice > 0) ? (margin / item.unitPrice) * 100 : 0
+                    
+                    let statusClass = ''
+                    let statusLabel = ''
+                    if (margin < 0) {
+                      statusClass = 'text-red-500 font-bold'
+                      statusLabel = '🔥 LOSS'
+                    } else if (marginPct < 5) {
+                      statusClass = 'text-amber-500 font-semibold'
+                      statusLabel = '⚠️ THIN'
+                    }
+
+                    return (
+                      <div className="pos-price-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          className={`input pos-price-input ${statusClass} ${item.unitPrice < (saleType === 'WHOLESALE' ? item.minWholesalePrice : item.minRetailPrice) ? 'input-error' : ''}`}
+                          value={item.unitPrice || ''}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => updatePrice(item.itemId, Number(e.target.value))}
+                          style={{ fontWeight: statusLabel ? 700 : 400 }}
+                          aria-label="Unit price"
+                        />
+                        {statusLabel && (
+                          <span style={{ fontSize: '0.6rem', marginTop: 2, whiteSpace: 'nowrap' }} className={statusClass}>
+                            {statusLabel} ({marginPct.toFixed(0)}%)
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 {item.unitPrice < (saleType === 'WHOLESALE' ? item.minWholesalePrice : item.minRetailPrice) && (
@@ -322,7 +382,7 @@ export default function POSPage() {
         <button
           className="btn btn-success btn-lg pos-checkout-btn"
           onClick={() => setMobileTab('payment')}
-          disabled={cart.length === 0 || hasFloorViolation || (requiresSession && !activeSession)}
+          disabled={cart.length === 0 || (requiresSession && !activeSession)}
           id="pos-checkout"
         >
           💳 Checkout
@@ -512,12 +572,12 @@ export default function POSPage() {
           </div>
         </div>
         <div className="pos-header-badges">
+          <ConnectivityStatus />
           {requiresSession && (activeSession ? (
             <span className="badge badge-success">● Session</span>
           ) : !sessionLoading && (
             <span className="badge badge-danger">⚠ No Session</span>
           ))}
-          {!isOnline && <span className="badge badge-warning">⚡ Offline</span>}
           <span className="badge badge-info">{user?.channel?.code || 'HQ'}</span>
         </div>
       </div>
@@ -539,15 +599,26 @@ export default function POSPage() {
       <div className="pos-desktop-layout">
         {/* Items panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
-          <div className="card" style={{ padding: '12px 16px' }}>
-            <input
-              ref={searchRef}
-              className="input"
-              style={{ fontSize: '1.1rem' }}
-              placeholder="🔍 Scan barcode or search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="card" style={{ padding: '12px 16px', position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                ref={searchRef}
+                className="input"
+                style={{ fontSize: '1.1rem', paddingRight: '45px' }}
+                placeholder="🔍 Scan barcode or search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button 
+                type="button"
+                className="btn btn-ghost" 
+                style={{ position: 'absolute', right: 5, top: '50%', transform: 'translateY(-50%)', padding: '8px', borderRadius: '50%' }}
+                onClick={() => setShowScanner(true)}
+                title="Use Camera to Scan"
+              >
+                <FiCamera size={20} />
+              </button>
+            </div>
           </div>
           <div className="pos-items-grid">
             {items.map((item) => (
@@ -582,15 +653,25 @@ export default function POSPage() {
         {/* Items tab content */}
         {mobileTab === 'items' && (
           <div className="pos-mobile-items">
-            <div style={{ padding: '0 12px 12px' }}>
-              <input
-                ref={searchRef}
-                className="input"
-                style={{ fontSize: '1rem' }}
-                placeholder="🔍 Scan barcode or search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div style={{ padding: '0 12px 12px', position: 'relative' }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  ref={searchRef}
+                  className="input"
+                  style={{ fontSize: '1rem', paddingRight: '45px' }}
+                  placeholder="🔍 Scan barcode or search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button 
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ position: 'absolute', right: 5, top: '50%', transform: 'translateY(-50%)' }}
+                  onClick={() => setShowScanner(true)}
+                >
+                  <FiCamera size={18} />
+                </button>
+              </div>
             </div>
             <div className="pos-items-grid-mobile">
               {items.map((item) => (
@@ -645,7 +726,7 @@ export default function POSPage() {
           </button>
           <button
             className={`pos-tab-btn ${mobileTab === 'payment' ? 'active' : ''}`}
-            onClick={() => cart.length > 0 && setMobileTab('payment')}
+            onClick={() => setMobileTab('payment')}
             disabled={cart.length === 0}
             style={{ opacity: cart.length === 0 ? 0.4 : 1 }}
           >
@@ -660,6 +741,7 @@ export default function POSPage() {
         <ManagerPinModal
           action={approvalTarget.action}
           contextId={approvalTarget.contextId}
+          marginPercent={approvalTarget.marginPercent}
           onApproved={(tok) => { setApprovalToken(tok); setApprovalTarget(null); handleCommitSale(tok) }}
           onCancel={() => setApprovalTarget(null)}
         />
@@ -679,6 +761,12 @@ export default function POSPage() {
       {lastSaleId && (
         <ReceiptModal saleId={lastSaleId} onClose={() => setLastSaleId(null)} />
       )}
+
+      <ScannerModal 
+        isOpen={showScanner} 
+        onClose={() => setShowScanner(false)} 
+        onScan={handleBarcodeScan} 
+      />
     </>
   )
 }

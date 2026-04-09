@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
-  commitSale, syncOfflineSale, findSales, findSaleById,
+  salesService, commitSale, syncOfflineSale, findSales, findSaleById,
   reverseSale, findSaleItems,
 } from './sales.service.js'
 import { listSalesQuery } from './sales.schema.js'
@@ -39,6 +39,12 @@ const commitSaleSchema = z.object({
 const syncOfflineSchema = z.object({
   offlineReceiptNo: z.string().max(50).optional(),
   saleData:         commitSaleSchema,
+  deviceDate:       z.string().optional(),
+})
+
+const resolveConflictSchema = z.object({
+  action: z.enum(['FORCE_SYNC', 'VOID']),
+  notes:  z.string().max(500).optional(),
 })
 
 export const salesRoutes: FastifyPluginAsync = async (app) => {
@@ -161,5 +167,22 @@ export const salesRoutes: FastifyPluginAsync = async (app) => {
     // FIX (from critical phase): use request.user.sub not request.user.id
     const { password } = z.object({ password: z.string().optional() }).parse(request.body)
     return reverseSale(id, request.user.sub, password)
+  })
+
+  // ── Sync Conflicts ─────────────────────────────────────────────────
+  app.get('/conflicts', {
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    handler: async (request) => {
+      return salesService.findConflicts(request.user.channelId!)
+    }
+  })
+
+  app.post('/conflicts/:id/resolve', {
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
+    handler: async (request) => {
+      const { id } = request.params as { id: string }
+      const body = resolveConflictSchema.parse(request.body)
+      return salesService.resolveConflict(id, body.action as any, request.user, body.notes)
+    }
   })
 }

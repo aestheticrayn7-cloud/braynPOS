@@ -4,6 +4,8 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { ScannerModal } from '@/components/shared/ScannerModal'
+import { toast } from 'react-hot-toast'
 
 interface Category { id: string; name: string; parentId: string | null; children?: Category[] }
 interface Brand { id: string; name: string }
@@ -19,6 +21,8 @@ export default function EditItemPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
+  const [showScanner, setShowScanner] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -110,6 +114,29 @@ export default function EditItemPage() {
     fetchItem()
   }, [token, id])
 
+  const handleGenerateAI = async () => {
+    if (!formData.name) return toast.error('Please enter an Item Name first to guide the AI.')
+    setAiLoading(true)
+    try {
+      const selectedCategory = flatCats.find(c => c.id === formData.categoryId)?.label?.trim() || 'General'
+      const selectedBrand = brands.find(b => b.id === formData.brandId)?.name || 'Unknown'
+      
+      const res = await api.post<{ description: string }>('/ai/generate-description', {
+        name: formData.name,
+        category: selectedCategory,
+        brand: selectedBrand
+      }, token!)
+      
+      set('description', res.description)
+      toast.success('AI description generated!')
+    } catch (err) {
+      console.error(err)
+      toast.error('AI Generation failed.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   const flattenCategories = (cats: Category[], depth = 0): { id: string; label: string }[] => {
     return cats.flatMap(c => [
       { id: c.id, label: '  '.repeat(depth) + c.name },
@@ -192,7 +219,10 @@ export default function EditItemPage() {
         <div style={{ display: 'flex', gap: 16 }}>
           <div className="form-group" style={{ flex: 1 }}>
             <label>Barcode</label>
-            <input className="input" placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input className="input" style={{ flex: 1 }} placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
+              <button type="button" className="btn btn-ghost" onClick={() => setShowScanner(true)}>📷</button>
+            </div>
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label>Unit of Measure</label>
@@ -251,7 +281,12 @@ export default function EditItemPage() {
 
         {/* Description */}
         <div className="form-group">
-          <label>Description</label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <label style={{ marginBottom: 0 }}>Description</label>
+            <button type="button" className="btn btn-ghost btn-xs" style={{ color: 'var(--accent)' }} onClick={handleGenerateAI} disabled={aiLoading}>
+              {aiLoading ? '⌛ Generating...' : '🤖 Generate with AI'}
+            </button>
+          </div>
           <textarea className="input" rows={2} placeholder="Optional item description..." value={formData.description} onChange={e => set('description', e.target.value)} style={{ resize: 'vertical' }} />
         </div>
 
@@ -298,6 +333,17 @@ export default function EditItemPage() {
           {loading ? '⏳ Updating...' : '✅ Update Item'}
         </button>
       </form>
+      {showScanner && (
+        <ScannerModal
+          isOpen={showScanner}
+          onClose={() => setShowScanner(false)}
+          onScan={(code) => {
+            set('barcode', code)
+            setShowScanner(false)
+            toast.success('Barcode scanned!')
+          }}
+        />
+      )}
     </div>
   )
 }

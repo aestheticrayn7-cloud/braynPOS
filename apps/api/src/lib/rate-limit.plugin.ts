@@ -84,4 +84,13 @@ export const RATE = {
       keyGenerator: (request: any) => `stock-${request.user?.id ?? request.ip}`,
     },
   },
+  // Anti-Scraping for Digital Catalog
+  PUBLIC_CATALOG: {
+    rateLimit: {
+      max:        20,
+      timeWindow: '1 minute',
+      // Strict IP-based limit for public access
+      keyGenerator: (request: any) => `catalog-public-${request.ip}`,
+    },
+  },
 } as const

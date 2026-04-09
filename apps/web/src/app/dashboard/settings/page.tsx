@@ -6,10 +6,11 @@ import { toast } from 'react-hot-toast'
 import { PhoneInput } from '@/components/shared/PhoneInput'
 import { OpeningStockAgreement } from '@/components/shared/OpeningStockAgreement'
 import { SessionManager } from './SessionManager'
+import { SyncConflictResolver } from './SyncConflictResolver'
 
 interface Customer { id: string; name: string; phone?: string; email?: string }
 
-type Tab = 'profile' | 'security' | 'business' | 'pos' | 'payroll' | 'receipt' | 'tax' | 'notifications' | 'advanced'
+type Tab = 'profile' | 'security' | 'business' | 'branding' | 'catalog' | 'pos' | 'printers' | 'payroll' | 'receipt' | 'tax' | 'notifications' | 'advanced' | 'offline'
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user)
@@ -28,7 +29,21 @@ export default function SettingsPage() {
   // Business
   const [biz, setBiz] = useState({
     businessName: '', vatNumber: '', address: '', phone: '', email: '', currency: 'KES', timezone: 'Africa/Nairobi',
+    businessSlogan: '',
   })
+
+  // Branding & Social
+  const [branding, setBranding] = useState({
+    logo: '', tagline: '', primaryColor: '#0ea5e9',
+    tiktokUrl: '', instagramUrl: '', facebookUrl: '', whatsappNumber: '',
+    catalogPublic: true
+  })
+
+  // Printers
+  const [printers, setPrinters] = useState<any[]>([])
+  const [newPrinter, setNewPrinter] = useState({ name: '', model: '', type: 'THERMAL', connection: 'IP' })
+  const [testingPrinterId, setTestingPrinterId] = useState<string | null>(null)
+
 
   // Receipt
   const [receipt, setReceipt] = useState({
@@ -109,6 +124,8 @@ export default function SettingsPage() {
         if (res.taxSettings) setTax(res.taxSettings)
         if (res.notifSettings) setNotif(res.notifSettings)
         if (res.posSettings) setPosConfig(res.posSettings)
+        if (res.brandingSettings) setBranding(res.brandingSettings)
+        if (res.printerSettings) setPrinters(res.printerSettings)
         if (isAdmin && res.payrollSettings) setPayroll(res.payrollSettings)
         if (isAdmin && res.advancedSettings) setAdvanced(res.advancedSettings)
         
@@ -132,6 +149,19 @@ export default function SettingsPage() {
     }
     fetchSettings()
   }, [token, isAdmin, isManager])
+
+  const testPrinter = async (p: any) => {
+    setTestingPrinterId(p.id)
+    try {
+      const res = await api.post<{ status: string }>('/dashboard/settings/printers/test', { host: p.connection }, token!)
+      if (res.status === 'online') toast.success(`Printer "${p.name}" is ONLINE ✅`)
+      else toast.error(`Printer "${p.name}" is ${res.status.toUpperCase()} ❌`)
+    } catch (e) {
+      toast.error('Connection test failed')
+    } finally {
+      setTestingPrinterId(null)
+    }
+  }
 
   const save = async (key: string, val: unknown) => {
     try {
@@ -229,6 +259,10 @@ export default function SettingsPage() {
     { key: 'receipt', icon: '🧾', label: 'Receipt' },
     { key: 'tax', icon: '📋', label: 'Tax' },
     { key: 'notifications', icon: '🔔', label: 'Notifications' },
+    { key: 'branding', icon: '🎨', label: 'Branding & Social' },
+    { key: 'catalog', icon: '📖', label: 'Digital Catalog' },
+    { key: 'printers', icon: '🖨️', label: 'Printers' },
+    { key: 'offline', icon: '📶', label: 'Offline Data' },
     { key: 'advanced', icon: '⚙️', label: 'Advanced' },
   ]
 
@@ -691,6 +725,169 @@ export default function SettingsPage() {
                 </div>
 
                 <button className="btn btn-primary" style={{ width: 'fit-content', marginTop: 20 }} onClick={() => save('payrollSettings', payroll)}>Save Global Payroll Settings</button>
+              </div>
+            </div>
+          )}
+
+          {tab === 'branding' && (
+            <div className="card" style={{ padding: 24 }}>
+              <h3 style={{ marginBottom: 20 }}>🤝 Partner Integrations & Branding</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                  <label>Business Logo</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 10 }}>
+                    <div style={{ width: 100, height: 100, borderRadius: 12, border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                      {branding.logo ? <img src={branding.logo} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: '2rem' }}>🏢</span>}
+                    </div>
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onloadend = () => setBranding({ ...branding, logo: reader.result as string })
+                          reader.readAsDataURL(file)
+                        }
+                      }} style={{ display: 'none' }} id="logo-upload" />
+                      <label htmlFor="logo-upload" className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>Upload New Logo</label>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8 }}>Recommended: Square PNG/SVG with transparent background.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                  <label>Tagline / Slogan</label>
+                  <input className="input" value={branding.tagline} onChange={e => setBranding({ ...branding, tagline: e.target.value })} placeholder="e.g. Quality you can trust" />
+                </div>
+
+                <div className="form-group">
+                  <label>TikTok Profile URL</label>
+                  <input className="input" value={branding.tiktokUrl} onChange={e => setBranding({ ...branding, tiktokUrl: e.target.value })} placeholder="https://tiktok.com/@yourshop" />
+                </div>
+                <div className="form-group">
+                  <label>Instagram Handle</label>
+                  <input className="input" value={branding.instagramUrl} onChange={e => setBranding({ ...branding, instagramUrl: e.target.value })} placeholder="https://instagram.com/yourshop" />
+                </div>
+                <div className="form-group">
+                  <label>Facebook Page URL</label>
+                  <input className="input" value={branding.facebookUrl} onChange={e => setBranding({ ...branding, facebookUrl: e.target.value })} placeholder="https://facebook.com/yourshop" />
+                </div>
+                <div className="form-group">
+                   <label>WhatsApp Business No.</label>
+                   <PhoneInput value={branding.whatsappNumber} onChange={val => setBranding({ ...branding, whatsappNumber: val })} />
+                </div>
+                <div className="form-group">
+                  <label>Primary Brand Color</label>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <input type="color" value={branding.primaryColor} onChange={e => setBranding({ ...branding, primaryColor: e.target.value })} style={{ width: 40, height: 40, padding: 0, border: 'none', background: 'none' }} />
+                    <code style={{ flex: 1 }}>{branding.primaryColor}</code>
+                  </div>
+                </div>
+              </div>
+              <button className="btn btn-primary" style={{ marginTop: 24 }} onClick={() => save('brandingSettings', branding)}>Save Branding</button>
+            </div>
+          )}
+
+          {tab === 'offline' && (isAdmin || isManager) && (
+            <SyncConflictResolver />
+          )}
+
+          {tab === 'catalog' && (
+            <div className="card" style={{ padding: 24 }}>
+              <h3 style={{ marginBottom: 12 }}>📖 Digital Catalog Management</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: '0.9rem' }}>
+                Your digital catalog is a live link your customers can visit to browse products and order via WhatsApp.
+              </p>
+
+              <div style={{ padding: 20, background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: 12, border: '1px solid var(--accent)', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 style={{ margin: 0, color: 'var(--accent)' }}>Live Catalog Link</h4>
+                    <code style={{ fontSize: '1rem', display: 'block', marginTop: 4 }}>https://catalog.braynpos.com/{biz.businessName.toLowerCase().replace(/\s+/g, '-') || 'your-shop'}</code>
+                  </div>
+                  <button className="btn btn-secondary btn-sm" onClick={() => {
+                    navigator.clipboard.writeText(`https://catalog.braynpos.com/${biz.businessName.toLowerCase().replace(/\s+/g, '-')}`)
+                    toast.success('Link copied!')
+                  }}>📋 Copy Link</button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <label style={{ display: 'flex', gap: 12, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={branding.catalogPublic} onChange={e => setBranding({ ...branding, catalogPublic: e.target.checked })} />
+                  <div><strong>Enable Public Catalog</strong><div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Make your products visible to anyone with the link</div></div>
+                </label>
+                <div className="alert alert-info">
+                  💡 <strong>Catalog Sync:</strong> All items with a valid <strong>image</strong> and <strong>price</strong> are automatically synced to your digital catalog every 10 minutes.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'printers' && (
+            <div className="card" style={{ padding: 24 }}>
+              <h3 style={{ marginBottom: 20 }}>🖨️ Printer Profiles</h3>
+              <div style={{ marginBottom: 24, padding: 20, border: '1px solid var(--border)', borderRadius: 12 }}>
+                 <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem' }}>Add New Printer</h4>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+                    <div className="form-group">
+                      <label>Printer Name</label>
+                      <input className="input" placeholder="e.g. Front Desk" value={newPrinter.name} onChange={e => setNewPrinter({...newPrinter, name: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                      <label>Model / Brand</label>
+                      <select className="input" value={newPrinter.model} onChange={e => setNewPrinter({...newPrinter, model: e.target.value})}>
+                        <option value="">Select Model</option>
+                        <option value="EPSON_TM_T88">Epson TM-T88</option>
+                        <option value="EPSON_TM_T20">Epson TM-T20</option>
+                        <option value="STAR_TSP100">Star TSP100</option>
+                        <option value="GENERIC_ESC_POS">Generic ESC/POS</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Connection</label>
+                      <input className="input" placeholder="IP (192.168.1.50) or USB" value={newPrinter.connection} onChange={e => setNewPrinter({...newPrinter, connection: e.target.value})} />
+                    </div>
+                 </div>
+                 <button className="btn btn-primary btn-sm" onClick={() => {
+                   if (!newPrinter.name) return
+                   const list = [...printers, { ...newPrinter, id: Math.random().toString(36).substr(2, 9) }]
+                   setPrinters(list)
+                   setNewPrinter({ name: '', model: '', type: 'THERMAL', connection: 'IP' })
+                   save('printerSettings', list)
+                 }}>Add Printer</button>
+              </div>
+
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr><th>Name</th><th>Model</th><th>Connection</th><th>Status</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {printers.map(p => (
+                      <tr key={p.id}>
+                        <td><strong>{p.name}</strong></td>
+                        <td>{p.model}</td>
+                        <td><code>{p.connection}</code></td>
+                        <td><span className="badge badge-success">READY</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn btn-secondary btn-xs" disabled={testingPrinterId === p.id} onClick={() => testPrinter(p)}>
+                              {testingPrinterId === p.id ? '⌛ Testing...' : '⚡ Test'}
+                            </button>
+                            <button className="btn btn-ghost btn-xs text-danger" onClick={() => {
+                              const list = printers.filter(item => item.id !== p.id)
+                              setPrinters(list)
+                              save('printerSettings', list)
+                            }}>Remove</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {printers.length === 0 && (
+                      <tr><td colSpan={5} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>No printers configured.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

@@ -50,6 +50,8 @@ export default function ItemsPage() {
   
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [itemToDel, setItemToDel] = useState<Item | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 150)
@@ -166,6 +168,33 @@ export default function ItemsPage() {
     if (user?.channelId && !channelId) setChannelId(user.channelId)
   }, [user?.channelId])
 
+  const handleBatchAIGenerate = async () => {
+    if (selectedIds.length === 0) return
+    setIsGeneratingBatch(true)
+    const toastId = toast.loading('Generating AI descriptions...')
+    
+    try {
+      const selectedItems = items.filter(i => selectedIds.includes(i.id))
+      const res = await api.post<{ results: { id: string; description: string; error?: string }[] }>('/ai/batch-generate', { items: selectedItems }, token!)
+      
+      let successCount = 0
+      for (const result of res.results) {
+        if (!result.error) {
+          await api.patch(`/items/${result.id}`, { description: result.description }, token!)
+          successCount++
+        }
+      }
+      
+      toast.success(`Successfully generated and saved ${successCount} descriptions`, { id: toastId })
+      setSelectedIds([])
+      fetchItems() // Refresh list to show updated icons if any
+    } catch (e) {
+      toast.error('Batch AI generation failed', { id: toastId })
+    } finally {
+      setIsGeneratingBatch(false)
+    }
+  }
+
   const handleToggleActive = async (item: Item) => {
     try {
       await api.patch(`/items/${item.id}`, { isActive: !item.isActive }, token!)
@@ -236,8 +265,13 @@ export default function ItemsPage() {
             headers={['SKU', 'Name', 'Category', 'Brand', 'Supplier', 'Stock Quantity', 'Retail Price', 'Wholesale Price', 'Status']}
             getData={getExportData}
           />
-          {['SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER'].includes(user?.role || '') && (
+           {['SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER'].includes(user?.role || '') && (
             <>
+              {selectedIds.length > 0 && (
+                <button className="btn btn-secondary" onClick={handleBatchAIGenerate} disabled={isGeneratingBatch}>
+                  {isGeneratingBatch ? '⌛ Generating...' : `🤖 AI Describe (${selectedIds.length})`}
+                </button>
+              )}
               <Link href="/dashboard/items/categories" className="btn btn-ghost">📁 Categories</Link>
               <Link href="/dashboard/items/brands" className="btn btn-ghost">🏷️ Brands</Link>
               <Link href="/dashboard/items/suppliers" className="btn btn-ghost">📦 Suppliers</Link>
@@ -321,6 +355,12 @@ export default function ItemsPage() {
         <table>
           <thead>
             <tr>
+              <th style={{ width: 40 }}>
+                <input type="checkbox" onChange={(e) => {
+                  if (e.target.checked) setSelectedIds(items.map(i => i.id))
+                  else setSelectedIds([])
+                }} checked={selectedIds.length === items.length && items.length > 0} />
+              </th>
               <th onClick={() => handleSort('sku')} style={{ cursor: 'pointer' }}>SKU {sortIcon('sku')}</th>
               <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>Name {sortIcon('name')}</th>
               <th onClick={() => handleSort('category')} style={{ cursor: 'pointer' }}>Category {sortIcon('category')}</th>
@@ -339,7 +379,13 @@ export default function ItemsPage() {
               <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No items found</td></tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id}>
+                 <tr key={item.id}>
+                  <td>
+                    <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => {
+                      if (selectedIds.includes(item.id)) setSelectedIds(selectedIds.filter(id => id !== item.id))
+                      else setSelectedIds([...selectedIds, item.id])
+                    }} />
+                  </td>
                   <td><code>{item.sku}</code></td>
                   <td><strong>{item.name}</strong></td>
                   <td><span className="badge badge-info">{item.category?.name || '—'}</span></td>

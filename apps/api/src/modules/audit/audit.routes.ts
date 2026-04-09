@@ -82,4 +82,36 @@ export const auditRoutes: FastifyPluginAsync = async (app) => {
       }
     }
   })
+
+  // POST /audit/serial-swap
+  // Forensic tool to correct serial numbers post-sale.
+  app.post('/serial-swap', {
+    config:     RATE.APPROVAL,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN')],
+  }, async (request) => {
+    const schema = z.object({
+      saleId:      z.string().uuid(),
+      itemId:      z.string().uuid(),
+      oldSerialId: z.string().uuid().nullable(),
+      newSerialNo: z.string().min(1),
+      reason:      z.string().min(4)
+    })
+
+    const body = schema.parse(request.body)
+    const { auditService } = await import('./audit.service.js')
+    
+    return auditService.swapSerialNumber({
+      ...body,
+      actorId: request.user.sub
+    })
+  })
+
+  // GET /audit/serial-history
+  app.get('/serial-history', {
+    config:     RATE.READ,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN')],
+  }, async (request) => {
+    const { auditService } = await import('./audit.service.js')
+    return auditService.getSerialAudits()
+  })
 }

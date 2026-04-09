@@ -22,9 +22,22 @@ export class PurchaseService {
 
     let totalCost = 0
     let totalQty = 0
+    const invalidCostLines: string[] = []
+
     for (const line of data.lines) {
+      if (line.unitCost <= 0) {
+        const item = await prisma.item.findUnique({ where: { id: line.itemId }, select: { name: true, sku: true } })
+        invalidCostLines.push(`${item?.name || line.itemId} (${item?.sku || 'N/A'}): Unit cost must be greater than 0`)
+      }
       totalCost += line.quantity * line.unitCost
       totalQty += line.quantity
+    }
+
+    if (invalidCostLines.length > 0) {
+      throw {
+        statusCode: 422,
+        message: `Invalid purchase data. One or more items have missing or zero costs:\n${invalidCostLines.join('\n')}`
+      }
     }
 
     const landedCostTotal = data.landedCosts?.reduce((s, l) => s + l.amount, 0) ?? 0

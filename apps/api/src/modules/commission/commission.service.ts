@@ -83,7 +83,8 @@ async function resolveRule(userId: string, channelId: string, saleType: string) 
 }
 
 // ── Calculate Commission for a Sale ──────────────────────────────────
-export async function calculateCommission(saleId: string): Promise<CommissionSummary | null> {
+export async function calculateCommission(saleId: string, tx?: any): Promise<CommissionSummary | null> {
+  const db = tx || prisma
   // ── 0. Check Global / Channel Settings ────────────────────────────────
   const settings = await settingsService.getAll(null) 
   const payrollSettings = settings.payrollSettings as any
@@ -92,7 +93,7 @@ export async function calculateCommission(saleId: string): Promise<CommissionSum
     return null
   }
 
-  const sale = await prisma.sale.findUnique({
+  const sale = await db.sale.findUnique({
     where:   { id: saleId },
     include: { items: true },
   })
@@ -104,7 +105,14 @@ export async function calculateCommission(saleId: string): Promise<CommissionSum
 
   let grossMargin = 0
   for (const item of sale.items) {
-    grossMargin += (Number(item.unitPrice) - Number(item.costPriceSnapshot)) * item.quantity
+    const cost = Number(item.costPriceSnapshot)
+    if (cost <= 0) {
+      commissionLogger.warn({ 
+        saleId, itemId: item.itemId, userId: sale.performedBy 
+      }, 'commission skipped — one or more items have zero/missing cost price')
+      return null // Hard-block commission for the entire sale if any cost is missing
+    }
+    grossMargin += (Number(item.unitPrice) - cost) * item.quantity
     grossMargin -= Number(item.discountAmount ?? 0)
   }
   grossMargin -= Number(sale.discountAmount ?? 0)
@@ -135,7 +143,7 @@ export async function calculateCommission(saleId: string): Promise<CommissionSum
     rateApplied = Number(rule.ratePercent)
   } else {
     // Fallback: Check specialized defaults from settings
-    const userRole = (await prisma.user.findUnique({
+    const userRole = (await db.user.findUnique({
       where:  { id: sale.performedBy },
       select: { role: true },
     }))?.role
@@ -151,7 +159,7 @@ export async function calculateCommission(saleId: string): Promise<CommissionSum
 
   const commissionAmount = (grossMargin * rateApplied) / 100
 
-  await prisma.commissionEntry.upsert({
+  await db.commissionEntry.upsert({
     where:  { saleId },
     create: {
       saleId,
