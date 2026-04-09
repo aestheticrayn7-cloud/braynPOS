@@ -41,19 +41,12 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--service-account'
-      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
-      - '--add-cloudsql-instances'
-      - '$PROJECT_ID:africa-south1:braynpos-db-af'
-      - '--network=braynpos-network'
-      - '--subnet=braynpos-subnet-af'
-      - '--vpc-egress=private-ranges-only'
-      - '--set-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+
+
       - '--command'
-      - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
+      - 'sh,-c,cd apps/api && pnpm start:prod'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup,DATABASE_URL=postgresql://placeholder:pass@localhost/db,DIRECT_URL=postgresql://placeholder:pass@localhost/db,REDIS_URL=redis://localhost:6379,JWT_SECRET=temporary_secret,CORS_ORIGIN=*'
 
   # Deploy Web to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -69,14 +62,11 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--service-account'
-      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
-      - '--set-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+
       - '--command'
       - 'sh,-c,cd apps/web && pnpm start'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
+      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app,DATABASE_URL=postgresql://placeholder:pass@localhost/db,REDIS_URL=redis://localhost:6379,JWT_SECRET=temporary_secret,CORS_ORIGIN=*'
 
 images:
   - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID'
