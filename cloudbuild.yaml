@@ -42,11 +42,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-      - '--add-cloudsql-instances'
-      - '$PROJECT_ID:africa-south1:braynpos-db-af'
-      - '--network=braynpos-network'
-      - '--subnet=braynpos-subnet-af'
-      - '--vpc-egress=private-ranges-only'
+
       - '--command'
       - 'sh,-c,cd apps/api && pnpm start:prod'
       - '--set-env-vars'
