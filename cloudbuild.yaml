@@ -41,8 +41,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--service-account'
-      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+
       - '--add-cloudsql-instances'
       - '$PROJECT_ID:africa-south1:braynpos-db-af'
       - '--network=braynpos-network'
@@ -69,8 +68,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--service-account'
-      - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
+
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
