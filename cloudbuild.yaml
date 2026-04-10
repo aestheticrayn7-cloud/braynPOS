@@ -68,3 +68,6 @@ steps:
 
 images:
   - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
