@@ -13,7 +13,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID']
 
-  # Deploy API to Cloud Run (with Direct VPC Egress)
+  # Deploy API to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -40,6 +40,7 @@ steps:
       - 'sh,-c,cd apps/api && pnpm start:prod'
       - '--set-env-vars'
       - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - '--startup-cpu-boost'
 
   # Deploy Web to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -63,6 +64,7 @@ steps:
       - 'sh,-c,cd apps/web && pnpm start'
       - '--set-env-vars'
       - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
+      - '--startup-cpu-boost'
 
 images:
   - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID'
