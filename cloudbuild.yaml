@@ -37,7 +37,7 @@ steps:
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--command'
-      - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
+      - 'sh,-c,cd apps/api && pnpm start:prod'
       - '--set-env-vars'
       - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
 
