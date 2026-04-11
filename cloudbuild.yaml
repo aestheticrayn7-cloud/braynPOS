@@ -41,6 +41,7 @@ steps:
       - '--set-env-vars'
       - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
       - '--cpu-boost'
+      - '--memory=1024Mi'
 
   # Deploy Web to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
