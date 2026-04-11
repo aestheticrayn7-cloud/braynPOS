@@ -113,14 +113,12 @@ export async function calculateNetSalary(
 
     if (rule.type === 'FIXED_AMOUNT') {
       // FIX 2: null rate on a FIXED_AMOUNT rule is a data config error —
-      // fail loudly so it gets fixed, not silently zero'd out.
       if (rule.rate === null || rule.rate === undefined) {
-        throw {
-          statusCode: 422,
-          message: `DeductionRule "${rule.name}" is FIXED_AMOUNT but has no rate value set. Configure a rate in the deduction rules admin panel.`,
-        }
+        console.warn(`[payroll-calculator] DeductionRule "${rule.name}" is FIXED_AMOUNT but has no rate. Using 0 to prevent blocking payroll.`)
+        amount = 0
+      } else {
+        amount = n(rule.rate)
       }
-      amount = n(rule.rate)
 
     } else if (rule.type === 'PERCENTAGE_OF_GROSS' || rule.type === 'PERCENTAGE_OF_TAXABLE') {
       const rate = n(rule.rate)
@@ -153,13 +151,10 @@ export async function calculateNetSalary(
     if (cap   !== null && amount > cap)   amount = cap
 
     // ── Final NaN guard before pushing ───────────────────────────
-    // FIX 1: If any arithmetic above produced NaN (e.g. bad DB data),
-    // catch it here rather than letting it corrupt the salary run totals.
+    // FIX 1: Catch NaN here, default to 0 and warn instead of aborting salary run.
     if (!isFinite(amount) || isNaN(amount)) {
-      throw {
-        statusCode: 422,
-        message: `DeductionRule "${rule.name}" produced a non-numeric result (${amount}). Check the rule configuration.`,
-      }
+      console.warn(`[payroll-calculator] DeductionRule "${rule.name}" produced a non-numeric result (${amount}). Forced to 0.`)
+      amount = 0
     }
 
     deductions.push({

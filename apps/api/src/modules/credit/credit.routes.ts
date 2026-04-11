@@ -39,6 +39,51 @@ export const creditRoutes: FastifyPluginAsync = async (app) => {
     return getCreditStatus(customerId)
   })
 
+  // GET /credit/outstanding/:customerId
+  app.get('/outstanding/:customerId', {
+    config:     RATE.READ,
+    preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER', 'CASHIER', 'SALES_PERSON')],
+  }, async (request, reply) => {
+    const { customerId } = request.params as { customerId: string }
+
+    if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
+      const customer = await prisma.customer.findUnique({
+        where:  { id: customerId },
+        select: { channelId: true },
+      })
+      if (!customer) {
+        return reply.status(404).send({ error: 'Customer not found' })
+      }
+      if (customer.channelId && customer.channelId !== request.user.channelId) {
+        return reply.status(403).send({
+          error:   'Forbidden',
+          message: 'Customer does not belong to your channel',
+        })
+      }
+    }
+
+    const sales = await prisma.sale.findMany({
+      where: { customerId, saleType: 'CREDIT', deletedAt: null },
+      include: { payments: true }
+    })
+
+    const outstandingSales = sales.map(s => {
+      const totalPaid = s.payments.filter(p => p.method !== 'CREDIT').reduce((sum, p) => sum + Number(p.amount), 0)
+      const outstanding = Number(s.netAmount) - totalPaid
+      return {
+        saleId: s.id,
+        receiptNo: s.receiptNo,
+        totalAmount: Number(s.netAmount),
+        totalPaid,
+        outstanding,
+        saleDate: s.createdAt,
+        dueDate: s.dueDate
+      }
+    }).filter(s => s.outstanding > 0)
+
+    return { outstandingSales }
+  })
+
   // POST /credit/repay
   app.post('/repay', {
     config:     RATE.SALE_COMMIT,

@@ -111,10 +111,17 @@ export default function PayrollPage() {
     setSaving(true)
     try {
       const payload = { month: runForm.month, year: runForm.year, ...(runForm.channelId && { channelId: runForm.channelId }) }
-      await api.post('/payroll/salary-runs', payload, token!)
+      const res: any = await api.post('/payroll/salary-runs', payload, token!)
       setShowNewRun(false)
       setRunForm({ month: now.getMonth() + 1, year: now.getFullYear(), channelId: '' })
-      toast.success('Salary run created successfully!')
+      
+      if (res && res.warnings && res.warnings.length > 0) {
+        toast.error(`Run created, but ${res.warnings.length} staff were skipped due to zero/invalid salaries. Check console for details.`, { duration: 6000 })
+        console.warn('Salary Run skipped staff:', res.warnings)
+      } else {
+        toast.success('Salary run created successfully!')
+      }
+      
       fetchRuns()
     } catch (err) { toast.error('Failed: ' + (err as Error).message) }
     finally { setSaving(false) }
