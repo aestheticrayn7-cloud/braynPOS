@@ -119,7 +119,7 @@ export default function CreditPage() {
     if (!selected || !pay.saleId || pay.amount <= 0) return toast.error('Fill all required fields')
     setPaying(true)
     try {
-      await api.post('/credit/payment', {
+      await api.post('/credit/repay', {
         customerId: selected.id, saleId: pay.saleId, amount: pay.amount, method: pay.method,
         ...(pay.reference && { reference: pay.reference }),
       }, token!)

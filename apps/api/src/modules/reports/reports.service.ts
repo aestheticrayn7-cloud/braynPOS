@@ -512,7 +512,7 @@ export class ReportsService {
         s."totalAmount",
         s."discountAmount",
         s.notes,
-        (SELECT username FROM users WHERE id = s."performedBy") as "performedBy",
+        (SELECT username FROM users WHERE id = s."performedBy"::uuid) as "performedBy",
         COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) as "totalCost",
         (s."netAmount" - COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0)) as "margin"
       FROM sales s
