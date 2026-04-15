@@ -14,7 +14,6 @@ steps:
     args: ['push', 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID']
 
   # Deploy API to Cloud Run
-  # NOTE: No --command flag. The Dockerfile CMD uses SERVICE_TYPE to route.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -37,14 +36,14 @@ steps:
       - '--vpc-egress=private-ranges-only'
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+      - '--command'
+      - 'sh,-c,cd apps/api && (pnpm exec prisma migrate deploy || true) && pnpm start:prod'
       - '--set-env-vars'
       - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
       - '--cpu-boost'
       - '--memory=1024Mi'
-      - '--timeout=600'
 
   # Deploy Web to Cloud Run
-  # NOTE: No --command flag. The Dockerfile CMD uses SERVICE_TYPE to route.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -61,7 +60,9 @@ steps:
       - '--service-account'
       - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
       - '--set-secrets'
-      - 'REDIS_URL=REDIS_URL:latest'
+      - 'DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+      - '--command'
+      - 'sh,-c,cd apps/web && pnpm start'
       - '--set-env-vars'
       - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
       - '--cpu-boost'

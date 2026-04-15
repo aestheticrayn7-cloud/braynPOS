@@ -33,6 +33,6 @@ RUN test -f apps/api/dist/server.js || (echo "FATAL: dist/server.js not found af
 FROM base AS runner
 COPY --from=builder /app ./
 
-# Switch start command based on SERVICE_TYPE
-# CRITICAL: export DIRECT_URL=$DATABASE_URL to prevent Prisma schema validation crash
-CMD ["sh", "-c", "export DIRECT_URL=${DIRECT_URL:-$DATABASE_URL}; if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && (timeout 30 pnpm exec prisma migrate deploy || true) && pnpm start:prod; fi"]
+# Switch start command based on SERVICE_TYPE (Cloud Run uses --command override, this is fallback)
+# DIRECT_URL fallback ensures Prisma never crashes on missing env var
+CMD ["sh", "-c", "export DIRECT_URL=${DIRECT_URL:-$DATABASE_URL}; if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start -- -p ${PORT:-3000}; else cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod; fi"]
