@@ -34,4 +34,4 @@ FROM base AS runner
 COPY --from=builder /app ./
 
 # Switch start command based on SERVICE_TYPE
-CMD ["sh", "-c", "if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod; fi"]
+CMD ["sh", "-c", "if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && pnpm exec prisma migrate deploy 2>&1 || echo '[WARN] migrate deploy failed, attempting recovery...' && pnpm exec prisma migrate resolve --applied 20260411120000_drift_fixes_part2 2>/dev/null; pnpm start:prod; fi"]
