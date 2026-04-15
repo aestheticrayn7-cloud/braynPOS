@@ -34,4 +34,5 @@ FROM base AS runner
 COPY --from=builder /app ./
 
 # Switch start command based on SERVICE_TYPE
-CMD ["sh", "-c", "if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && (timeout 30 pnpm exec prisma migrate deploy || echo 'WARN: migrate skipped') && pnpm start:prod; fi"]
+# CRITICAL: export DIRECT_URL=$DATABASE_URL to prevent Prisma schema validation crash
+CMD ["sh", "-c", "export DIRECT_URL=${DIRECT_URL:-$DATABASE_URL}; if [ \"$SERVICE_TYPE\" = \"web\" ]; then cd apps/web && pnpm start; else cd apps/api && (timeout 30 pnpm exec prisma migrate deploy || true) && pnpm start:prod; fi"]
