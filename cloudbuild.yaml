@@ -37,7 +37,9 @@ steps:
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DIRECT_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup,PORT=8080'
+      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - '--command'
+      - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
       - '--cpu-boost'
       - '--memory=1024Mi'
 
@@ -60,7 +62,9 @@ steps:
       - '--set-secrets'
       - 'REDIS_URL=REDIS_URL:latest'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app,PORT=3000'
+      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
+      - '--command'
+      - 'sh,-c,cd apps/web && pnpm start'
       - '--cpu-boost'
 
 images:
