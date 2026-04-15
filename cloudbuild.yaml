@@ -36,12 +36,8 @@ steps:
       - '--vpc-egress=private-ranges-only'
       - '--set-secrets'
       - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DIRECT_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
-      - '--command'
-      - 'sh'
-      - '-c'
-      - 'cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup,PORT=8080'
       - '--cpu-boost'
       - '--memory=1024Mi'
 
@@ -63,12 +59,8 @@ steps:
       - 'braynpos-sa@$PROJECT_ID.iam.gserviceaccount.com'
       - '--set-secrets'
       - 'REDIS_URL=REDIS_URL:latest'
-      - '--command'
-      - 'sh'
-      - '-c'
-      - 'cd apps/web && pnpm start'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
+      - 'SERVICE_TYPE=web,NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app,PORT=3000'
       - '--cpu-boost'
 
 images:
