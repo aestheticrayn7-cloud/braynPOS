@@ -41,7 +41,7 @@ export default function SettingsPage() {
 
   // Printers
   const [printers, setPrinters] = useState<any[]>([])
-  const [newPrinter, setNewPrinter] = useState({ name: '', model: '', type: 'THERMAL', connection: 'IP' })
+  const [newPrinter, setNewPrinter] = useState({ name: '', model: '', type: 'THERMAL', connection: 'BLUETOOTH' })
   const [testingPrinterId, setTestingPrinterId] = useState<string | null>(null)
 
 
@@ -845,7 +845,11 @@ export default function SettingsPage() {
                     </div>
                     <div className="form-group">
                       <label>Connection</label>
-                      <input className="input" placeholder="IP (192.168.1.50) or USB" value={newPrinter.connection} onChange={e => setNewPrinter({...newPrinter, connection: e.target.value})} />
+                      <select className="input" value={newPrinter.connection} onChange={e => setNewPrinter({...newPrinter, connection: e.target.value})}>
+                        <option value="BLUETOOTH">Bluetooth (Wireless)</option>
+                        <option value="USB">USB (Cable)</option>
+                        <option value="IP">Network (IP/Ethernet)</option>
+                      </select>
                     </div>
                  </div>
                  <button className="btn btn-primary btn-sm" onClick={() => {
