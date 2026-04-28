@@ -18,7 +18,6 @@ export class ItemsService {
       isActive:  true,
       ...(query.isActive      !== undefined && { isActive:      query.isActive }),
       ...(query.isSerialized  !== undefined && { isSerialized:  query.isSerialized }),
-      ...(query.channelId     && { inventoryBalances: { some: { channelId: query.channelId } } }),
       ...(query.search        && {
         OR: [
           { name:    { contains: query.search, mode: 'insensitive' } },
