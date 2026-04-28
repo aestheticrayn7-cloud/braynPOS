@@ -97,7 +97,9 @@ async function commitSaleOnce(
       itemDetails[line.itemId] = { ...item, effectiveCost }
 
       const currentQty = stockMap[line.itemId] ?? 0
-      if (!options?.skipStockCheck && currentQty < line.quantity) {
+      const isProduct = itemDetails[line.itemId].type === 'PRODUCT'
+
+      if (!options?.skipStockCheck && isProduct && currentQty < line.quantity) {
         throw { statusCode: 422, message: `Insufficient stock for ${item.name}. Available: ${currentQty}` }
       }
 
@@ -192,23 +194,27 @@ async function commitSaleOnce(
         }),
       }),
       tx.stockMovement.createMany({
-        data: input.items.map(line => ({
-          itemId:         line.itemId,
-          channelId:      input.channelId,
-          movementType:   'SALE',
-          quantityChange: -(line.quantity),
-          referenceId:    newSale.id,
-          referenceType:  'sale',
-          unitCostAtTime: itemDetails[line.itemId].effectiveCost,
-          performedBy:    actor.sub,
-        })),
+        data: input.items
+          .filter(line => itemDetails[line.itemId].type === 'PRODUCT')
+          .map(line => ({
+            itemId:         line.itemId,
+            channelId:      input.channelId,
+            movementType:   'SALE',
+            quantityChange: -(line.quantity),
+            referenceId:    newSale.id,
+            referenceType:  'sale',
+            unitCostAtTime: itemDetails[line.itemId].effectiveCost,
+            performedBy:    actor.sub,
+          })),
       }),
-      ...input.items.map(line =>
-        tx.inventoryBalance.update({
-          where:  { itemId_channelId: { itemId: line.itemId, channelId: input.channelId } },
-          data:   { availableQty: { decrement: line.quantity } }
-        })
-      )
+      ...input.items
+        .filter(line => itemDetails[line.itemId].type === 'PRODUCT')
+        .map(line =>
+          tx.inventoryBalance.update({
+            where:  { itemId_channelId: { itemId: line.itemId, channelId: input.channelId } },
+            data:   { availableQty: { decrement: line.quantity } }
+          })
+        )
     ])
 
     await tx.payment.createMany({

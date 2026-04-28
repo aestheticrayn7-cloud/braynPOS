@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { BluetoothPrinter } from '@/lib/bluetooth-printer'
+import { toast } from 'react-hot-toast'
 
 interface ReceiptData {
   receiptNo: string
@@ -45,6 +47,7 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
   })
   const [branding, setBranding] = useState<{ logo?: string }>({})
   const [loading, setLoading] = useState(true)
+  const [printing, setPrinting] = useState(false)
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   useEffect(() => {
@@ -63,6 +66,22 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
   }, [token, saleId])
 
   const handlePrint = () => window.print()
+
+  const handleBluetoothPrint = async () => {
+    if (!data) return
+    setPrinting(true)
+    const tid = toast.loading('Connecting to Bluetooth Printer...')
+    try {
+      const bytes = BluetoothPrinter.generateEscPos(data, settings)
+      await BluetoothPrinter.print(bytes)
+      toast.success('Print job sent!', { id: tid })
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Bluetooth Print failed', { id: tid })
+    } finally {
+      setPrinting(false)
+    }
+  }
 
   const handleShare = async () => {
     if (!data) return
@@ -267,13 +286,17 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
             📲 Send via WhatsApp
           </button>
           
+          <button className="btn btn-primary" onClick={handleBluetoothPrint} disabled={printing}>
+            {printing ? '⏳ Printing...' : '🔵 Bluetooth Print'}
+          </button>
+
           {isMobile ? (
-            <button className="btn btn-primary" onClick={handleShare}>
+            <button className="btn btn-ghost" onClick={handleShare}>
               📤 Share
             </button>
           ) : (
-            <button className="btn btn-primary" onClick={handlePrint}>
-              🖨️ Print
+            <button className="btn btn-ghost" onClick={handlePrint}>
+              🖨️ Browser Print
             </button>
           )}
 

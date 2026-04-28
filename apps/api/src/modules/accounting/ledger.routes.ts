@@ -21,7 +21,7 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
     }).parse(request.query)
 
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      query.channelId = request.user.channelId || undefined
+      query.channelId = request.user.channelId || '00000000-0000-0000-0000-000000000000'
     }
 
     return ledgerService.getJournalEntries(query)
@@ -46,7 +46,7 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
 
     let cid = query.channelId
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      cid = request.user.channelId || undefined
+      cid = request.user.channelId || '00000000-0000-0000-0000-000000000000'
     }
 
     return ledgerService.getTrialBalance(query.asOfDate, cid)
@@ -66,7 +66,7 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
     }).parse(request.query)
 
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      query.channelId = request.user.channelId || undefined
+      query.channelId = request.user.channelId || '00000000-0000-0000-0000-000000000000'
     }
 
     return ledgerService.getAccountLedger(accountId, query)
@@ -84,7 +84,7 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
 
     let cid = query.channelId
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      cid = request.user.channelId || undefined
+      cid = request.user.channelId || '00000000-0000-0000-0000-000000000000'
     }
 
     return ledgerService.getProfitLoss(query.startDate, query.endDate, cid)
@@ -101,7 +101,7 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
 
     let cid = query.channelId
     if (!['SUPER_ADMIN', 'MANAGER_ADMIN'].includes(request.user.role)) {
-      cid = request.user.channelId || undefined
+      cid = request.user.channelId || '00000000-0000-0000-0000-000000000000'
     }
 
     return ledgerService.getBalanceSheet(query.asOfDate, cid)
@@ -138,3 +138,4 @@ export const ledgerRoutes: FastifyPluginAsync = async (app) => {
     `
   })
 }
+

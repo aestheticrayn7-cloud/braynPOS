@@ -186,29 +186,20 @@ export class ItemsService {
             },
           })
 
-          await (tx as any).costAudit.create({
-            data: {
-              itemId:      item.id,
-              channelId:   creatorChannelId,
-              oldCost:     0,
-              newCost:     itemData.weightedAvgCost || 0,
-              reason:      'INITIAL_CREATION',
-              performedBy: creatorId,
-            }
-          })
-
-          await tx.stockMovement.create({
-            data: {
-              itemId:         item.id,
-              channelId:      creatorChannelId,
-              movementType:   'ADJUSTMENT_IN',
-              quantityChange: 0,
-              referenceId:    item.id,
-              referenceType:  'adjustment',
-              performedBy:    creatorId,
-              notes:          'Initial channel anchoring with local pricing',
-            },
-          })
+          if (itemData.type !== 'SERVICE') {
+            await tx.stockMovement.create({
+              data: {
+                itemId:         item.id,
+                channelId:      creatorChannelId,
+                movementType:   'ADJUSTMENT_IN',
+                quantityChange: 0,
+                referenceId:    item.id,
+                referenceType:  'adjustment',
+                performedBy:    creatorId,
+                notes:          'Initial channel anchoring with local pricing',
+              },
+            })
+          }
         }
 
         logAction({
@@ -280,16 +271,6 @@ export class ItemsService {
         })
 
         if (balanceData.weightedAvgCost !== undefined && Number(oldBalance?.weightedAvgCost || 0) !== Number(balanceData.weightedAvgCost)) {
-           await (tx as any).costAudit.create({
-             data: {
-               itemId:      id,
-               channelId,
-               oldCost:     oldBalance?.weightedAvgCost || 0,
-               newCost:     balanceData.weightedAvgCost,
-               reason:      'MANUAL_ADJUST',
-               performedBy: ctx?.userId || 'SYSTEM',
-             }
-           })
         }
       }
 
@@ -375,17 +356,6 @@ export class ItemsService {
 
     if (currentWAC !== newWAC) {
        const ctx = requestContext.getStore()
-       await (prisma as any).costAudit.create({
-         data: {
-           itemId,
-           channelId,
-           oldCost:     currentWAC,
-           newCost:     newWAC,
-           reason:      'PURCHASE_RECALCULATION',
-           referenceId,
-           performedBy: ctx?.userId || 'SYSTEM',
-         }
-       })
     }
 
     return newWAC
@@ -605,7 +575,7 @@ export class ItemsService {
     })
   }
 
-  async initializeMultiBranchStock(itemId: string, branches: { channelId: string; qty: number; cost: number }[], performedBy: string) {
+  async initializeMultiBranchStock(itemId: string, branches: Array<{ channelId: string; qty: number; cost: number }>, performedBy: string) {
     return prisma.$transaction(async (tx) => {
       for (const b of branches) {
         await (tx as any).inventoryBalance.upsert({
@@ -703,16 +673,6 @@ export class ItemsService {
         })
 
         // Log Cost Audit if cost changed
-        await (tx as any).costAudit.create({
-          data: {
-            itemId,
-            channelId:   alloc.channelId,
-            oldCost:     0, // We assume opening stock sets or increments from an initial state
-            newCost:     alloc.costPrice,
-            reason:      'OPENING_STOCK',
-            performedBy: actorId
-          }
-        })
       }
 
       return { success: true, count: allocations.length }

@@ -254,6 +254,7 @@ model Item {
   taxClass          TaxClass           @default(STANDARD)
   imageUrl          String?
   isActive          Boolean            @default(true)
+  type              ItemType           @default(PRODUCT)
   deletedAt         DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -1426,4 +1427,9 @@ model SyncConflict {
 
   @@index([channelId, status])
   @@map("sync_conflicts")
+}
+
+enum ItemType {
+  PRODUCT
+  SERVICE
 }

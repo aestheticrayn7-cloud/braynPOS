@@ -40,7 +40,12 @@ export default function EditItemPage() {
     minWholesalePrice: 0,
     reorderLevel: 0,
     isActive: true,
+    imageUrl: '',
+    type: 'PRODUCT' as 'PRODUCT' | 'SERVICE',
   })
+
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   const persistenceKey = `brayn_edit_item_form_${id}`
 
@@ -92,6 +97,8 @@ export default function EditItemPage() {
         minWholesalePrice: Number(item.minWholesalePrice) || 0,
         reorderLevel: item.reorderLevel || 0,
         isActive: item.isActive,
+        imageUrl: item.imageUrl || '',
+        type: item.type || 'PRODUCT',
       })
     } catch (err) { 
       console.error(err)
@@ -144,6 +151,63 @@ export default function EditItemPage() {
     ])
   }
 
+  const processImage = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const MAX_SIZE = 1200
+          const size = Math.min(img.width, img.height)
+          const xOffset = (img.width - size) / 2
+          const yOffset = (img.height - size) / 2
+          const targetSize = Math.min(size, MAX_SIZE)
+          canvas.width = targetSize
+          canvas.height = targetSize
+          const ctx = canvas.getContext('2d')
+          if (!ctx) return reject('Failed to get canvas context')
+          ctx.drawImage(img, xOffset, yOffset, size, size, 0, 0, targetSize, targetSize)
+          resolve(canvas.toDataURL('image/jpeg', 0.85))
+        }
+        img.onerror = reject
+        img.src = e.target?.result as string
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement> | File) => {
+    const file = e instanceof File ? e : e.target.files?.[0]
+    if (!file) return
+    setIsProcessing(true)
+    const tid = toast.loading('🚀 Optimizing Image...')
+    try {
+      if (file.size > 10 * 1024 * 1024) return toast.error('Max 10MB', { id: tid })
+      const processed = await processImage(file)
+      set('imageUrl', processed)
+      toast.success('✨ Image updated!', { id: tid })
+    } catch (err) {
+      toast.error('Processing failed', { id: tid })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const item = e.clipboardData.items[0]
+    if (item?.type.includes('image')) {
+      const file = item.getAsFile()
+      if (file) handleFileSelect(file)
+    }
+  }
+
+  const handleAIImage = async () => {
+    if (!formData.name) return toast.error('Please enter an Item Name.')
+    toast.error('DALL-E 3 integration pending phase 2.')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name.trim()) return alert('Item name is required')
@@ -167,6 +231,8 @@ export default function EditItemPage() {
         minRetailPrice: Number(formData.minRetailPrice) || 0,
         minWholesalePrice: Number(formData.minWholesalePrice) || 0,
         reorderLevel: Number(formData.reorderLevel) || 0,
+        imageUrl: formData.imageUrl,
+        type: formData.type,
         channelId: useAuthStore.getState().user?.channelId || '',
       }
 
@@ -202,39 +268,142 @@ export default function EditItemPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* SKU & Name */}
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>SKU</label>
-            <input className="input" placeholder="e.g. ITEM-001" value={formData.sku} onChange={e => set('sku', e.target.value)} />
-          </div>
-          <div className="form-group" style={{ flex: 2 }}>
-            <label>Item Name *</label>
-            <input className="input" placeholder="e.g. Wireless Laser Mouse" value={formData.name} onChange={e => set('name', e.target.value)} required />
-          </div>
+      <form 
+        onSubmit={handleSubmit} 
+        onPaste={handlePaste}
+        className="card" 
+        style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}
+      >
+        {/* Item Type Selection */}
+        <div style={{ 
+          display: 'flex', 
+          backgroundColor: 'var(--bg-card-alt, #f8fafc)', 
+          padding: '4px', 
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border)',
+          width: 'fit-content',
+          marginBottom: 8
+        }}>
+          {['PRODUCT', 'SERVICE'].map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => set('type', t)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 'calc(var(--radius-lg) - 4px)',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                transition: 'all 0.2s ease',
+                backgroundColor: formData.type === t ? 'var(--primary)' : 'transparent',
+                color: formData.type === t ? 'white' : 'var(--text-secondary)',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: formData.type === t ? '0 4px 12px rgba(99, 102, 241, 0.2)' : 'none'
+              }}
+            >
+              {t === 'PRODUCT' ? '📦 Product' : '🛠️ Service'}
+            </button>
+          ))}
         </div>
 
-        {/* Barcode & UoM */}
-        <div style={{ display: 'flex', gap: 16 }}>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>Barcode</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input className="input" style={{ flex: 1 }} placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
-              <button type="button" className="btn btn-ghost" onClick={() => setShowScanner(true)}>📷</button>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          {/* Image Upload Area */}
+          <div className="form-group" style={{ width: 160, margin: 0 }}>
+            <label>Product Image</label>
+            <div 
+              style={{ 
+                width: 160, 
+                height: 160, 
+                border: isDragging ? '2px solid var(--accent)' : '2px dashed var(--border)', 
+                borderRadius: 16, 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                background: formData.imageUrl ? `url(${formData.imageUrl}) center/cover` : (isDragging ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--bg-hover)'), 
+                cursor: 'pointer', 
+                overflow: 'hidden', 
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                boxShadow: isDragging ? '0 0 20px rgba(var(--accent-rgb), 0.2)' : 'none'
+              }}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setIsDragging(false)
+                const file = e.dataTransfer.files[0]
+                if (file) handleFileSelect(file)
+              }}
+              onClick={() => document.getElementById('image-upload')?.click()}
+            >
+              {!formData.imageUrl && !isProcessing && (
+                <div style={{ textAlign: 'center', opacity: 0.5 }}>
+                  <span style={{ fontSize: '2.5rem' }}>📷</span>
+                  <p style={{ fontSize: '0.7rem', marginTop: 4 }}>Drag or Paste</p>
+                </div>
+              )}
+              {isProcessing && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexDirection: 'column', gap: 8 }}>
+                   <div className="spinner-sm"></div>
+                   <span style={{ fontSize: '0.7rem' }}>Optimizing...</span>
+                </div>
+              )}
+              {formData.imageUrl && !isProcessing && (
+                <div style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.7em', textAlign: 'center', padding: '4px 0', backdropFilter: 'blur(4px)' }}>
+                  Change Image
+                </div>
+              )}
+              <input id="image-upload" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect} />
             </div>
+            <button 
+              type="button" 
+              className="btn btn-ghost btn-xs" 
+              style={{ width: '100%', marginTop: 8, color: 'var(--accent)', fontSize: '0.7rem' }}
+              onClick={handleAIImage}
+            >
+              🤖 AI Mockup
+            </button>
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>Unit of Measure</label>
-            <select className="input" value={formData.unitOfMeasure} onChange={e => set('unitOfMeasure', e.target.value)}>
-              <option value="PCS">Pieces (PCS)</option>
-              <option value="KG">Kilograms (KG)</option>
-              <option value="LTR">Litres (LTR)</option>
-              <option value="MTR">Meters (MTR)</option>
-              <option value="BOX">Box</option>
-              <option value="PACK">Pack</option>
-              <option value="DOZEN">Dozen</option>
-            </select>
+
+          <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* SKU & Name */}
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>SKU</label>
+                <input className="input" placeholder="e.g. ITEM-001" value={formData.sku} onChange={e => set('sku', e.target.value)} />
+              </div>
+              <div className="form-group" style={{ flex: 2, margin: 0 }}>
+                <label>Item Name *</label>
+                <input className="input" placeholder="e.g. Wireless Laser Mouse" value={formData.name} onChange={e => set('name', e.target.value)} required />
+              </div>
+            </div>
+
+            {/* Barcode & UoM */}
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>Barcode</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input className="input" style={{ flex: 1 }} placeholder="e.g. 6901234567890" value={formData.barcode} onChange={e => set('barcode', e.target.value)} />
+                  <button type="button" className="btn btn-ghost" onClick={() => setShowScanner(true)}>📷</button>
+                </div>
+              </div>
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                <label>Unit of Measure</label>
+                <select className="input" value={formData.unitOfMeasure} onChange={e => set('unitOfMeasure', e.target.value)}>
+                  <option value="PCS">Pieces (PCS)</option>
+                  <option value="HRS">Hours (HRS)</option>
+                  <option value="SES">Session (SES)</option>
+                  <option value="KG">Kilograms (KG)</option>
+                  <option value="LTR">Litres (LTR)</option>
+                  <option value="MTR">Meters (MTR)</option>
+                  <option value="BOX">Box</option>
+                  <option value="PACK">Pack</option>
+                  <option value="DOZEN">Dozen</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -315,10 +484,12 @@ export default function EditItemPage() {
             <label>Floor Price - Wholesale (KES)</label>
             <input type="number" className="input" min="0" step="0.01" value={formData.minWholesalePrice} onChange={e => set('minWholesalePrice', e.target.value)} />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label>Reorder Level (Qty)</label>
-            <input type="number" className="input" min="0" value={formData.reorderLevel} onChange={e => set('reorderLevel', e.target.value)} />
-          </div>
+          {formData.type === 'PRODUCT' && (
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Reorder Level (Qty)</label>
+              <input type="number" className="input" min="0" value={formData.reorderLevel} onChange={e => set('reorderLevel', e.target.value)} />
+            </div>
+          )}
         </div>
 
         {/* Status */}

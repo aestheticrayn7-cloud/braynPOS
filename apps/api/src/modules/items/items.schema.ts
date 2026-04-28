@@ -17,8 +17,9 @@ export const createItemSchema = z.object({
   reorderLevel: z.number().int().min(0).optional(),
   isSerialized: z.boolean().optional(),
   taxClass: z.enum(['STANDARD', 'ZERO_RATED', 'EXEMPT']).optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().optional(),
   isActive: z.boolean().optional(),
+  type: z.enum(['PRODUCT', 'SERVICE']).default('PRODUCT').optional(),
 })
 
 export const updateItemSchema = createItemSchema.partial()

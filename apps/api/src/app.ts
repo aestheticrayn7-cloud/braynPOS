@@ -39,7 +39,7 @@ export async function buildApp() {
       if (typeof fromHeader === 'string' && fromHeader.length > 0) return fromHeader
       return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
     },
-    bodyLimit:         512 * 1024,
+    bodyLimit:         5 * 1024 * 1024,
     trustProxy:        true,
     connectionTimeout: 30_000,
   })

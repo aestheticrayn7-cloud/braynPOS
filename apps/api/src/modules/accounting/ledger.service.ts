@@ -87,12 +87,11 @@ export class LedgerService {
         COALESCE(SUM(ll."debitAmount"),  0)   AS "totalDebit",
         COALESCE(SUM(ll."creditAmount"), 0)   AS "totalCredit"
       FROM accounts a
-      LEFT JOIN ledger_lines ll ON ll."accountId" = a.id
-      LEFT JOIN journal_entries je
-        ON  je.id          = ll."journalEntryId"
+      JOIN ledger_lines ll    ON ll."accountId" = a.id
+      JOIN journal_entries je ON je.id          = ll."journalEntryId"
+      WHERE a."isActive" = true
         AND je."postedAt" <= ${dateFilter}
         ${channelFilter}
-      WHERE a."isActive" = true
       GROUP BY a.id, a.code, a.name, a.type
       HAVING
         COALESCE(SUM(ll."debitAmount"),  0) > 0
@@ -243,13 +242,12 @@ export class LedgerService {
           ELSE 0
         END AS balance
       FROM accounts a
-      LEFT JOIN ledger_lines ll ON ll."accountId" = a.id
-      LEFT JOIN journal_entries je
-        ON  je.id          = ll."journalEntryId"
-        AND je."postedAt" <= ${dateFilter}
-        ${channelFilter}
+      JOIN ledger_lines ll    ON ll."accountId" = a.id
+      JOIN journal_entries je ON je.id          = ll."journalEntryId"
       WHERE a.type IN ('ASSET', 'LIABILITY', 'EQUITY')
         AND a."isActive" = true
+        AND je."postedAt" <= ${dateFilter}
+        ${channelFilter}
       GROUP BY a.id, a.code, a.name, a.type
       ORDER BY a.type, a.code
     `
@@ -267,6 +265,31 @@ export class LedgerService {
 
     const totalAssets      = assets.reduce((s, a) => s + a.balance, 0)
     const totalLiabilities = liabilities.reduce((s, l) => s + l.balance, 0)
+    
+    // Calculate Cumulative Net Income (Revenue - Expenses) to date for Equity
+    const netIncomeRows = await prisma.$queryRaw<Array<{ net: Prisma.Decimal }>>`
+      SELECT 
+        COALESCE(SUM(CASE WHEN a.type = 'REVENUE' THEN ll."creditAmount" - ll."debitAmount" ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN a.type = 'EXPENSE' THEN ll."debitAmount" - ll."creditAmount" ELSE 0 END), 0) AS net
+      FROM accounts a
+      JOIN ledger_lines ll    ON ll."accountId" = a.id
+      JOIN journal_entries je ON je.id          = ll."journalEntryId"
+      WHERE a.type IN ('REVENUE', 'EXPENSE')
+        AND je."postedAt" <= ${dateFilter}
+        ${channelFilter}
+    `
+    const netIncome = Number(netIncomeRows[0]?.net || 0)
+    
+    // Add Net Income to Equity section if not already zero
+    if (netIncome !== 0) {
+      equity.push({
+        accountId:   'net-income-period',
+        accountCode: 'NET',
+        accountName: 'Current Period Profit/Loss',
+        balance:     netIncome,
+      })
+    }
+
     const totalEquity      = equity.reduce((s, e) => s + e.balance, 0)
 
     // FIX 3: Balance sheet assertion — Assets must equal Liabilities + Equity

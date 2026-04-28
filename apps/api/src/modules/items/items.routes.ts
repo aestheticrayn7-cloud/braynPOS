@@ -82,9 +82,11 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     config:     RATE.APPROVAL,
     preHandler: [authorize('SUPER_ADMIN', 'ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
   }, async (request, reply) => {
-    const { approvalToken, ...body } = z.object({
+    const { approvalToken, ...rest } = z.object({
       approvalToken: z.string().optional(),
-    }).passthrough().parse(request.body) as z.infer<typeof createItemSchema> & { approvalToken?: string }
+    }).passthrough().parse(request.body)
+
+    const body = createItemSchema.parse(rest)
 
     const sanitizedBody = {
       ...body,
@@ -171,6 +173,9 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     const body = stockAdjustmentSchema.parse(request.body)
 
     const item       = await prisma.item.findUniqueOrThrow({ where: { id: body.itemId } })
+    if (item.type === 'SERVICE') {
+      throw { statusCode: 400, message: 'Stock adjustments are not allowed for Service items' }
+    }
     const unitPrice  = Number(item.retailPrice)
     const totalValue      = Math.abs(body.quantity) * Number(item.retailPrice)
     const THRESHOLD_QTY   = 50
@@ -282,6 +287,11 @@ export const itemsRoutes: FastifyPluginAsync = async (app) => {
     })
 
     const body = schema.parse(request.body)
+    const item = await prisma.item.findUniqueOrThrow({ where: { id: body.itemId } })
+    if (item.type === 'SERVICE') {
+      throw { statusCode: 400, message: 'Bulk opening stock is not allowed for Service items' }
+    }
+
     return itemsService.bulkOpeningStock({
       ...body,
       actorId: request.user.sub
