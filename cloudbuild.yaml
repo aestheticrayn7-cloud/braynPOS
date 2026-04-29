@@ -35,11 +35,11 @@ steps:
       - '--subnet=braynpos-subnet-af'
       - '--vpc-egress=private-ranges-only'
       - '--set-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest'
+      - 'DATABASE_URL=DATABASE_URL:latest,DIRECT_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,JWT_SECRET=JWT_SECRET:latest,CORS_ORIGIN=CORS_ORIGIN:latest,GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest,GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest,GOOGLE_REDIRECT_URI=GOOGLE_REDIRECT_URI:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest'
       - '--command'
       - 'sh,-c,cd apps/api && pnpm exec prisma migrate deploy && pnpm start:prod'
       - '--set-env-vars'
-      - 'SERVICE_TYPE=api,GEMINI_API_KEY=pending-setup'
+      - 'SERVICE_TYPE=api'
       - '--cpu-boost'
       - '--memory=1024Mi'
 

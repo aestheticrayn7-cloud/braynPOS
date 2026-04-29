@@ -7,6 +7,7 @@ import { PhoneInput } from '@/components/shared/PhoneInput'
 import { OpeningStockAgreement } from '@/components/shared/OpeningStockAgreement'
 import { SessionManager } from './SessionManager'
 import { SyncConflictResolver } from './SyncConflictResolver'
+import { BluetoothPrinter } from '@/lib/bluetooth-printer'
 
 interface Customer { id: string; name: string; phone?: string; email?: string }
 
@@ -153,6 +154,13 @@ export default function SettingsPage() {
   const testPrinter = async (p: any) => {
     setTestingPrinterId(p.id)
     try {
+      if (p.connection === 'BLUETOOTH') {
+        // Bluetooth MUST be tested locally in the browser
+        await BluetoothPrinter.connect()
+        toast.success(`Printer "${p.name}" is READY ✅`)
+        return
+      }
+
       const res = await api.post<{ status: string }>('/dashboard/settings/printers/test', { host: p.connection }, token!)
       if (res.status === 'online') toast.success(`Printer "${p.name}" is ONLINE ✅`)
       else toast.error(`Printer "${p.name}" is ${res.status.toUpperCase()} ❌`)
@@ -852,12 +860,27 @@ export default function SettingsPage() {
                       </select>
                     </div>
                  </div>
-                 <button className="btn btn-primary btn-sm" onClick={() => {
+                 <button className="btn btn-primary btn-sm" onClick={async () => {
                    if (!newPrinter.name) return
-                   const list = [...printers, { ...newPrinter, id: Math.random().toString(36).substr(2, 9) }]
-                   setPrinters(list)
-                   setNewPrinter({ name: '', model: '', type: 'THERMAL', connection: 'IP' })
-                   save('printerSettings', list)
+                   
+                   try {
+                     if (newPrinter.connection === 'BLUETOOTH') {
+                       // Trigger browser device picker
+                       await BluetoothPrinter.connect()
+                     }
+                     
+                     const list = [...printers, { ...newPrinter, id: Math.random().toString(36).substr(2, 9) }]
+                     setPrinters(list)
+                     setNewPrinter({ name: '', model: '', type: 'THERMAL', connection: 'BLUETOOTH' })
+                     save('printerSettings', list)
+                     if (newPrinter.connection === 'BLUETOOTH') {
+                       toast.success('Bluetooth printer paired successfully!')
+                     }
+                   } catch (err) {
+                     if (newPrinter.connection === 'BLUETOOTH') {
+                       toast.error('Bluetooth pairing cancelled or failed')
+                     }
+                   }
                  }}>Add Printer</button>
               </div>
 
