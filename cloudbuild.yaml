@@ -1,13 +1,16 @@
 steps:
   # Build the unified Docker image with unique tag
   - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     args:
-      - 'build'
-      - '--build-arg'
-      - 'NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app'
-      - '-t'
-      - 'africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID'
-      - '.'
+      - '-c'
+      - |
+        docker build \
+          --build-arg NEXT_PUBLIC_API_URL=https://brayn-api-135906948054.africa-south1.run.app \
+          --build-arg NEXT_PUBLIC_GEMINI_API_KEY=$$GEMINI_API_KEY \
+          -t africa-south1-docker.pkg.dev/$PROJECT_ID/braynpos-repo-af/braynpos-unified:$BUILD_ID \
+          .
+    secretEnv: ['GEMINI_API_KEY']
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -72,3 +75,8 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/GEMINI_API_KEY/versions/latest
+      env: 'GEMINI_API_KEY'
