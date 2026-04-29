@@ -92,7 +92,7 @@ export default function AIPortalPage() {
                 textTransform:   'uppercase',
                 letterSpacing:   '0.05em',
               }}>
-                Gemini 2.5 Flash
+                Gemini 1.5 Flash
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
