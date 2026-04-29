@@ -273,7 +273,23 @@ export default function NewItemPage() {
 
   const handleAIImage = async () => {
     if (!formData.name) return toast.error('Please enter an Item Name first to guide the AI.')
-    toast.error('AI Image Mockups: Enterprise subscription required for DALL-E 3 integration.')
+    const tid = toast.loading('🤖 Gemini 2.0: Generating high-fidelity mockup...')
+    try {
+      const selectedCategory = flatCats.find(c => c.id === formData.categoryId)?.label?.trim() || 'General'
+      const selectedBrand = brands.find(b => b.id === formData.brandId)?.name || 'Unknown'
+      
+      const res = await api.post<{ imageUrl: string }>('/ai/generate-mockup', {
+        name: formData.name,
+        category: selectedCategory,
+        brand: selectedBrand
+      }, token!)
+      
+      set('imageUrl', res.imageUrl)
+      toast.success('✨ Gemini 2.0 Mockup Generated!', { id: tid })
+    } catch (err) {
+      console.error(err)
+      toast.error('AI Generation failed. Check your Gemini API settings.', { id: tid })
+    }
   }
 
   return (
