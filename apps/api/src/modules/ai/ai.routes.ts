@@ -7,7 +7,7 @@ import { z } from 'zod'
 // Shared instance - ideally would be in a service
 // Shared instance - using Gemini 2.0 Flash for superior reasoning and multimodal features
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 export const aiRoutes: FastifyPluginAsync = async (app) => {
   app.addHook('preHandler', authenticate)
