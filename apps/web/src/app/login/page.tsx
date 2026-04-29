@@ -145,7 +145,17 @@ export default function LoginPage() {
       <div className="login-card animate-fade-in">
         <div className="brand">
           <h1>◆ BRAYN</h1>
-          <p>Hybrid Edition • Enterprise POS [Last Updated: Apr 9, 2026]</p>
+          <p>
+            Hybrid Edition • Enterprise POS [Last Updated:{' '}
+            {process.env.NEXT_PUBLIC_BUILD_DATE
+              ? new Date(process.env.NEXT_PUBLIC_BUILD_DATE).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
+              : 'Apr 9, 2026'}
+            ]
+          </p>
         </div>
 
         {error && <div className="login-error">{error}</div>}
