@@ -24,10 +24,14 @@ export const googleRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       await googleService.handleCallback(code, userId)
-      return reply.redirect(`${process.env.CORS_ORIGIN?.[0] || 'http://localhost:3000'}/dashboard/settings?google=success`)
+      const origins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',')
+      const primaryOrigin = origins[0].trim()
+      return reply.redirect(`${primaryOrigin}/dashboard/settings?google=success`)
     } catch (error) {
       request.log.error({ err: error }, 'Google OAuth callback failed')
-      return reply.redirect(`${process.env.CORS_ORIGIN?.[0] || 'http://localhost:3000'}/dashboard/settings?google=error`)
+      const origins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',')
+      const primaryOrigin = origins[0].trim()
+      return reply.redirect(`${primaryOrigin}/dashboard/settings?google=error`)
     }
   })
 }
