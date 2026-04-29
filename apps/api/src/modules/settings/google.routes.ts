@@ -32,4 +32,16 @@ export const googleRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(`${origin}/dashboard/settings?google=error`)
     }
   })
+
+  // 3. Check Google connection status
+  fastify.get('/status', { preHandler: [authenticate] }, async (request) => {
+    const user = await (await import('../../lib/prisma.js')).prisma.user.findUnique({
+      where: { id: request.user.sub },
+      select: { googleEmail: true, googleAccessToken: true },
+    })
+    return {
+      connected: !!user?.googleAccessToken,
+      email: user?.googleEmail || undefined,
+    }
+  })
 }

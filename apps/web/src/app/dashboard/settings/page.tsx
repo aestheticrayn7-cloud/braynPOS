@@ -13,6 +13,83 @@ interface Customer { id: string; name: string; phone?: string; email?: string }
 
 type Tab = 'profile' | 'security' | 'business' | 'branding' | 'catalog' | 'pos' | 'printers' | 'payroll' | 'receipt' | 'tax' | 'notifications' | 'advanced' | 'offline'
 
+function GoogleConnectionStatus() {
+  const token = useAuthStore((s) => s.accessToken)
+  const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [googleEmail, setGoogleEmail] = useState('')
+
+  useEffect(() => {
+    // Check URL for google=success/error
+    const params = new URLSearchParams(window.location.search)
+    const googleResult = params.get('google')
+    if (googleResult === 'success') {
+      toast.success('Google Workspace connected successfully!')
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (googleResult === 'error') {
+      toast.error('Google Workspace connection failed. Please try again.')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+
+    // Check connection status from API
+    const checkStatus = async () => {
+      try {
+        const res = await api.get<{ connected: boolean; email?: string }>('/settings/google/status', token!)
+        if (res.connected) {
+          setStatus('connected')
+          setGoogleEmail(res.email || '')
+        } else {
+          setStatus('disconnected')
+        }
+      } catch {
+        setStatus('disconnected')
+      }
+    }
+    if (token) checkStatus()
+  }, [token])
+
+  if (status === 'loading') return <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Checking connection...</div>
+
+  if (status === 'connected') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ padding: '10px 16px', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ color: 'var(--success)', fontWeight: 700 }}>✅ Connected</span>
+          {googleEmail && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>({googleEmail})</span>}
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={async () => {
+            try {
+              const res = await api.get<{ url: string }>('/settings/google/auth', token!)
+              if (res.url) window.location.href = res.url
+            } catch { toast.error('Failed to reconnect') }
+          }}
+        >
+          Reconnect
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className="btn btn-secondary"
+      onClick={async () => {
+        try {
+          const res = await api.get<{ url: string }>('/settings/google/auth', token!)
+          if (res.url) window.location.href = res.url
+        } catch { toast.error('Failed to initiate Google connection') }
+      }}
+    >
+      Connect Google Workspace
+    </button>
+  )
+}
+
+
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user)
   const token = useAuthStore((s) => s.accessToken)
@@ -325,20 +402,7 @@ export default function SettingsPage() {
                 <div style={{ marginTop: 24, padding: 20, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-secondary)' }}>
                   <h4 style={{ marginBottom: 12 }}>🔗 Linked Accounts</h4>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 16 }}>Connect your Google workspace account to enable one-click direct exports to Google Sheets and Docs from any dashboard table.</p>
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary" 
-                    onClick={async () => {
-                      try {
-                        const res = await api.get<{ url: string }>('/settings/google/auth', token!)
-                        if (res.url) window.location.href = res.url
-                      } catch (err) {
-                        toast.error('Failed to initiate Google connection')
-                      }
-                    }}
-                  >
-                    Connect Google Workspace
-                  </button>
+                  <GoogleConnectionStatus />
                 </div>
               </div>
             </div>
