@@ -27,7 +27,8 @@ function GoogleConnectionStatus() {
       // Clean URL
       window.history.replaceState({}, '', window.location.pathname)
     } else if (googleResult === 'error') {
-      toast.error('Google Workspace connection failed. Please try again.')
+      const reason = params.get('reason') || 'Unknown error'
+      toast.error(`Google connection failed: ${reason}`, { duration: 8000 })
       window.history.replaceState({}, '', window.location.pathname)
     }
 

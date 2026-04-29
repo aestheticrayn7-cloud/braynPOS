@@ -26,10 +26,11 @@ export const googleRoutes: FastifyPluginAsync = async (fastify) => {
       await googleService.handleCallback(code, userId)
       const origin = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',')[0]?.trim() || 'http://localhost:3000'
       return reply.redirect(`${origin}/dashboard/settings?google=success`)
-    } catch (error) {
-      request.log.error({ err: error }, 'Google OAuth callback failed')
+    } catch (error: any) {
+      const errMsg = error?.message || error?.response?.data?.error_description || 'Unknown error'
+      request.log.error({ err: error, errMsg }, 'Google OAuth callback failed')
       const origin = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',')[0]?.trim() || 'http://localhost:3000'
-      return reply.redirect(`${origin}/dashboard/settings?google=error`)
+      return reply.redirect(`${origin}/dashboard/settings?google=error&reason=${encodeURIComponent(errMsg)}`)
     }
   })
 
