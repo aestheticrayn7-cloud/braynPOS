@@ -123,10 +123,21 @@ export default function ItemsPage() {
   }
 
   const getExportData = async () => {
-    const q = buildQuery()
-    const url = `/items?limit=5000&${q.toString()}`
-    const res = await api.get<{ data: Item[] }>(url, token!)
-    return res.data.map(item => [
+    const allItems: Item[] = []
+    let currentPage = 1
+    let totalPages = 1
+
+    do {
+      const q = buildQuery()
+      q.set('limit', '100')
+      q.set('page', currentPage.toString())
+      const res = await api.get<{ data: Item[]; meta: { totalPages: number } }>(`/items?${q.toString()}`, token!)
+      allItems.push(...(res.data ?? []))
+      totalPages = res.meta?.totalPages ?? 1
+      currentPage++
+    } while (currentPage <= totalPages)
+
+    return allItems.map(item => [
       item.sku,
       item.name,
       item.category?.name || '—',

@@ -86,9 +86,20 @@ export default function SalesPage() {
   }
 
   const getExportData = async () => {
-    const params = buildQuery(1, '5000')
-    const res = await api.get<{ data: Sale[] }>(`/sales?${params}`, token!)
-    return res.data.map(sale => [
+    const allSales: Sale[] = []
+    let currentPage = 1
+    let totalPages = 1
+
+    // Fetch all records in batches of 100 (backend max)
+    do {
+      const params = buildQuery(currentPage, '100')
+      const res = await api.get<{ data: Sale[]; meta: { totalPages: number } }>(`/sales?${params}`, token!)
+      allSales.push(...res.data)
+      totalPages = res.meta.totalPages
+      currentPage++
+    } while (currentPage <= totalPages)
+
+    return allSales.map(sale => [
       sale.receiptNo,
       sale.saleType,
       fmtDateTime(sale.createdAt),

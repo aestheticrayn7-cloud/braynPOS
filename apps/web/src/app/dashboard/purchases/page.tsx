@@ -93,17 +93,27 @@ export default function PurchasesPage() {
     const end = new Date(endDate)
     end.setHours(23,59,59,999)
 
-    const params = new URLSearchParams({
-      limit:     '5000',
-      startDate: start.toISOString(),
-      endDate:   end.toISOString(),
-    })
-    
-    if (selectedChannel) params.append('channelId', selectedChannel)
-    if (tab === 'supplier' && selectedSupplier) params.append('supplierId', selectedSupplier)
+    const allPurchases: Purchase[] = []
+    let currentPage = 1
+    let totalPages = 1
 
-    const res = await api.get<{ data: Purchase[] }>(`/purchases?${params.toString()}`, token!)
-    return res.data.map(p => [
+    do {
+      const params = new URLSearchParams({
+        limit:     '100',
+        page:      currentPage.toString(),
+        startDate: start.toISOString(),
+        endDate:   end.toISOString(),
+      })
+      if (selectedChannel) params.append('channelId', selectedChannel)
+      if (tab === 'supplier' && selectedSupplier) params.append('supplierId', selectedSupplier)
+
+      const res = await api.get<{ data: Purchase[]; meta: { totalPages: number } }>(`/purchases?${params.toString()}`, token!)
+      allPurchases.push(...(res.data ?? []))
+      totalPages = res.meta?.totalPages ?? 1
+      currentPage++
+    } while (currentPage <= totalPages)
+
+    return allPurchases.map(p => [
       p.purchaseNo,
       p.supplier?.name || '—',
       p.channel?.name || '—',
