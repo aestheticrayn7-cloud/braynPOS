@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
  */
 export async function generateText(prompt: string, systemInstruction?: string) {
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash",
+    model: "gemini-flash-latest",
     systemInstruction: systemInstruction 
   });
 
@@ -27,7 +27,7 @@ export async function generateText(prompt: string, systemInstruction?: string) {
  */
 export async function* streamText(prompt: string, systemInstruction?: string) {
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash",
+    model: "gemini-flash-latest",
     systemInstruction: systemInstruction 
   });
 
@@ -57,7 +57,7 @@ export async function embedText(text: string): Promise<number[]> {
  */
 export function createChatSession(systemInstruction?: string) {
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash",
+    model: "gemini-flash-latest",
     systemInstruction: systemInstruction 
   });
 

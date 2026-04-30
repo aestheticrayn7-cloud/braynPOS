@@ -30,12 +30,13 @@ export function ExportMenu({ title, headers, getData, onPrint }: ExportMenuProps
         window.open(response.url, '_blank')
       }
     } catch (error: any) {
-      if (error.response?.status === 400) {
-        toast.error('Google Account not connected. Link it in Settings first.')
+      const status = error?.status ?? error?.response?.status
+      if (status === 400 || status === 401) {
+        toast.error('Google account not connected. Please link it in Settings → Profile → Linked Accounts first.')
       } else {
-        toast.error(`Failed to export to Google ${type === 'sheets' ? 'Sheets' : 'Docs'}`)
+        toast.error(error?.message || `Failed to export to Google ${type === 'sheets' ? 'Sheets' : 'Docs'}`)
       }
-      console.error(error)
+      console.error('[ExportMenu] Export failed:', error)
     } finally {
       setIsExporting(false)
       setIsOpen(false)
