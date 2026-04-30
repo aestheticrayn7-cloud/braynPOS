@@ -172,6 +172,13 @@ export class BluetoothPrinter {
         ...Array.from(qrDataBytes),
         0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30        // Print QR
       ]);
+      
+      // Secondary 1D Barcode (CODE128) for maximum compatibility
+      addText('\n');
+      addRaw([0x1D, 0x68, 0x40]); // Height
+      addRaw([0x1D, 0x77, 0x02]); // Width
+      addRaw([0x1D, 0x6B, 0x49, qrData.length]); // CODE128
+      qrData.split('').forEach(c => commands.push(c.charCodeAt(0)));
       addText('\n');
     }
     

@@ -44,7 +44,7 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
   const token = useAuthStore((s) => s.accessToken)
   const [data, setData]     = useState<ReceiptData | null>(null)
   const [settings, setSettings] = useState<ReceiptSettings>({
-    showBusinessName: true, showBusinessAddress: true, showBusinessPhone: true, paperWidth: '80mm', fontSize: 'md', showPoweredBy: true, showLogo: true
+    showBusinessName: true, showBusinessAddress: true, showBusinessPhone: true, paperWidth: '80mm', fontSize: 'md', showPoweredBy: true, showLogo: true, showBarcode: true
   })
   const [branding, setBranding] = useState<{ logo?: string }>({})
   const [loading, setLoading] = useState(true)
@@ -195,7 +195,7 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
             {settings.showBusinessName !== false && (
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#000', textTransform: 'uppercase' }}>{data?.channel.name}</h2>
             )}
-            {settings.showBusinessAddress !== false && data?.channel.address && (
+            {settings.showBusinessAddress !== false && data?.channel.address && data.channel.address !== 'None' && (
               <p style={{ margin: '4px 0', color: '#000', fontSize: '0.85rem' }}>
                 {data.channel.address}
               </p>
@@ -307,7 +307,10 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
             )}
 
             {settings.showPoweredBy !== false && (
-               <p style={{ marginTop: 20, opacity: 0.6, fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em' }}>POWERED BY BRAYN POS</p>
+               <div style={{ marginTop: 20 }}>
+                 <p style={{ opacity: 0.6, fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em', margin: 0 }}>POWERED BY BRAYN POS</p>
+                 <p style={{ fontSize: '0.5rem', opacity: 0.4 }}>v2.1.0-stab</p>
+               </div>
             )}
           </div>
         </div>
