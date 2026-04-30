@@ -28,7 +28,9 @@ export function SyncConflictResolver() {
   const fetchConflicts = async () => {
     setLoading(true)
     try {
-      const data = await api.get<SyncConflict[]>('/sales/conflicts', token!)
+      const channelId = useAuthStore.getState().user?.channelId
+      const url = `/sales/conflicts${channelId ? `?channelId=${channelId}` : ''}`
+      const data = await api.get<SyncConflict[]>(url, token!)
       setConflicts(data)
     } catch (err) {
       toast.error('Failed to load sync conflicts')

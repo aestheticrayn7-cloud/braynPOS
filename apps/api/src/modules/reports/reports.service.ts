@@ -512,16 +512,17 @@ export class ReportsService {
         s."totalAmount",
         s."discountAmount",
         s.notes,
-        (SELECT username FROM users WHERE id = s."performedBy"::uuid) as "performedBy",
+        u.username as "performedBy",
         COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0) as "totalCost",
         (s."netAmount" - COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0)) as "margin"
       FROM sales s
+      LEFT JOIN users u ON u.id::text = s."performedBy"
       JOIN sale_items si ON s.id = si."saleId"
       WHERE s."channelId" = ${channelId}
         AND s."createdAt" >= ${start}
         AND s."createdAt" <= ${end}
         AND s."deletedAt" IS NULL
-      GROUP BY s.id, s."receiptNo", s."createdAt", s."saleType", s."netAmount", s."totalAmount", s."discountAmount", s.notes, s."performedBy"
+      GROUP BY s.id, s."receiptNo", s."createdAt", s."saleType", s."netAmount", s."totalAmount", s."discountAmount", s.notes, u.username
       HAVING (s."netAmount" - COALESCE(SUM(si."costPriceSnapshot" * si.quantity), 0)) < 0
       ORDER BY s."createdAt" DESC
     `

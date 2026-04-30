@@ -34,7 +34,9 @@ export default function ForensicMarginAuditPage() {
     if (!token) return
     setLoading(true)
     try {
-      const res = await api.get<ForensicRecord[]>(`/reports/forensic-audit?startDate=${startDate}&endDate=${endDate}`, token)
+      const channelId = useAuthStore.getState().user?.channelId
+      const url = `/reports/forensic-audit?startDate=${startDate}&endDate=${endDate}${channelId ? `&channelId=${channelId}` : ''}`
+      const res = await api.get<ForensicRecord[]>(url, token)
       setRecords(res)
     } catch {
       toast.error('Failed to load forensic audit records')

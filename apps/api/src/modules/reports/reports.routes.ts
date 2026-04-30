@@ -23,12 +23,14 @@ function resolveChannelId(
   channelId: string | null | undefined,
   queryCid:  string | undefined
 ): string {
-  if (['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(role)) {
-    if (!queryCid) throw { statusCode: 400, message: 'channelId is required for admin reports' }
-    return queryCid
+  const effectiveCid = queryCid || channelId
+  if (!effectiveCid) {
+    if (['SUPER_ADMIN', 'MANAGER_ADMIN', 'ADMIN'].includes(role)) {
+      throw { statusCode: 400, message: 'channelId is required for admin reports (specify a branch)' }
+    }
+    throw { statusCode: 400, message: 'Your account has no channel assigned' }
   }
-  if (!channelId) throw { statusCode: 400, message: 'Your account has no channel assigned' }
-  return channelId
+  return effectiveCid
 }
 
 export const reportsRoutes: FastifyPluginAsync = async (app) => {

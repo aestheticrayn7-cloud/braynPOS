@@ -106,7 +106,15 @@ export class BluetoothPrinter {
     addText(line('-'));
     addRaw(LEFT);
     addText(`ID: ${receipt.receiptNo}`);
-    addText(`Date: ${new Date(receipt.date).toLocaleDateString()}`);
+    addText(`Date: ${new Date(receipt.date).toLocaleString()}`);
+    
+    if (settings.showCashierName && receipt.cashier) {
+      addText(`Cashier: ${receipt.cashier}`);
+    }
+    if (settings.showCustomerInfo && receipt.customer) {
+      addText(`Customer: ${receipt.customer.name}`);
+    }
+    
     addText(line('-'));
 
     receipt.items.forEach((item: any) => {
@@ -119,13 +127,23 @@ export class BluetoothPrinter {
     });
 
     addText(line('-'));
-    addRaw(BOLD_ON);
-    const totalLabel = 'TOTAL';
-    const totalValue = `${receipt.totals.total.toLocaleString()}`;
-    const totalPadding = lineWidth - totalLabel.length - totalValue.length;
-    addText(totalLabel + ' '.repeat(Math.max(1, totalPadding)) + totalValue);
-    addRaw(BOLD_OFF);
-    addText(line('-'));
+    
+    // Detailed Totals
+    const addTotalRow = (label: string, value: number, bold = false) => {
+      if (bold) addRaw(BOLD_ON);
+      const valStr = value.toLocaleString();
+      const padding = lineWidth - label.length - valStr.length;
+      addText(label + ' '.repeat(Math.max(1, padding)) + valStr);
+      if (bold) addRaw(BOLD_OFF);
+    };
+
+    addTotalRow('Subtotal', receipt.totals.subtotal);
+    if (receipt.totals.discount) addTotalRow('Discount', -receipt.totals.discount);
+    if (receipt.totals.tax) addTotalRow('Tax', receipt.totals.tax);
+    
+    addText(line('='));
+    addTotalRow('TOTAL', receipt.totals.total, true);
+    addText(line('='));
 
     receipt.payments.forEach((p: any) => {
       const pLabel = p.method.replace('_', ' ');
@@ -135,8 +153,32 @@ export class BluetoothPrinter {
     });
 
     addRaw(CENTER);
-    addText('\n' + (settings.receiptFooter || 'Thank you for your business!'));
+    if (settings.showBarcode) {
+      addText('\n');
+      
+      // QR Code Implementation (Native ESC/POS)
+      // Reference: GS ( k
+      const qrData = receipt.receiptNo;
+      const qrDataBytes = encoder.encode(qrData);
+      const storeLen = qrDataBytes.length + 3;
+      const pl = storeLen % 256;
+      const ph = Math.floor(storeLen / 256);
+
+      addRaw([
+        0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00, // Model 2
+        0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x06,       // Size 6
+        0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x30,       // EC Level L
+        0x1D, 0x28, 0x6B, pl, ph, 0x31, 0x50, 0x30,            // Store data
+        ...Array.from(qrDataBytes),
+        0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30        // Print QR
+      ]);
+      addText('\n');
+    }
+    
+    addText('\n' + (settings.receiptFooter || 'Thank you!'));
+    addRaw(BOLD_ON);
     addText('POWERED BY BRAYN POS');
+    addRaw(BOLD_OFF);
     addText('\n\n\n'); // Feed
     addRaw(CUT);
 

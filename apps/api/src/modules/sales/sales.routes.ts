@@ -173,7 +173,10 @@ export const salesRoutes: FastifyPluginAsync = async (app) => {
   app.get('/conflicts', {
     preHandler: [authorize('SUPER_ADMIN', 'MANAGER_ADMIN', 'MANAGER')],
     handler: async (request) => {
-      return salesService.findConflicts(request.user.channelId!)
+      const { channelId } = request.query as { channelId?: string }
+      const cid = channelId || request.user.channelId
+      if (!cid) throw { statusCode: 400, message: 'channelId is required to view conflicts' }
+      return salesService.findConflicts(cid)
     }
   })
 

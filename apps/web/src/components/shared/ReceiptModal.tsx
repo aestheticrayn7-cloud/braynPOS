@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { api } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { BluetoothPrinter } from '@/lib/bluetooth-printer'
@@ -48,6 +49,21 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
   const [branding, setBranding] = useState<{ logo?: string }>({})
   const [loading, setLoading] = useState(true)
   const [printing, setPrinting] = useState(false)
+  const [qrCode, setQrCode] = useState<string>('')
+
+  useEffect(() => {
+    const generateQR = async () => {
+      if (data?.receiptNo && settings.showBarcode) {
+        try {
+          const url = await QRCode.toDataURL(data.receiptNo, { width: 128, margin: 1 })
+          setQrCode(url)
+        } catch (err) {
+          console.error('QR Gen failed', err)
+        }
+      }
+    }
+    generateQR()
+  }, [data?.receiptNo, settings.showBarcode])
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   useEffect(() => {
@@ -177,14 +193,14 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
               </div>
             )}
             {settings.showBusinessName !== false && (
-              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#000' }}>{data?.channel.name}</h2>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#000', textTransform: 'uppercase' }}>{data?.channel.name}</h2>
             )}
-            {settings.showBusinessAddress !== false && (
-              <p style={{ margin: '4px 0', color: '#000' }}>
-                {(data?.channel.address === 'None' || !data?.channel.address) ? '' : data.channel.address}
+            {settings.showBusinessAddress !== false && data?.channel.address && (
+              <p style={{ margin: '4px 0', color: '#000', fontSize: '0.85rem' }}>
+                {data.channel.address}
               </p>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4, fontSize: '0.85rem' }}>
               {settings.showBusinessPhone !== false && data?.channel.phone && (
                 <p style={{ margin: 0, color: '#000' }}>TEL: {data.channel.phone}</p>
               )}
@@ -192,91 +208,106 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
                 <p style={{ margin: 0, color: '#000' }}>{data.channel.email}</p>
               )}
               {settings.showVatNumber && data?.vatPIN && (
-                <p style={{ margin: 0, color: '#000' }}>VAT/PIN: {data.vatPIN}</p>
+                <p style={{ margin: 0, color: '#000', fontWeight: 600 }}>VAT/PIN: {data.vatPIN}</p>
               )}
             </div>
           </div>
 
-          <div style={{ borderBottom: '1px dashed #333', marginBottom: 16 }} />
+          <div style={{ borderBottom: '2px solid #000', marginBottom: 12 }} />
 
-          <div style={{ marginBottom: 12, color: '#000' }}>
+          <div style={{ marginBottom: 12, color: '#000', fontSize: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 600 }}>ID: {data?.receiptNo}</span>
-              <span style={{ opacity: 0.8 }}>{data ? new Date(data.date).toLocaleDateString() : ''}</span>
+              <span style={{ fontWeight: 700 }}>ID: {data?.receiptNo}</span>
+              <span>{data ? new Date(data.date).toLocaleString() : ''}</span>
             </div>
             {settings.showCashierName && data?.cashier && (
-              <div style={{ marginTop: 4, fontSize: '0.8rem' }}>Served by: {data.cashier}</div>
+              <div style={{ marginTop: 4 }}>Served by: <span style={{ fontWeight: 600 }}>{data.cashier}</span></div>
             )}
             {settings.showCustomerInfo && data?.customer && (
-              <div style={{ marginTop: 6 }}>Customer: {data.customer.name}</div>
+              <div style={{ marginTop: 4 }}>Customer: <span style={{ fontWeight: 600 }}>{data.customer.name}</span></div>
             )}
           </div>
 
           <div style={{ borderBottom: '1px dashed #333', marginBottom: 12 }} />
 
-          <table style={{ width: '100%', fontSize: '0.9rem', borderCollapse: 'collapse', background: 'transparent' }}>
+          <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse', background: 'transparent' }}>
             <thead>
-              <tr style={{ borderBottom: '1.5px solid #000' }}>
-                <th style={{ textAlign: 'left', padding: '6px 0', color: '#000' }}>ITEM</th>
-                <th style={{ textAlign: 'right', padding: '6px 4px', color: '#000' }}>QTY</th>
-                <th style={{ textAlign: 'right', padding: '6px 0', color: '#000' }}>TOTAL</th>
+              <tr style={{ borderBottom: '2px solid #000' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#000' }}>ITEM</th>
+                <th style={{ textAlign: 'right', padding: '8px 0', color: '#000' }}>TOTAL</th>
               </tr>
             </thead>
             <tbody>
               {data?.items.map((item, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '10px 0', verticalAlign: 'top', color: '#000' }}>
-                    <div style={{ fontWeight: 500 }}>{item.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#444' }}>@{item.unitPrice.toLocaleString()}</div>
+                <tr key={idx}>
+                  <td style={{ padding: '8px 0', verticalAlign: 'top', color: '#000' }}>
+                    <div style={{ fontWeight: 700 }}>{item.name}</div>
+                    <div style={{ fontSize: '0.75rem' }}>{item.quantity} x {item.unitPrice.toLocaleString()}</div>
                   </td>
-                  <td style={{ textAlign: 'right', padding: '10px 4px', verticalAlign: 'top', color: '#000' }}>{item.quantity}</td>
-                  <td style={{ textAlign: 'right', padding: '10px 0', color: '#000', verticalAlign: 'top', fontWeight: 500 }}>
-                    <div style={{ textAlign: 'right', height: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', paddingTop: '10px' }}>
-                      {item.lineTotal.toLocaleString()}
-                    </div>
+                  <td style={{ textAlign: 'right', padding: '8px 0', color: '#000', verticalAlign: 'top', fontWeight: 700 }}>
+                    {item.lineTotal.toLocaleString()}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div style={{ borderTop: '1px dashed #333', marginTop: 12, paddingTop: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000' }}>
+          <div style={{ borderTop: '1px dashed #333', marginTop: 12, paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000', fontSize: '0.85rem' }}>
               <span>Subtotal</span>
               <span>{data?.totals.subtotal.toLocaleString()}</span>
             </div>
             {data?.totals.discount ? (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000', fontSize: '0.85rem' }}>
                 <span>Discount</span>
                 <span>-{data.totals.discount.toLocaleString()}</span>
               </div>
             ) : null}
             {data?.totals.tax ? (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, color: '#000', fontSize: '0.85rem' }}>
                 <span>Tax</span>
                 <span>{data.totals.tax.toLocaleString()}</span>
               </div>
             ) : null}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem', marginTop: 8, color: '#000', borderTop: '2px solid #000', paddingTop: 8 }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              fontWeight: 800, 
+              fontSize: '1.3rem', 
+              marginTop: 8, 
+              color: '#000', 
+              borderTop: '2px solid #000', 
+              borderBottom: '2px solid #000',
+              padding: '10px 0' 
+            }}>
               <span>TOTAL</span>
               <span>{data?.totals.total.toLocaleString()}</span>
             </div>
           </div>
 
-          <div style={{ marginTop: 20, fontSize: '0.9rem', color: '#000' }}>
-            <div style={{ fontWeight: 700, marginBottom: 8 }}>PAYMENTS:</div>
+          <div style={{ marginTop: 20, fontSize: '0.85rem', color: '#000' }}>
+            <div style={{ fontWeight: 800, marginBottom: 8, borderBottom: '1px solid #ddd', paddingBottom: 4 }}>PAYMENTS</div>
             {data?.payments.map((p, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
                 <span>{p.method.replace('_', ' ')}</span>
-                <span>{p.amount.toLocaleString()}</span>
+                <span style={{ fontWeight: 600 }}>{p.amount.toLocaleString()}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 24, fontSize: '0.85rem', lineBreak: 'anywhere' }}>
-            {settings.receiptFooter && <p style={{ marginBottom: 8 }}>{settings.receiptFooter}</p>}
+          <div style={{ textAlign: 'center', marginTop: 32, fontSize: '0.85rem', color: '#000' }}>
+            {settings.receiptFooter && <p style={{ marginBottom: 12, fontWeight: 500 }}>{settings.receiptFooter}</p>}
+            
+            {settings.showBarcode && qrCode && (
+              <div style={{ marginTop: 16, marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.05em', opacity: 0.8 }}>VERIFY RECEIPT</div>
+                <img src={qrCode} alt="Receipt QR" style={{ width: 120, height: 120, border: '1px solid #000', padding: 4 }} />
+                <div style={{ fontSize: '0.7rem', fontWeight: 600 }}>{data?.receiptNo}</div>
+              </div>
+            )}
+
             {settings.showPoweredBy !== false && (
-               <p style={{ marginTop: 12, opacity: 0.7, fontSize: '0.7rem', fontWeight: 600 }}>POWERED BY BRAYN POS</p>
+               <p style={{ marginTop: 20, opacity: 0.6, fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em' }}>POWERED BY BRAYN POS</p>
             )}
           </div>
         </div>
@@ -311,7 +342,7 @@ export function ReceiptModal({ saleId, onClose }: ReceiptModalProps) {
 
 function formatReceiptText(data: ReceiptData, settings: ReceiptSettings): string {
   const lines = [
-    settings.showBusinessName !== false ? data.channel.name : '',
+    settings.showBusinessName !== false ? data.channel.name.toUpperCase() : '',
     settings.showBusinessAddress !== false ? data.channel.address || '' : '',
     settings.showBusinessPhone !== false ? `TEL: ${data.channel.phone || 'N/A'}` : '',
     '──────────────────────',
@@ -320,11 +351,12 @@ function formatReceiptText(data: ReceiptData, settings: ReceiptSettings): string
     settings.showCashierName && data.cashier ? `Cashier: ${data.cashier}` : '',
     settings.showCustomerInfo && data.customer ? `Customer: ${data.customer.name}` : '',
     '──────────────────────',
-    ...data.items.map(i => `${i.name} x${i.quantity}  ${i.lineTotal.toLocaleString()}`),
+    ...data.items.map(i => `${i.name}\n  ${i.quantity} x ${i.unitPrice.toLocaleString()}  ${i.lineTotal.toLocaleString()}`),
     '──────────────────────',
     `Subtotal: ${data.totals.subtotal.toLocaleString()}`,
     data.totals.discount ? `Discount: -${data.totals.discount.toLocaleString()}` : '',
     data.totals.tax ? `Tax: ${data.totals.tax.toLocaleString()}` : '',
+    '──────────────────────',
     `TOTAL: ${data.totals.total.toLocaleString()}`,
     '──────────────────────',
     ...data.payments.map(p => `${p.method.replace('_', ' ')}: ${p.amount.toLocaleString()}`),
